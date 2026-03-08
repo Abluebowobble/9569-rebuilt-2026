@@ -9,14 +9,17 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,8 +33,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final SparkMax pivotMotor = new SparkMax(HardwareMap.INTAKE_PIVOT, MotorType.kBrushless);
   private final SparkMax rollerMotor = new SparkMax(HardwareMap.INTAKE_ROLLER, MotorType.kBrushless);
 
-  private final DutyCycleEncoder intakePivotEncoder = new DutyCycleEncoder(HardwareMap.INTAKE_PIVOT_ENCODER);
-  private final double kZero = 0;
+  private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
 
   private Position setPointAngle;
   private static final Angle kPositionTolerance = Degrees.of(0); // to tune
@@ -73,23 +75,23 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public IntakeSubsystem() {
-    SparkBaseConfig config = new SparkMaxConfig(); // might absstract to parent class? 
+    SparkBaseConfig config = new SparkMaxConfig(); // might absstract to parent class?
     pivotMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     rollerMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    pivotEncoder.setPosition(0);
+
+    SmartDashboard.putData(this);
   }
 
   public void set(Speed speed) {
     pivotMotor.setVoltage(speed.voltage());
   }
 
-  public double getPositionInPWM() {
-    return intakePivotEncoder.get() - this.kZero;
-  }
-
   public void set(Position position) {
     setPointAngle = position;
-    double output = pivotMotorController.calculate(getPositionInPWM(),
-        (position.degrees().baseUnitMagnitude() % 360) / 360 + this.kZero);
+    double output = pivotMotorController.calculate(pivotEncoder.getPosition(),
+        (position.degrees().baseUnitMagnitude() % 360) / 360);
     pivotMotor.setVoltage(output * pivotMotor.getBusVoltage());
   }
 
@@ -103,7 +105,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean isPositionWithinTolerance() {
-    final Angle cur = Degrees.of(getPositionInPWM() * 360);
+    final Angle cur = Degrees.of(pivotEncoder.getPosition() * 360);
     final Angle target = setPointAngle.degrees();
 
     return cur.isNear(target, kPositionTolerance);
@@ -125,11 +127,11 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    SmartDashboard.putString("Command", getCurrentCommand() != null ? getCurrentCommand().getName() : "null");
-    SmartDashboard.putNumber("Angle (degrees)", getPositionInPWM());
-    SmartDashboard.putNumber("Pivot Supply Current", pivotMotor.getOutputCurrent());
-    SmartDashboard.putNumber("Roller Supply Current", rollerMotor.getOutputCurrent());
+  public void initSendable(SendableBuilder builder) {
+    builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
+        null);
+    builder.addDoubleProperty("Angle (degrees)", () -> pivotEncoder.getPosition(), null);
+    builder.addDoubleProperty("Pivot Supply Current", () -> pivotMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Roller Supply Current", () -> rollerMotor.getOutputCurrent(), null);
   }
 }

@@ -34,14 +34,14 @@ public final class Constants {
     public static final int INTAKE_ROLLER = 40;
     public static final int INTAKE_PIVOT = 41;
     public static final int INTAKE_PIVOT_ENCODER = 42;
-    public static final int FLOOR = 53;
+    public static final int CONVEYOR = 53;
     public static final int FEEDER = 9;
     public static final int SHOOTER_LEFT = 8;
     public static final int SHOOTER_RIGHT = 38;
     public static final int SHOOTER_MIDDLE = 39;
 
     // PWM
-    public static final int ACTUATOR_LEFT = 39;
-    public static final int ACTUATOR_RIGHT = 39;
+    public static final int ACTUATOR_LEFT = 50;
+    public static final int ACTUATOR_RIGHT = 51;
   }
 }

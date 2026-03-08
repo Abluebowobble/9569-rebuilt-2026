@@ -47,6 +47,10 @@ public class ConveyorSubsystem extends SubsystemBase {
     motor.setVoltage(speed.voltage());
   }
 
+  public void setPercentageOutput(double percentage) {
+    motor.setVoltage(percentage * motor.getBusVoltage());
+  }
+
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
