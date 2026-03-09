@@ -11,7 +11,7 @@
   },
   "encoder": {
     "type": "analog",
-    "id": 11,
+    "id": 3,
     "canbus": null
   },
   "inverted": {

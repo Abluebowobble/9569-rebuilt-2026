@@ -63,9 +63,6 @@ public class SwerveSubsystem extends SubsystemBase {
   // PhotonVision class for full field localization
   // private Vision vision;
 
-  // Enable vision odometry
-  private boolean isVisionDrive = false;
-
   private final Field2d field = new Field2d();
 
   /** Creates a new SwerveSubsystem. */
@@ -76,7 +73,7 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
         Meter.of(4)),
         Rotation2d.fromDegrees(0))
-        : new Pose2d(new Translation2d(Meter.of(16),
+        :   new Pose2d(new Translation2d(Meter.of(16),
             Meter.of(4)),
             Rotation2d.fromDegrees(180));
 
@@ -87,13 +84,9 @@ public class SwerveSubsystem extends SubsystemBase {
       throw new RuntimeException(e);
     }
 
-    swerveDrive.setModuleEncoderAutoSynchronize(false,
-        1); // resynchronize absolute encoders and motor encoders periodically when they are
-            // not moving
-
-    if (isVisionDrive) {
-      swerveDrive.stopOdometryThread();
-    }
+    // swerveDrive.setModuleEncoderAutoSynchronize(false,
+    //     1); // resynchronize absolute encoders and motor encoders periodically when they are
+    //         // not moving
 
     setupPathPlanner();
 
