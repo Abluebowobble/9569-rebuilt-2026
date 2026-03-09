@@ -27,10 +27,14 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.struct.parser.ParseException;
@@ -305,21 +309,27 @@ public class SwerveSubsystem extends SubsystemBase {
     // }
   }
 
+  public void addVisionMeasurement(
+      Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> stdDevs) {
+    swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, stdDevs);
+  }
+
   @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
+  public void initSendable(SendableBuilder sendableBuilder) {
+    sendableBuilder.addStringProperty("Command",
+        () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
 
-    builder.addDoubleProperty("Module 1", () -> swerveDrive.getModules()[0].getAbsolutePosition(), null);
-    builder.addDoubleProperty("Module 2", () -> swerveDrive.getModules()[1].getAbsolutePosition(), null);
-    builder.addDoubleProperty("Module 3", () -> swerveDrive.getModules()[2].getAbsolutePosition(), null);
-    builder.addDoubleProperty("Module 4", () -> swerveDrive.getModules()[3].getAbsolutePosition(), null);
+    sendableBuilder.addDoubleProperty("Module 1", () -> swerveDrive.getModules()[0].getAbsolutePosition(), null);
+    sendableBuilder.addDoubleProperty("Module 2", () -> swerveDrive.getModules()[1].getAbsolutePosition(), null);
+    sendableBuilder.addDoubleProperty("Module 3", () -> swerveDrive.getModules()[2].getAbsolutePosition(), null);
+    sendableBuilder.addDoubleProperty("Module 4", () -> swerveDrive.getModules()[3].getAbsolutePosition(), null);
 
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
 
-    builder.addDoubleProperty("Robot X", () -> currentPose.getTranslation().getX(), null);
-    builder.addDoubleProperty("Robot Y", () -> currentPose.getTranslation().getY(), null);
-    builder.addDoubleProperty("Robot Heading (deg)", () -> currentPose.getRotation().getDegrees(), null);
+    sendableBuilder.addDoubleProperty("Robot X", () -> currentPose.getTranslation().getX(), null);
+    sendableBuilder.addDoubleProperty("Robot Y", () -> currentPose.getTranslation().getY(), null);
+    sendableBuilder.addDoubleProperty("Robot Heading (deg)", () -> currentPose.getRotation().getDegrees(), null);
   }
 }

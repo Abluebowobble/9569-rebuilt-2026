@@ -38,6 +38,7 @@ public class HoodSubsystem extends SubsystemBase {
     // time tracker
     private Time lastUpdateTime = Seconds.of(0);
 
+
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
         rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
@@ -62,7 +63,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     /** Expects a position between 0.0 and 1.0 */
-    public Command setPositionCommand(double position) {
+    public Command setCommand(double position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
@@ -94,10 +95,11 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
+    public void initSendable(SendableBuilder sendableBuilder) {
+        sendableBuilder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
                 null);
-        builder.addDoubleProperty("Current Position", () -> currentPosition, null);
-        builder.addDoubleProperty("Target Position", () -> targetPosition, value -> setPosition(value));
+        sendableBuilder.addDoubleProperty("Current Position", () -> currentPosition, null);
+        sendableBuilder.addDoubleProperty("Target Position", () -> targetPosition, value -> setPosition(value));
+        
     }
 }

@@ -6,6 +6,8 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.ArrayList;
+
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -20,6 +22,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -30,11 +33,13 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SparkMax leftShooterMotor = new SparkMax(HardwareMap.SHOOTER_LEFT, MotorType.kBrushless);
   private final SparkMax middleShooterMotor = new SparkMax(HardwareMap.SHOOTER_MIDDLE, MotorType.kBrushless);
   private final SparkMax rightShooterMotor = new SparkMax(HardwareMap.SHOOTER_RIGHT, MotorType.kBrushless);
+  private final SparkMax[] motors = { leftShooterMotor, middleShooterMotor, rightShooterMotor };
 
   // encoder
   private final RelativeEncoder leftEncoder = leftShooterMotor.getEncoder();
   private final RelativeEncoder middleEncoder = leftShooterMotor.getEncoder();
   private final RelativeEncoder rightEncoder = leftShooterMotor.getEncoder();
+  private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   // pidf
   private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0.19, 0.58); // to tune
@@ -56,9 +61,9 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setVoltage(Voltage voltage) {
-    leftShooterMotor.setVoltage(voltage);
-    middleShooterMotor.setVoltage(voltage);
-    rightShooterMotor.setVoltage(voltage);
+    for (SparkMax m : motors) {
+      m.setVoltage(voltage);
+    }
   }
 
   public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax motor) {
@@ -68,23 +73,29 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void updateCurrentSpeed() {
-    updateCurrentSpeedOfMotor(leftEncoder, leftShooterMotor);
-    updateCurrentSpeedOfMotor(middleEncoder, middleShooterMotor);
-    updateCurrentSpeedOfMotor(rightEncoder, rightShooterMotor);
+    for (int i = 0; i < 3; i++) {
+      updateCurrentSpeedOfMotor(encoders[i], motors[i]);
+    }
   }
 
   public void set(double rpm) {
     targetRPM = rpm;
   }
 
-  public boolean isVelocityWithinTolerance(RelativeEncoder encoder) {
-    double currentRPM = encoder.getVelocity();
-    return MathUtil.isNear(targetRPM, currentRPM, kVelocityTolerance); // checks if the current RPM is within desired
-                                                                       // RPM
+  public boolean isVelocityWithinTolerance() {
+    for (RelativeEncoder e : encoders) {
+      double currentRPM = e.getVelocity();
+      if (!MathUtil.isNear(targetRPM, currentRPM, kVelocityTolerance)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
-  public Command runCommand(Voltage voltage) {
-    return startEnd(() -> setVoltage(voltage), () -> setVoltage(Volts.of(0)));
+  public Command runCommand(double rpm) {
+    return runOnce(() -> set(rpm))
+        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
   }
 
   @Override
@@ -94,6 +105,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {
-    sendableBuilder.addDoubleProperty("RPM (Rotations per minute)", () -> leftEncoder.getVelocity(), null);
+    sendableBuilder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
+    sendableBuilder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
+    sendableBuilder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);
+    sendableBuilder.addDoubleProperty("target RPM", () -> targetRPM,
+        value -> targetRPM = value);
+
   }
 }

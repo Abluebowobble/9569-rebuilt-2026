@@ -133,5 +133,6 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Angle (degrees)", () -> pivotEncoder.getPosition(), null);
     builder.addDoubleProperty("Pivot Supply Current", () -> pivotMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("Roller Supply Current", () -> rollerMotor.getOutputCurrent(), null);
+    
   }
 }

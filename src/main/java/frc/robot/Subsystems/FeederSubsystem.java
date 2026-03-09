@@ -22,7 +22,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0); // to tune
+    RUN(0.7); // to tune
 
     private final double percentOutput;
 
@@ -57,9 +57,9 @@ public class FeederSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
+  public void initSendable(SendableBuilder sendableBuilder) {
+    sendableBuilder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
-    builder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
+    sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
   }
 }
