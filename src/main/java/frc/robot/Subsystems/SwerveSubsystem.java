@@ -73,7 +73,7 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
         Meter.of(4)),
         Rotation2d.fromDegrees(0))
-        :   new Pose2d(new Translation2d(Meter.of(16),
+        : new Pose2d(new Translation2d(Meter.of(16),
             Meter.of(4)),
             Rotation2d.fromDegrees(180));
 
@@ -83,10 +83,13 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-
-    // swerveDrive.setModuleEncoderAutoSynchronize(false,
-    //     1); // resynchronize absolute encoders and motor encoders periodically when they are
-    //         // not moving
+    swerveDrive.setAngularVelocityCompensation(true,
+        true,
+        0.1); // Correct for skew that gets worse as angular velocity increases. Start with a
+              // coefficient of 0.1.
+    swerveDrive.setModuleEncoderAutoSynchronize(false,
+        1); // resynchronize absolute encoders and motor encoders periodically when they are
+            // not moving
 
     setupPathPlanner();
 
@@ -290,17 +293,6 @@ public class SwerveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    // if (visionPoseOptR.isPresent()) {
-    // swerveDrive.addVisionMeasurement(visionPoseOptR.get(), timestampOptR.get());
-    // photonfield2d.setRobotPose(visionPoseOptR.get());
-    // isTherePhotonR = true;
-    // // SmartDashboard.putNumber("photon Robot X", visionPoseOpt.get().getX());
-    // // SmartDashboard.putNumber("photon Robot Y", visionPoseOpt.get().getY());
-    // // SmartDashboard.putNumber("photon Robot Heading
-    // // (deg)",visionPoseOpt.get().getRotation().getDegrees());
-    // } else {
-    // isTherePhotonR = false;
-    // }
   }
 
   public void addVisionMeasurement(

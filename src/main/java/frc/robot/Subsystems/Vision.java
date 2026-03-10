@@ -60,8 +60,6 @@ public class Vision extends SubsystemBase {
   private Matrix<N3, N1> curStdDevsR;
   private Matrix<N3, N1> curStdDevsL;
 
-  private Supplier<Pose2d> currentPose;
-
   private final EstimateConsumer consumer;
 
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
@@ -104,6 +102,10 @@ public class Vision extends SubsystemBase {
   public void periodic() {
     // // This method will be called once per scheduler run
 
+    // make dt use camera
+    useBestCameraResults();
+
+    // get targets
     List<PhotonTrackedTarget> targetsR = updateResults(cameraR);
     List<PhotonTrackedTarget> targetsL = updateResults(cameraL);
   }

@@ -6,12 +6,12 @@
   },
   "angle": {
     "type": "sparkmax_neo",
-    "id": 3,
+    "id": 1,
     "canbus": null
   },
   "encoder": {
     "type": "analog",
-    "id": 1,
+    "id": 0,
     "canbus": null
   },
   "inverted": {
