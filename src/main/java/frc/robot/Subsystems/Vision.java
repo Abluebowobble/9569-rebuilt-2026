@@ -133,7 +133,6 @@ public class Vision extends SubsystemBase {
     return estimatedPose;
   }
 
-  // abstract later
   private void useBestCameraResults() {
     Optional<EstimatedRobotPose> visionEstL = processCamera(cameraL, photonEstimatorL, curStdDevsL);
     Optional<EstimatedRobotPose> visionEstR = processCamera(cameraR, photonEstimatorR, curStdDevsR);
