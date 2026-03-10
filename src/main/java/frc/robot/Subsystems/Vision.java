@@ -122,28 +122,22 @@ public class Vision extends SubsystemBase {
     return targets;
   }
 
-  // abstract later
+  private Optional<EstimatedRobotPose> processCamera(PhotonCamera camera, PhotonPoseEstimator photonEstimator, Matrix<N3, N1> curStdDevs) {
+    Optional<EstimatedRobotPose> estimatedPose = Optional.empty();
+    for (var result : camera.getAllUnreadResults()) {
+      estimatedPose = photonEstimator.estimateCoprocMultiTagPose(result);
+      if (estimatedPose.isEmpty()) {
+        estimatedPose = photonEstimator.estimateLowestAmbiguityPose(result);
+      }
+      
+      updateEstimationStdDevs(estimatedPose, result.getTargets(), photonEstimator, curStdDevs);
+    }
+    return estimatedPose;
+  }
+
   private void useBestCameraResults() {
-    Optional<EstimatedRobotPose> visionEstL = Optional.empty();
-    Optional<EstimatedRobotPose> visionEstR = Optional.empty();
-
-    for (var result : cameraL.getAllUnreadResults()) {
-      visionEstL = photonEstimatorL.estimateCoprocMultiTagPose(result);
-      if (visionEstL.isEmpty()) {
-        visionEstL = photonEstimatorL.estimateLowestAmbiguityPose(result);
-      }
-
-      updateEstimationStdDevs(visionEstL, result.getTargets(), photonEstimatorL, curStdDevsL);
-    }
-
-    for (var result : cameraR.getAllUnreadResults()) {
-      visionEstR = photonEstimatorR.estimateCoprocMultiTagPose(result);
-      if (visionEstR.isEmpty()) {
-        visionEstR = photonEstimatorR.estimateLowestAmbiguityPose(result);
-      }
-
-      updateEstimationStdDevs(visionEstR, result.getTargets(), photonEstimatorR, curStdDevsR);
-    }
+    Optional<EstimatedRobotPose> visionEstL = processCamera(cameraL, photonEstimatorL, curStdDevsL);
+    Optional<EstimatedRobotPose> visionEstR = processCamera(cameraR, photonEstimatorR, curStdDevsR);
 
     double sumR = curStdDevsR.elementSum();
     double sumL = curStdDevsL.elementSum();
@@ -151,7 +145,7 @@ public class Vision extends SubsystemBase {
     if (sumR < sumL && visionEstR.isPresent()) {
       consumer.accept(visionEstR.get().estimatedPose.toPose2d(), visionEstR.get().timestampSeconds, curStdDevsR);
     } else if (sumR > sumL && visionEstL.isPresent()) {
-      consumer.accept(visionEstR.get().estimatedPose.toPose2d(), visionEstR.get().timestampSeconds, curStdDevsL);
+      consumer.accept(visionEstL.get().estimatedPose.toPose2d(), visionEstL.get().timestampSeconds, curStdDevsL);
     }
   }
 
