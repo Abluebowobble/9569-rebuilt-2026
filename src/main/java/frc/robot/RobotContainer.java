@@ -16,7 +16,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.IntakeSubsystem;
+import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
+import frc.robot.Subsystems.ConveyorSubsystem;
+import frc.robot.Subsystems.FeederSubsystem;
 import swervelib.SwerveInputStream;
 
 public class RobotContainer {
@@ -40,13 +43,6 @@ public class RobotContainer {
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
 
-  SwerveInputStream driveDirectAngle = driveAngularVelocity.copy().withControllerHeadingAxis(ps5Controller::getRightX,
-      ps5Controller::getRightY)
-      .headingWhile(true);
-
-  SwerveInputStream driveRobotOriented = driveAngularVelocity.copy().robotRelative(true)
-      .allianceRelativeControl(false);
-
   SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(driveBase.getSwerveDrive(),
       () -> -ps5Controller.getLeftY(),
       () -> -ps5Controller.getLeftX())
@@ -56,7 +52,7 @@ public class RobotContainer {
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
 
-  // Derive the heading axis with math!
+  // Derive the heading axis with math
   SwerveInputStream driveDirectAngleKeyboard = driveAngularVelocityKeyboard.copy()
       .withControllerHeadingAxis(() -> Math.sin(
           ps5Controller.getRawAxis(
@@ -77,23 +73,13 @@ public class RobotContainer {
       .translationHeadingOffset(Rotation2d.fromDegrees(
           0));
 
-  // different swerve commands
-  // Command driveFieldOrientedDirectAngle =
-  // driveBase.driveFieldOriented(driveDirectAngle);
   Command driveFieldOrientedAnglularVelocity = driveBase.driveFieldOriented(driveAngularVelocity);
-  // Command driveRobotOrientedAngularVelocity =
-  // driveBase.driveFieldOriented(driveRobotOriented);
-  // Command driveSetpointGen = driveBase.driveWithSetpointGeneratorFieldRelative(
-  // driveDirectAngle);
   Command driveFieldOrientedDirectAngleKeyboard = driveBase.driveFieldOriented(driveDirectAngleKeyboard);
-  // Command driveFieldOrientedAnglularVelocityKeyboard =
-  // driveBase.driveFieldOriented(driveAngularVelocityKeyboard);
-  // Command driveSetpointGenKeyboard =
-  // driveBase.driveWithSetpointGeneratorFieldRelative(
-  // driveDirectAngleKeyboard);
 
-  IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-
+  // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  FeederSubsystem FeederSubsystem = new FeederSubsystem();
+  ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
+  ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   public RobotContainer() {
     CanandEventLoop.getInstance();
     configureBindings();
@@ -106,7 +92,11 @@ public class RobotContainer {
       driveBase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     }
 
-    ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
+    // ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
+    ps5Controller.circle().onTrue(FeederSubsystem.runCommand());
+    ps5Controller.square().onTrue(conveyorSubsystem.runCommand());
+    ps5Controller.cross().onTrue(conveyorSubsystem.runCommand().alongWith(FeederSubsystem.runCommand()));
+    ps5Controller.cross().onTrue(conveyorSubsystem.runCommand().alongWith(FeederSubsystem.runCommand()));
   }
 
   public Command getAutonomousCommand() {

@@ -30,7 +30,7 @@ public class ConveyorSubsystem extends SubsystemBase {
     private final double percentOutput;
 
     private Speed(double percentOutput) {
-      this.percentOutput = percentOutput;
+      this.percentOutput =  percentOutput;
     }
 
     public Voltage voltage() {

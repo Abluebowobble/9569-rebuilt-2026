@@ -81,6 +81,10 @@ public class ShooterSubsystem extends SubsystemBase {
     targetRPM = rpm;
   }
 
+  public void stop() {
+    set(0);
+  }
+
   public boolean isVelocityWithinTolerance() {
     for (RelativeEncoder e : encoders) {
       double currentRPM = e.getVelocity();

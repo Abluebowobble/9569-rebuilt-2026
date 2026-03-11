@@ -97,8 +97,8 @@ public class SwerveSubsystem extends SubsystemBase {
     // SmartDashboard.putData("swerve + photon field", field);
     // // Command name
     // SmartDashboard.putString(
-    //     "Command",
-    //     getCurrentCommand() != null ? getCurrentCommand().getName() : "null");
+    // "Command",
+    // getCurrentCommand() != null ? getCurrentCommand().getName() : "null");
 
     // Module absolute positions
 
@@ -108,7 +108,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     // SmartDashboard.putNumber("Robot X", currentPose.getTranslation().getX());
     // SmartDashboard.putNumber("Robot Y", currentPose.getTranslation().getY());
-    // SmartDashboard.putNumber("Robot Heading (deg)", currentPose.getRotation().getDegrees());
+    // SmartDashboard.putNumber("Robot Heading (deg)",
+    // currentPose.getRotation().getDegrees());
   }
 
   public void setupPathPlanner() {
@@ -174,21 +175,21 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   // implement cameras later when vision is implemented
-  // public Command aimAtTarget(Cameras camera) {
+  public Command aimAtTarget(Cameras camera) {
 
-  // return run(() -> {
-  // Optional<PhotonPipelineResult> resultO = camera.getBestResult();
-  // if (resultO.isPresent()) {
-  // var result = resultO.get();
-  // if (result.hasTargets()) {
-  // drive(getTargetSpeeds(0,
-  // 0,
-  // Rotation2d.fromDegrees(result.getBestTarget()
-  // .getYaw()))); // Not sure if this will work, more math may be required.
-  // }
-  // }
-  // });
-  // }
+    return run(() -> {
+      Optional<PhotonPipelineResult> resultO = camera.getBestResult();
+      if (resultO.isPresent()) {
+        var result = resultO.get();
+        if (result.hasTargets()) {
+          drive(getTargetSpeeds(0,
+              0,
+              Rotation2d.fromDegrees(result.getBestTarget()
+                  .getYaw()))); // Not sure if this will work, more math may be required.
+        }
+      }
+    });
+  }
 
   public void drive(ChassisSpeeds velocity) {
     swerveDrive.drive(velocity);
@@ -306,7 +307,7 @@ public class SwerveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
+
     SmartDashboard.putNumber("Module 1 (abs)", swerveDrive.getModules()[0].getAbsolutePosition());
     SmartDashboard.putNumber("Module 2 (new)", swerveDrive.getModules()[1].getAbsoluteEncoder().getAbsolutePosition());
     SmartDashboard.putNumber("Module 3 (abs)", swerveDrive.getModules()[2].getRawAbsolutePosition());

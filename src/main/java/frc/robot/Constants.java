@@ -31,14 +31,13 @@ public final class Constants {
   public static class HardwareMap {
 
     // NEO
-    public static final int INTAKE_ROLLER = 40;
+    public static final int INTAKE_ROLLER = 40; //
     public static final int INTAKE_PIVOT = 9;
-    public static final int INTAKE_PIVOT_ENCODER = 42;
-    public static final int CONVEYOR = 53;
-    public static final int FEEDER = 9;
-    public static final int SHOOTER_LEFT = 8;
-    public static final int SHOOTER_RIGHT = 38;
-    public static final int SHOOTER_MIDDLE = 39;
+    public static final int CONVEYOR = 14;
+    public static final int FEEDER = 15; // 
+    public static final int SHOOTER_LEFT = 11;
+    public static final int SHOOTER_RIGHT = 12;
+    public static final int SHOOTER_MIDDLE = 13;
 
     // PWM
     public static final int ACTUATOR_LEFT = 50;
