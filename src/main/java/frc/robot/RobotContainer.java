@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.io.File;
 
+import com.reduxrobotics.canand.CanandEventLoop;
 import frc.robot.Constants.OperatorConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
 import swervelib.SwerveInputStream;
 
@@ -90,7 +92,10 @@ public class RobotContainer {
   // driveBase.driveWithSetpointGeneratorFieldRelative(
   // driveDirectAngleKeyboard);
 
+  IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+
   public RobotContainer() {
+    CanandEventLoop.getInstance();
     configureBindings();
   }
 
@@ -100,6 +105,8 @@ public class RobotContainer {
     } else {
       driveBase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     }
+
+    ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
   }
 
   public Command getAutonomousCommand() {

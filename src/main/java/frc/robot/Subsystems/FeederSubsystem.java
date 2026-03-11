@@ -39,9 +39,6 @@ public class FeederSubsystem extends SubsystemBase {
   public FeederSubsystem() {
     SparkBaseConfig config = new SparkMaxConfig();
     motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-    SmartDashboard.putData(this);
-
   }
 
   public void set(Speed speed) {
@@ -54,6 +51,11 @@ public class FeederSubsystem extends SubsystemBase {
 
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
+  }
+
+  @Override
+  public void periodic() {
+    SmartDashboard.putData(this);
   }
 
   @Override

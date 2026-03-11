@@ -32,7 +32,7 @@ public final class Constants {
 
     // NEO
     public static final int INTAKE_ROLLER = 40;
-    public static final int INTAKE_PIVOT = 41;
+    public static final int INTAKE_PIVOT = 9;
     public static final int INTAKE_PIVOT_ENCODER = 42;
     public static final int CONVEYOR = 53;
     public static final int FEEDER = 9;

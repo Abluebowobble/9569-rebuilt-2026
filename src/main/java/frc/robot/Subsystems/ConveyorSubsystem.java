@@ -57,6 +57,11 @@ public class ConveyorSubsystem extends SubsystemBase {
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
+  
+  @Override
+  public void periodic() {
+    SmartDashboard.putData(this);
+  }
 
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {

@@ -1,3 +1,4 @@
+
 {
   "drive": {
     "type": "krakenx60",
@@ -11,14 +12,14 @@
   },
   "encoder": {
     "type": "analog",
-    "id": 3,
+    "id": 0,
     "canbus": null
   },
   "inverted": {
     "drive": false,
     "angle": false
   },
-  "absoluteEncoderOffset": 0,
+  "absoluteEncoderOffset": 159.23,
   "location": {
     "front": -11.5,
     "left": -10.5

@@ -48,7 +48,6 @@ public class HoodSubsystem extends SubsystemBase {
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
         setPosition(currentPosition);
-        SmartDashboard.putData(this);
     }
 
     /** Expects a position between 0.0 and 1.0 */
@@ -92,6 +91,7 @@ public class HoodSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         updateCurrentPosition();
+        SmartDashboard.putData(this);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private static final Angle kPositionTolerance = Degrees.of(0); // to tune
 
   // pivot motor controller
-  private final PIDController pivotMotorController = new PIDController(0, 0, 0); // to tune
+  private final PIDController pivotMotorController = new PIDController(5, 0, 0); // to tune
 
   // speed and position enums
   public enum Speed {
@@ -60,8 +60,8 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     // all of this is to tune
     STOWED(0),
-    INTAKE(0),
-    AGITATE(0);
+    INTAKE(10),
+    AGITATE(70);
 
     private final double degrees;
 
@@ -81,7 +81,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     pivotEncoder.setPosition(0);
 
-    SmartDashboard.putData(this);
   }
 
   public void set(Speed speed) {
@@ -124,6 +123,11 @@ public class IntakeSubsystem extends SubsystemBase {
           set(Position.INTAKE);
           set(Speed.STOP);
         });
+  }
+
+  @Override
+  public void periodic() {
+    SmartDashboard.putData(this);
   }
 
   @Override

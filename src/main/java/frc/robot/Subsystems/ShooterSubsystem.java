@@ -100,6 +100,7 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     updateCurrentSpeed();
+    SmartDashboard.putData(this);
   }
 
   @Override
