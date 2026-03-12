@@ -46,71 +46,36 @@ public class Vision extends SubsystemBase {
       .loadField(AprilTagFields.k2026RebuiltAndymark);
 
   // Cameras
-  private final PhotonCamera cameraR;
-  private final PhotonCamera cameraL;
+  private final PhotonCamera camera;
 
-  private final Transform3d kRobotToCamR = new Transform3d(new Translation3d(-0.13172, 0.32659, 0.338),
-      new Rotation3d(0, 0, 0));
-  private final Transform3d kRobotToCamL = new Transform3d(new Translation3d(-0.13172, -0.32659, 0.338),
+  private final Transform3d kRobotToCam = new Transform3d(new Translation3d(0, 0, 0),
       new Rotation3d(0, 0, 0));
 
-  private final PhotonPoseEstimator photonEstimatorR;
-  private final PhotonPoseEstimator photonEstimatorL;
+  private final PhotonPoseEstimator PhotonPoseEstimator;
 
-  private Matrix<N3, N1> curStdDevsR;
-  private Matrix<N3, N1> curStdDevsL;
+  private Matrix<N3, N1> curStdDevs;
 
   private final EstimateConsumer consumer;
 
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
-  /** Creates a new Vision. */
+  /** Creates a new Vision. Pass in method that will use data */
   public Vision(EstimateConsumer consumer) {
     this.consumer = consumer;
 
-    cameraR = new PhotonCamera("right camera");
-    cameraL = new PhotonCamera("left camera");
+    camera = new PhotonCamera("camera");
 
-    photonEstimatorR = new PhotonPoseEstimator(kAprilTagField, kRobotToCamR);
-    photonEstimatorL = new PhotonPoseEstimator(kAprilTagField, kRobotToCamL);
+    PhotonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kRobotToCam);
   }
-
-  // public void updatePoseCamera(PhotonCamera camera, PhotonPoseEstimator
-  // poseEstimator, Transform3d cameraToRobot) {
-  // var result = camera.getLatestResult();
-
-  // if (!result.hasTargets())
-  // return;
-
-  // PhotonTrackedTarget target = result.getBestTarget();
-
-  // if (kAprilTagField.getTagPose(target.getFiducialId()).isPresent()) {
-  // Pose3d robotPose =
-  // PhotonUtils.estimateFieldToRobotAprilTag(target.getBestCameraToTarget(),
-  // kAprilTagField.getTagPose(target.getFiducialId()).get(), cameraToRobot);
-  // }
-  // Optional<EstimatedRobotPose> pose =
-  // poseEstimator.estimateCoprocMultiTagPose(result);
-
-  // if (pose.isEmpty()) {
-  // pose = poseEstimator.estimateLowestAmbiguityPose(result);
-  // }
-  // }
 
   @Override
   public void periodic() {
-    // // This method will be called once per scheduler run
-
-    // make dt use camera
+    // make consumer use camera
     useBestCameraResults();
-
-    // get targets
-    List<PhotonTrackedTarget> targetsR = updateResults(cameraR);
-    List<PhotonTrackedTarget> targetsL = updateResults(cameraL);
   }
 
-  private List<PhotonTrackedTarget> updateResults(PhotonCamera camera) {
+  private List<PhotonTrackedTarget> updateTargets() {
     List<PhotonTrackedTarget> targets = new ArrayList<>();
 
     PhotonPipelineResult result = camera.getLatestResult();
@@ -122,36 +87,22 @@ public class Vision extends SubsystemBase {
     return targets;
   }
 
-  private Optional<EstimatedRobotPose> processCamera(PhotonCamera camera, PhotonPoseEstimator photonEstimator, Matrix<N3, N1> curStdDevs) {
-    Optional<EstimatedRobotPose> estimatedPose = Optional.empty();
-    for (var result : camera.getAllUnreadResults()) {
-      estimatedPose = photonEstimator.estimateCoprocMultiTagPose(result);
-      if (estimatedPose.isEmpty()) {
-        estimatedPose = photonEstimator.estimateLowestAmbiguityPose(result);
-      }
-      
-      updateEstimationStdDevs(estimatedPose, result.getTargets(), photonEstimator, curStdDevs);
-    }
-    return estimatedPose;
-  }
-
   private void useBestCameraResults() {
-    Optional<EstimatedRobotPose> visionEstL = processCamera(cameraL, photonEstimatorL, curStdDevsL);
-    Optional<EstimatedRobotPose> visionEstR = processCamera(cameraR, photonEstimatorR, curStdDevsR);
+    Optional<EstimatedRobotPose> visionEstimate = Optional.empty();
+    for (var result : camera.getAllUnreadResults()) {
+      visionEstimate = PhotonPoseEstimator.estimateCoprocMultiTagPose(result);
+      if (visionEstimate.isEmpty()) {
+        visionEstimate = PhotonPoseEstimator.estimateLowestAmbiguityPose(result);
+      }
 
-    double sumR = curStdDevsR.elementSum();
-    double sumL = curStdDevsL.elementSum();
-
-    if (sumR < sumL && visionEstR.isPresent()) {
-      consumer.accept(visionEstR.get().estimatedPose.toPose2d(), visionEstR.get().timestampSeconds, curStdDevsR);
-    } else if (sumR > sumL && visionEstL.isPresent()) {
-      consumer.accept(visionEstL.get().estimatedPose.toPose2d(), visionEstL.get().timestampSeconds, curStdDevsL);
+      updateEstimationStdDevs(visionEstimate, result.getTargets());
     }
+
+    consumer.accept(visionEstimate.get().estimatedPose.toPose2d(), visionEstimate.get().timestampSeconds, curStdDevs);
   }
 
   private void updateEstimationStdDevs(
-      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets, PhotonPoseEstimator estimator,
-      Matrix<N3, N1> curStdDevs) {
+      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {
       // No pose input. Default to single-tag std devs
       curStdDevs = kSingleTagStdDevs;
@@ -164,7 +115,7 @@ public class Vision extends SubsystemBase {
       // Precalculation - see how many tags we found, and calculate an
       // average-distance metric
       for (var tgt : targets) {
-        var tagPose = estimator.getFieldTags().getTagPose(tgt.getFiducialId());
+        var tagPose = PhotonPoseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
 
         if (tagPose.isEmpty())
           continue;
@@ -202,7 +153,7 @@ public class Vision extends SubsystemBase {
   }
 
   public Matrix<N3, N1> getEstimationStdDevs() {
-    return curStdDevsL;
+    return curStdDevs;
   }
 
   @FunctionalInterface

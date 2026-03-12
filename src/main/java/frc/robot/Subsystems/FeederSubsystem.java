@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FeederSubsystem extends SubsystemBase {
+  
   private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
 
   public enum Speed {
@@ -60,7 +61,8 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {
-    sendableBuilder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
+    sendableBuilder.addStringProperty("Command",
+        () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
   }

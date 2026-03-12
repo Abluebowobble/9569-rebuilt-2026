@@ -4,8 +4,6 @@
 
 package frc.robot.Commands;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Degrees;
@@ -15,13 +13,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.LandMarks;
 import frc.robot.Subsystems.SwerveSubsystem;
-import swervelib.SwerveInputStream;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class AimCommand extends Command {
@@ -29,11 +24,13 @@ public class AimCommand extends Command {
   private final SwerveSubsystem swerve;
   private double rotationalVelocity;
   private DoubleSupplier leftSupplier;
-  private DoubleSupplier rightsSupplier;
+  private DoubleSupplier rightSupplier;
 
   /** Creates a new AimAndDriveCommand. */
   public AimCommand(SwerveSubsystem s, DoubleSupplier leftSupplier, DoubleSupplier rightSupplier) {
     this.swerve = s;
+    this.leftSupplier = leftSupplier;
+    this.rightSupplier = rightSupplier;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
@@ -53,28 +50,33 @@ public class AimCommand extends Command {
 
     // // turn field oriented vector into robot oriented vector
     // Rotation2d hubDirectionInOperatorPerspective = hubDirectionInFieldPerspective
-    //     .minus(swerve.getHeading());
+    // .minus(swerve.getHeading());
 
     return hubDirectionInFieldPerspective;
   }
 
-  @Override
-  public void execute() {
+  public double rotationalVelocity() {
     // find new rotational velocity
     rotationalVelocity = swerve.getSwerveDrive().getSwerveController()
         .headingCalculate(swerve.getHeading().getRadians(), getDirectionToHub().getRadians());
 
     // convert into controller readings
-    final double velocityAsPercent = rotationalVelocity / swerve.getSwerveDrive().getMaximumChassisVelocity();
+    double velocityAsPercent = rotationalVelocity / swerve.getSwerveDrive().getMaximumChassisVelocity();
+
+    return velocityAsPercent;
+  }
+
+  @Override
+  public void initialize() {
 
     // override default swerve command and run this
-    Command drive = swerve.driveCommand(() -> ps5Controller.getLeftX(), () -> ps5Controller.getLeftY(),
-        () -> MathUtil.clamp(velocityAsPercent, -1, 1));
-    
+    Command drive = swerve.driveCommand(leftSupplier, rightSupplier,
+        this::rotationalVelocity);
+
     // schedule command
     CommandScheduler.getInstance().schedule(drive);
   }
-  
+
   @Override
   public boolean isFinished() {
     return false;

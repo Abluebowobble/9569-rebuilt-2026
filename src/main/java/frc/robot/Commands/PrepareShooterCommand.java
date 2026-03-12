@@ -18,12 +18,12 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LandMarks;
-import frc.robot.Commands.AimShotCommand.Shot;
+import frc.robot.Commands.PrepareShooterCommand.Shot;
 import frc.robot.Subsystems.HoodSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class AimShotCommand extends Command {
+public class PrepareShooterCommand extends Command {
 
   public static class Shot {
     public final double shooterRPM;
@@ -61,11 +61,12 @@ public class AimShotCommand extends Command {
   private final Supplier<Pose2d> robotPoseSupplier;
 
   /** Creates a new AimShotCommand. */
-  public AimShotCommand(ShooterSubsystem shooterSubsystem, HoodSubsystem hoodSubsystem,
+  public PrepareShooterCommand(ShooterSubsystem shooterSubsystem, HoodSubsystem hoodSubsystem,
       Supplier<Pose2d> robotPoseSupplier) {
     this.shooterSubsystem = shooterSubsystem;
     this.hoodSubsystem = hoodSubsystem;
     this.robotPoseSupplier = robotPoseSupplier;
+    
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(shooterSubsystem, hoodSubsystem);
   }
