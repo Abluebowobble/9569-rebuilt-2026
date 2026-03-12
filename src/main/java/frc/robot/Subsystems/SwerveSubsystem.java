@@ -5,6 +5,7 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Degrees;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.dyn4j.geometry.Rotation;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 
@@ -70,11 +72,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
     boolean blueAlliance = DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Blue;
-    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(1),
-        Meter.of(4)),
+    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(0),
+        Meter.of(0)),
         Rotation2d.fromDegrees(0))
-        : new Pose2d(new Translation2d(Meter.of(16),
-            Meter.of(4)),
+        : new Pose2d(new Translation2d(Meter.of(0),
+            Meter.of(0)),
             Rotation2d.fromDegrees(180));
 
     try {
@@ -176,6 +178,21 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public void drive(ChassisSpeeds velocity) {
     swerveDrive.drive(velocity);
+  }
+
+  /**
+   * If the operator is in the Blue Alliance Station, this should be 0 degrees. If
+   * the operator is in the Red Alliance Station, this should be 180 degrees.
+   */
+  public Rotation2d getOperatorForwardDirection() {
+    Rotation2d fieldOrientedHeading = swerveDrive.getPose().getRotation();
+    Optional<DriverStation.Alliance> currentAlliance = DriverStation.getAlliance();
+
+    if (currentAlliance.isPresent() && currentAlliance.get() == DriverStation.Alliance.Red) {
+      return fieldOrientedHeading.rotateBy(new Rotation2d(Degrees.of(180)));
+    }
+
+    return fieldOrientedHeading;
   }
 
   public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, Rotation2d angle) {

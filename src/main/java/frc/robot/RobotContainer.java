@@ -5,9 +5,12 @@
 package frc.robot;
 
 import java.io.File;
+import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.reduxrobotics.canand.CanandEventLoop;
 import frc.robot.Constants.OperatorConstants;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -76,10 +79,11 @@ public class RobotContainer {
   Command driveFieldOrientedAnglularVelocity = driveBase.driveFieldOriented(driveAngularVelocity);
   Command driveFieldOrientedDirectAngleKeyboard = driveBase.driveFieldOriented(driveDirectAngleKeyboard);
 
-  // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  FeederSubsystem FeederSubsystem = new FeederSubsystem();
+  IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  FeederSubsystem feederSubsystem = new FeederSubsystem();
   ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+
   public RobotContainer() {
     CanandEventLoop.getInstance();
     configureBindings();
@@ -92,14 +96,16 @@ public class RobotContainer {
       driveBase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     }
 
-    // ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
-    ps5Controller.circle().onTrue(FeederSubsystem.runCommand());
-    ps5Controller.square().onTrue(conveyorSubsystem.runCommand());
-    ps5Controller.cross().onTrue(conveyorSubsystem.runCommand().alongWith(FeederSubsystem.runCommand()));
-    ps5Controller.cross().onTrue(conveyorSubsystem.runCommand().alongWith(FeederSubsystem.runCommand()));
+    ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
+    ps5Controller.circle().onTrue(intakeSubsystem.returnCommand());
+    ps5Controller.cross().whileTrue(intakeSubsystem.agitateCommand());
+    ps5Controller.square().whileTrue(shooterSubsystem.runCommand(0.1));
+    // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
+    // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
+    // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
   }
 
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return driveBase.driveToPose(new Pose2d(Meter.of(0.2), Meter.of(0), new Rotation2d(0)));
   }
 }

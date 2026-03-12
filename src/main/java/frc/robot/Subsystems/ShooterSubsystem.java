@@ -36,13 +36,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
   // encoder
   private final RelativeEncoder leftEncoder = leftShooterMotor.getEncoder();
-  private final RelativeEncoder middleEncoder = leftShooterMotor.getEncoder();
-  private final RelativeEncoder rightEncoder = leftShooterMotor.getEncoder();
+  private final RelativeEncoder middleEncoder = middleShooterMotor.getEncoder();
+  private final RelativeEncoder rightEncoder = rightShooterMotor.getEncoder();
   private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   // pidf
-  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0.19, 0.58); // to tune
-  private final PIDController controller = new PIDController(0, 0, 0); // to tune
+  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0.15, 0.19, 0.58); // to tune
+  private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
 
   private static final double kVelocityTolerance = 0.1; // if current RPM is within desired RPM +- velocity tolerance,
                                                         // then its within tolerance
@@ -51,8 +51,8 @@ public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
     SparkBaseConfig config = new SparkMaxConfig();
-    leftShooterMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    middleShooterMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters,
+    leftShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    middleShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
     rightShooterMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -60,21 +60,22 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setVoltage(Voltage voltage) {
-    for (SparkMax m : motors) {
-      m.setVoltage(voltage);
-    }
+    leftShooterMotor.setVoltage(-voltage.magnitude());
+    middleShooterMotor.setVoltage(voltage.magnitude());
+    rightShooterMotor.setVoltage(-voltage.magnitude());
   }
 
   public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax motor) {
     double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM) * motor.getBusVoltage();
     motor.setVoltage(feedForward.calculate(targetRPM) + pidVoltage);
-
   }
 
   public void updateCurrentSpeed() {
-    for (int i = 0; i < 3; i++) {
-      updateCurrentSpeedOfMotor(encoders[i], motors[i]);
-    }
+    updateCurrentSpeedOfMotor(leftEncoder, leftShooterMotor);
+    // updateCurrentSpeedOfMotor(rightEncoder, rightShooterMotor);
+    // for (int i = 0; i < 3; i++) {
+    //   updateCurrentSpeedOfMotor(encoders[i], motors[i]);
+    // }
   }
 
   public void set(double rpm) {
@@ -105,13 +106,13 @@ public class ShooterSubsystem extends SubsystemBase {
   public void periodic() {
     updateCurrentSpeed();
     SmartDashboard.putData(this);
+    SmartDashboard.putNumber("left RPM", leftEncoder.getVelocity());
+    SmartDashboard.putNumber("middle RPM", middleEncoder.getVelocity());
+    SmartDashboard.putNumber("right RPM", rightEncoder.getVelocity());
   }
 
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {
-    sendableBuilder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
-    sendableBuilder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
-    sendableBuilder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);
     sendableBuilder.addDoubleProperty("target RPM", () -> targetRPM,
         value -> targetRPM = value);
 

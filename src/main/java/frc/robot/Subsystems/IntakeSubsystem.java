@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
@@ -35,11 +36,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
 
-  private Position setPointAngle;
-  private static final Angle kPositionTolerance = Degrees.of(0); // to tune
+  private double setPointAngle;
+  private static final double kPositionTolerance = 1; // to tune
 
   // pivot motor controller
-  private final PIDController pivotMotorController = new PIDController(5, 0, 0); // to tune
+  private final PIDController pivotMotorController = new PIDController(0.45, 0, 0); // to tune
 
   // speed and position enums
   public enum Speed {
@@ -59,18 +60,19 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public enum Position {
     // all of this is to tune
-    STOWED(0),
-    INTAKE(10),
-    AGITATE(70);
+    // pivot motor 180:1
+    STOWED(4),
+    INTAKE(41.85),
+    AGITATE(10);
 
-    private final double degrees;
+    private final double rotations;
 
-    private Position(double degrees) {
-      this.degrees = degrees;
+    private Position(double rotations) {
+      this.rotations = rotations;
     }
 
-    public Angle degrees() {
-      return Degrees.of(degrees);
+    public double rotations() {
+      return rotations;
     }
   }
 
@@ -80,7 +82,6 @@ public class IntakeSubsystem extends SubsystemBase {
     rollerMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     pivotEncoder.setPosition(0);
-
   }
 
   public void set(Speed speed) {
@@ -88,10 +89,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public void set(Position position) {
-    setPointAngle = position;
-    double output = pivotMotorController.calculate(pivotEncoder.getPosition(),
-        (position.degrees().baseUnitMagnitude() % 360) / 360);
-    pivotMotor.setVoltage(output * pivotMotor.getBusVoltage());
+    setPointAngle = position.rotations();
   }
 
   public Command intakeCommand() {
@@ -101,13 +99,20 @@ public class IntakeSubsystem extends SubsystemBase {
           set(Speed.INTAKE);
         },
         () -> set(Speed.STOP));
-  }
+  } 
+
+  public Command returnCommand() {
+    return runOnce(
+        () -> {
+          set(Position.STOWED);
+        });
+  } 
 
   public boolean isPositionWithinTolerance() {
-    final Angle cur = Degrees.of(pivotEncoder.getPosition() * 360);
-    final Angle target = setPointAngle.degrees();
+    final double cur = pivotEncoder.getPosition() * 360;
+    final double target = setPointAngle;
 
-    return cur.isNear(target, kPositionTolerance);
+    return MathUtil.isNear(cur, target, kPositionTolerance);
   }
 
   public Command agitateCommand() {
@@ -127,16 +132,27 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putData(this);
+    SmartDashboard.putNumber("Rotations", pivotEncoder.getPosition());
+    updatePivot();
   }
 
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
-        null);
-    builder.addDoubleProperty("Angle (degrees)", () -> pivotEncoder.getPosition(), null);
-    builder.addDoubleProperty("Pivot Supply Current", () -> pivotMotor.getOutputCurrent(), null);
-    builder.addDoubleProperty("Roller Supply Current", () -> rollerMotor.getOutputCurrent(), null);
-    
+  public void updatePivot() {
+    double output = pivotMotorController.calculate(pivotEncoder.getPosition(),
+        setPointAngle);
+    pivotMotor.setVoltage(output);
   }
+
+  // @Override
+  // public void initSendable(SendableBuilder builder) {
+  // builder.addStringProperty("Command", () -> getCurrentCommand() != null ?
+  // getCurrentCommand().getName() : "null",
+  // null);
+  // builder.addDoubleProperty("Angle (degrees)", () ->
+  // pivotEncoder.getPosition(), null);
+  // builder.addDoubleProperty("Pivot Supply Current", () ->
+  // pivotMotor.getOutputCurrent(), null);
+  // builder.addDoubleProperty("Roller Supply Current", () ->
+  // rollerMotor.getOutputCurrent(), null);
+
+  // }
 }

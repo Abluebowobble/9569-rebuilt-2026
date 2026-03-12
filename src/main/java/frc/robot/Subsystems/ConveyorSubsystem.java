@@ -26,7 +26,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.83); // to tune
+    RUN(0.1); // to tune
 
     private final double percentOutput;
 
@@ -43,8 +43,6 @@ public class ConveyorSubsystem extends SubsystemBase {
   public ConveyorSubsystem() {
     SparkBaseConfig config = new SparkMaxConfig(); // might absstract to parent class?
     motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-    SmartDashboard.putData(this);
   }
 
   public void set(Speed speed) {
@@ -61,13 +59,8 @@ public class ConveyorSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
-    SmartDashboard.putData(this);
+    SmartDashboard.putNumber("current output", motor.getOutputCurrent());
   }
 
-  @Override
-  public void initSendable(SendableBuilder sendableBuilder) {
-    sendableBuilder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : null,
-        null);
-    sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
-  }
+  
 }
