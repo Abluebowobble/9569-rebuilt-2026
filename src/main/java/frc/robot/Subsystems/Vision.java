@@ -53,7 +53,8 @@ public class Vision extends SubsystemBase {
   private final PhotonPoseEstimator PhotonPoseEstimator;
 
   // darrien said: 1.709034 in y and 25.353391 in x
-  private final Transform3d kRobotToCam = new Transform3d(new Translation3d(Inches.of(0), Inches.of(1.709034), Inches.of(25.353391)),
+  private final Transform3d kRobotToCam = new Transform3d(
+      new Translation3d(Inches.of(0), Inches.of(1.709034), Inches.of(25.353391)),
       new Rotation3d(Degrees.of(0), Degrees.of(61.9), Degrees.of(0)));
 
   // swerve related values
@@ -64,7 +65,10 @@ public class Vision extends SubsystemBase {
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
-  /** This object expects a function as an initial parameter. i.e. in yagsl: swerve.addVisionMeasurement()*/
+  /**
+   * This object expects a function as an initial parameter. i.e. in yagsl:
+   * swerve.addVisionMeasurement()
+   */
   public Vision(EstimateConsumer consumer) {
     this.consumer = consumer;
     camera = new PhotonCamera("camera");
@@ -96,7 +100,8 @@ public class Vision extends SubsystemBase {
 
     for (var result : camera.getAllUnreadResults()) {
 
-      // process estimated pose using multitags, use lowest ambiguity pose as fall back
+      // process estimated pose using multitags, use lowest ambiguity pose as fall
+      // back
       visionEstimate = PhotonPoseEstimator.estimateCoprocMultiTagPose(result);
       if (visionEstimate.isEmpty()) {
         visionEstimate = PhotonPoseEstimator.estimateLowestAmbiguityPose(result);

@@ -16,56 +16,58 @@ import frc.robot.Subsystems.Vision;
 
 public class GeneralRobotCommands {
 
-    Vision vision;
     SwerveSubsystem swerveSubsystem;
     ShooterSubsystem shooterSubsystem;
     IntakeSubsystem intakeSubsystem;
-    HoodSubsystem hoodSubsystem;
+    // HoodSubsystem hoodSubsystem;
     FeederSubsystem feederSubsystem;
     ConveyorSubsystem conveyorSubsystem;
-    DoubleSupplier leftXSupplier;
+
     DoubleSupplier leftYSupplier;
+    DoubleSupplier leftXSupplier;
+
     Command operatorSwerveDefaulCommand;
 
-    public GeneralRobotCommands(Vision vision, SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
-            IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
-            ConveyorSubsystem conveyorSubsystem, DoubleSupplier leftXSupplier, DoubleSupplier leftYSupplier,
+    public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
+            IntakeSubsystem intakeSubsystem, FeederSubsystem feederSubsystem,
+            ConveyorSubsystem conveyorSubsystem, DoubleSupplier leftYSupplier, DoubleSupplier leftXSupplier,
             Command operatorSwerveDefaulCommand) {
-        this.vision = vision;
         this.swerveSubsystem = swerveSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.intakeSubsystem = intakeSubsystem;
-        this.hoodSubsystem = hoodSubsystem;
+        // this.hoodSubsystem = hoodSubsystem;
         this.feederSubsystem = feederSubsystem;
         this.conveyorSubsystem = conveyorSubsystem;
-        this.leftXSupplier = leftXSupplier;
+
         this.leftYSupplier = leftYSupplier;
+        this.leftXSupplier = leftXSupplier;
+
         this.operatorSwerveDefaulCommand = operatorSwerveDefaulCommand;
     }
 
-    public Command AimAndShootCommand() {
-        AimCommand aimCommand = new AimCommand(swerveSubsystem, leftXSupplier, leftYSupplier,
-                operatorSwerveDefaulCommand);
-        PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-                () -> swerveSubsystem.getPose());
+    // public Command AimAndShootCommand() {
+    //     AimCommand aimCommand = new AimCommand(swerveSubsystem, leftYSupplier, leftXSupplier,
+    //             operatorSwerveDefaulCommand);
+    //     PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    //             () -> swerveSubsystem.getPose());
 
-        return Commands.deadline(
-                Commands.waitUntil(() -> swerveSubsystem.isAimed()
-                        && prepareShooterCommand.isReadyToShoot())
-                        .andThen(feed()),
-                aimCommand,
-                Commands.waitSeconds(0.25).andThen(prepareShooterCommand));
-    }
+    //     return Commands.deadline(
+    //             Commands.waitUntil(() -> swerveSubsystem.isAimed()
+    //                     && prepareShooterCommand.isReadyToShoot())
+    //                     .andThen(feed()),
+    //             aimCommand,
+    //             Commands.waitSeconds(0.25).andThen(prepareShooterCommand));
+    // }
 
-    public Command autoShooterNoAimCommand() {
-        PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-                () -> swerveSubsystem.getPose());
+    // public Command autoShooterNoAimCommand() {
+    //     PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    //             () -> swerveSubsystem.getPose());
 
-        Command feedWhenReady = Commands.waitUntil(prepareShooterCommand::isReadyToShoot)
-                .andThen(feed());
+    //     Command feedWhenReady = Commands.waitUntil(prepareShooterCommand::isReadyToShoot)
+    //             .andThen(feed());
 
-        return Commands.parallel(prepareShooterCommand, feedWhenReady);
-    }
+    //     return Commands.parallel(prepareShooterCommand, feedWhenReady);
+    // }
 
     private Command feed() {
         return Commands.sequence(

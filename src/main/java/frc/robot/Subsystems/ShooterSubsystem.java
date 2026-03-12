@@ -45,7 +45,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
 
   private static final double kVelocityTolerance = 1; // if current RPM is within desired RPM +- velocity tolerance,
-                                                        // then its within tolerance
+                                                      // then its within tolerance
+  private static final double kRPMShooter = 1;
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
   // for tuning
@@ -73,18 +74,24 @@ public class ShooterSubsystem extends SubsystemBase {
     rightShooterMotor.setVoltage(voltage.magnitude());
   }
 
-  /** updates speed of given motor via pidf, requires RelativeEncoder encoder, SparkMax motor */
+  /**
+   * updates speed of given motor via pidf, requires RelativeEncoder encoder,
+   * SparkMax motor
+   */
   public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax motor) {
     double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM) * motor.getBusVoltage();
     motor.setVoltage(feedForward.calculate(targetRPM) + pidVoltage);
   }
 
-  /** This function updates the rpm based on the value in smart dashboard. Updates each motor separately. */
+  /**
+   * This function updates the rpm based on the value in smart dashboard. Updates
+   * each motor separately.
+   */
   public void updateSpeedWithSmartDashboard() {
     targetL = SmartDashboard.getNumber("Left Pivot RPM", 0);
     targetM = SmartDashboard.getNumber("Middle Pivot RPM", 0);
     targetR = SmartDashboard.getNumber("Right Pivot RPM", 0);
-    double[] targets = {targetL, targetM, targetR};
+    double[] targets = { targetL, targetM, targetR };
 
     for (int i = 0; i < 3; i++) {
       double pidVoltage = controller.calculate(encoders[i].getVelocity(), targets[i]) * motors[i].getBusVoltage();
@@ -99,7 +106,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
   }
 
-  /** set target RPM for all motors  */
+  /** set target RPM for all motors */
   public void set(double rpm) {
     targetRPM = rpm;
   }
@@ -125,6 +132,11 @@ public class ShooterSubsystem extends SubsystemBase {
   public Command runCommand(double rpm) {
     return runOnce(() -> set(rpm))
         .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+  }
+
+  public Command runCommand() {
+    return runCommand(kRPMShooter)
+      .handleInterrupt(() -> set(0));
   }
 
   @Override

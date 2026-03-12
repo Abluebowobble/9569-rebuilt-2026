@@ -33,18 +33,18 @@ public class AimCommand extends Command {
     private final SwerveSubsystem swerve;
     private boolean poseWarningIssued = false;
     private double rotationalVelocity;
-    private DoubleSupplier leftXSupplier;
     private DoubleSupplier leftYSupplier;
+    private DoubleSupplier leftXSupplier;
     private Command operatorSwerveDefaulCommand;
 
     private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
 
     /** Creates a new AimAndDriveCommand. */
-    public AimCommand(SwerveSubsystem s, DoubleSupplier leftXSupplier, DoubleSupplier leftYSupplier,
+    public AimCommand(SwerveSubsystem s, DoubleSupplier leftYSupplier, DoubleSupplier leftXSupplier,
             Command operatorSwerveDefaulCommand) {
         this.swerve = s;
-        this.leftXSupplier = leftXSupplier;
         this.leftYSupplier = leftYSupplier;
+        this.leftXSupplier = leftXSupplier;
         this.operatorSwerveDefaulCommand = operatorSwerveDefaulCommand;
 
         // Use addRequirements() here to declare subsystem dependencies.
@@ -72,7 +72,10 @@ public class AimCommand extends Command {
                 && y <= LandMarks.fieldWidth + kPoseEdgeMarginMeters;
     }
 
-    /** sketchy asf would not trust, needs limit on angular velocity and linear velocity */
+    /**
+     * sketchy asf would not trust, needs limit on angular velocity and linear
+     * velocity
+     */
     public double rotation() {
         final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
         final Time elapsedTime = currentTime.minus(lastUpdateTime);
@@ -93,12 +96,14 @@ public class AimCommand extends Command {
         if (pose == null) {
             return false;
         }
+        
         final Translation2d translation = pose.getTranslation();
         final double x = translation.getX();
         final double y = translation.getY();
         if (!Double.isFinite(x) || !Double.isFinite(y)) {
             return false;
         }
+
         return x >= -kPoseEdgeMarginMeters
                 && x <= LandMarks.fieldLength + kPoseEdgeMarginMeters
                 && y >= -kPoseEdgeMarginMeters
@@ -131,7 +136,8 @@ public class AimCommand extends Command {
                 .deadband(OperatorConstants.DEADBAND)
                 .scaleTranslation(0.8)
                 .allianceRelativeControl(true);
-        Command driveFieldOrientedAutoHeadingAnglularVelocity = swerve.driveFieldOriented(driveAutoHeadingAngularVelocity);
+        Command driveFieldOrientedAutoHeadingAnglularVelocity = swerve
+                .driveFieldOriented(driveAutoHeadingAngularVelocity);
         // override default command
         swerve.setDefaultCommand(driveFieldOrientedAutoHeadingAnglularVelocity);
     }
