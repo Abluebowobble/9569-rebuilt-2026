@@ -91,7 +91,8 @@ public class RobotContainer {
   }
 
   public void compBindings() {
-
+    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
   }
 
   public Command getAutonomousCommand() {
