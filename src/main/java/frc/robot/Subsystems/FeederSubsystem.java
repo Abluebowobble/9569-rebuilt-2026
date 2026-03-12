@@ -23,8 +23,8 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.7), // to tune
-    REVERSE(-0.7); // to tune
+    RUN(0.7),
+    REVERSE(-0.7);
 
     private final double percentOutput;
 
@@ -43,22 +43,27 @@ public class FeederSubsystem extends SubsystemBase {
     motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
+  /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
   }
 
+  /** sets speed given Voltage volts */
   public void set(Voltage volts) {
     motor.setVoltage(volts);
   }
 
+  /** given parameter 0-1, sets percentage output of motor */
   public void setPercentageOutput(double percentage) {
     motor.setVoltage(percentage * motor.getBusVoltage());
   }
 
+  /** set to forward speed enum on start, stop on end */
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
 
+  /** set to reverse speed enum on start, stop on end*/
   public Command reverseCommand() {
     return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
   }

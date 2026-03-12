@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -45,27 +48,26 @@ public class Vision extends SubsystemBase {
   public static final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
       .loadField(AprilTagFields.k2026RebuiltAndymark);
 
-  // Cameras
+  // Photon related values
   private final PhotonCamera camera;
-
-  private final Transform3d kRobotToCam = new Transform3d(new Translation3d(0, 0, 0),
-      new Rotation3d(0, 0, 0));
-
   private final PhotonPoseEstimator PhotonPoseEstimator;
 
+  // darrien said: 1.709034 in y and 25.353391 in x
+  private final Transform3d kRobotToCam = new Transform3d(new Translation3d(Inches.of(0), Inches.of(1.709034), Inches.of(25.353391)),
+      new Rotation3d(Degrees.of(0), Degrees.of(61.9), Degrees.of(0)));
+
+  // swerve related values
+  private final EstimateConsumer consumer;
   private Matrix<N3, N1> curStdDevs;
 
-  private final EstimateConsumer consumer;
-
+  // confidence based on different states of vision
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
-  /** Creates a new Vision. Pass in method that will use data */
+  /** This object expects a function as an initial parameter. i.e. in yagsl: swerve.addVisionMeasurement()*/
   public Vision(EstimateConsumer consumer) {
     this.consumer = consumer;
-
     camera = new PhotonCamera("camera");
-
     PhotonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kRobotToCam);
   }
 
@@ -75,6 +77,7 @@ public class Vision extends SubsystemBase {
     useBestCameraResults();
   }
 
+  /** Gets latest april tags stored in pipeline */
   private List<PhotonTrackedTarget> updateTargets() {
     List<PhotonTrackedTarget> targets = new ArrayList<>();
 
@@ -87,20 +90,27 @@ public class Vision extends SubsystemBase {
     return targets;
   }
 
+  /** Makes the given consumer use camera results for telemetry */
   private void useBestCameraResults() {
     Optional<EstimatedRobotPose> visionEstimate = Optional.empty();
+
     for (var result : camera.getAllUnreadResults()) {
+
+      // process estimated pose using multitags, use lowest ambiguity pose as fall back
       visionEstimate = PhotonPoseEstimator.estimateCoprocMultiTagPose(result);
       if (visionEstimate.isEmpty()) {
         visionEstimate = PhotonPoseEstimator.estimateLowestAmbiguityPose(result);
       }
 
+      // update confidence
       updateEstimationStdDevs(visionEstimate, result.getTargets());
     }
 
+    // feed values to swerve
     consumer.accept(visionEstimate.get().estimatedPose.toPose2d(), visionEstimate.get().timestampSeconds, curStdDevs);
   }
 
+  /** updates our current confidence in the reliability of the vision */
   private void updateEstimationStdDevs(
       Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {

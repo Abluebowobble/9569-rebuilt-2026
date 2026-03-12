@@ -5,11 +5,14 @@
 package frc.robot;
 
 import java.io.File;
+import java.util.function.DoubleSupplier;
+
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.reduxrobotics.canand.CanandEventLoop;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Commands.GeneralRobotCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -21,32 +24,37 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
+import frc.robot.Subsystems.Vision;
 import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
+import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
 
 public class RobotContainer {
 
   // controllers
-  private final CommandPS5Controller ps5Controller = new CommandPS5Controller(0);
-  private final CommandXboxController xboxController = new CommandXboxController(1);
+  private final CommandPS5Controller ps5Controller = new CommandPS5Controller(OperatorConstants.DRIVER_1_CONTROLLER_PORT);
+  private final CommandXboxController xboxController = new CommandXboxController(OperatorConstants.DRIVER_2_CONTROLLER_PORT);
+
+  DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
+  DoubleSupplier leftYSupplier = () -> ps5Controller.getLeftY() * -1;
 
   // subsystems
-  private final SwerveSubsystem driveBase = new SwerveSubsystem();
+  private final SwerveSubsystem swerve = new SwerveSubsystem();
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled
    * by angular velocity.
    */
-  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(driveBase.getSwerveDrive(),
-      () -> ps5Controller.getLeftY() * -1,
-      () -> ps5Controller.getLeftX() * -1)
+  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(swerve.getSwerveDrive(),
+      leftYSupplier,
+      leftXSupplier)
       .withControllerRotationAxis(ps5Controller::getRightX)
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
 
-  SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(driveBase.getSwerveDrive(),
+  SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(swerve.getSwerveDrive(),
       () -> -ps5Controller.getLeftY(),
       () -> -ps5Controller.getLeftX())
       .withControllerRotationAxis(() -> ps5Controller.getRawAxis(
@@ -76,13 +84,18 @@ public class RobotContainer {
       .translationHeadingOffset(Rotation2d.fromDegrees(
           0));
 
-  Command driveFieldOrientedAnglularVelocity = driveBase.driveFieldOriented(driveAngularVelocity);
-  Command driveFieldOrientedDirectAngleKeyboard = driveBase.driveFieldOriented(driveDirectAngleKeyboard);
+  Command driveFieldOrientedAnglularVelocity = swerve.driveFieldOriented(driveAngularVelocity);
+  Command driveFieldOrientedDirectAngleKeyboard = swerve.driveFieldOriented(driveDirectAngleKeyboard);
 
   IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   FeederSubsystem feederSubsystem = new FeederSubsystem();
   ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+
+  GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(vision, swerveSubsystem, shooterSubsystem,
+            intakeSubsystem, hoodSubsystem, feederSubsystem,
+            conveyorSubsystem, leftSupplier, rightSupplier,
+            Command operatorSwerveDefaulCommand);
 
   public RobotContainer() {
     CanandEventLoop.getInstance();
@@ -91,21 +104,26 @@ public class RobotContainer {
 
   private void configureBindings() {
     if (RobotBase.isSimulation()) {
-      driveBase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
+      swerve.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
     } else {
-      driveBase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+      swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     }
 
-    ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
-    ps5Controller.circle().onTrue(intakeSubsystem.returnCommand());
-    ps5Controller.cross().whileTrue(intakeSubsystem.agitateCommand());
-    ps5Controller.square().whileTrue(shooterSubsystem.runCommand(0.1));
+    // ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
+    // ps5Controller.circle().onTrue(intakeSubsystem.returnCommand());
+    // ps5Controller.cross().whileTrue(intakeSubsystem.agitateCommand());
+    // ps5Controller.square().whileTrue(shooterSubsystem.runCommand(0.1));
+
+
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
     // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
   }
-
+  
+  public void compBindings() {
+    ps5Controller.L2().
+  }
   public Command getAutonomousCommand() {
-    return driveBase.driveToPose(new Pose2d(Meter.of(0.2), Meter.of(0), new Rotation2d(0)));
+    return swerve.driveToPose(new Pose2d(Meter.of(0.2), Meter.of(0), new Rotation2d(0)));
   }
 }

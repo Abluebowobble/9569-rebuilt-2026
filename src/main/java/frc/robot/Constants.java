@@ -6,32 +6,49 @@ package frc.robot;
 
 import java.util.HashMap;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Degrees;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Velocity;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide
+ * numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants
+ * should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * <p>
+ * It is advised to statically import this class (or one of its inner classes)
+ * wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
   public static class OperatorConstants {
-    public static final int kDriverControllerPort = 2;
-    public static final double DEADBAND = 0.1; 
-    public static final double TURN_FACTOR = 0.5; 
+    public static final int DRIVER_1_CONTROLLER_PORT = 0;
+    public static final int DRIVER_2_CONTROLLER_PORT = 1;
+    public static final double DEADBAND = 0.1;
+    public static final double TURN_FACTOR = 0.5;
   }
+
   public static class SwerveConstants {
     public static final double MAX_SPEED = Units.feetToMeters(10.5);;
-    public static final double SCALE_TRANSLATION = 1; 
+    public static final double SCALE_TRANSLATION = 1;
+    public static final LinearVelocity MAX_SWERVE_VELOCITY = Meters.of(2).per(Second);
+    public static final Angle AIM_TOLERANCE = Degrees.of(5);
   }
+
   public static class HardwareMap {
 
     // NEO
-    public static final int INTAKE_ROLLER = 40; //
+    public static final int INTAKE_ROLLER = 0; //
     public static final int INTAKE_PIVOT = 9;
     public static final int CONVEYOR = 14;
     public static final int FEEDER = 15;
@@ -40,7 +57,7 @@ public final class Constants {
     public static final int SHOOTER_RIGHT = 13;
 
     // PWM
-    public static final int ACTUATOR_LEFT = 50;
-    public static final int ACTUATOR_RIGHT = 51;
+    public static final int ACTUATOR_LEFT = 2;
+    public static final int ACTUATOR_RIGHT = 3;
   }
 }

@@ -45,14 +45,17 @@ public class ConveyorSubsystem extends SubsystemBase {
     motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
+  /** sets speed based on speed enum in percentage output*/
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
   }
 
+  /** set speed given a percentage output*/
   public void setPercentageOutput(double percentage) {
     motor.setVoltage(percentage * motor.getBusVoltage());
   }
 
+  /** runs the conveyor, stops on end */
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }

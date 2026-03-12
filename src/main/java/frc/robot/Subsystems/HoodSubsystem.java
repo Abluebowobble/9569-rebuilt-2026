@@ -25,19 +25,18 @@ public class HoodSubsystem extends SubsystemBase {
     private static final double kMaxPosition = 0;
     private static final double kPositionTolerance = 0;
 
+    // sets current position and setpoint
     private double currentPosition = 0.5;
     private double targetPosition = 0.5;
-
-    private static final Distance kServoLength = Millimeters.of(100);
-    private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
 
     // servos
     private final Servo leftServo;
     private final Servo rightServo;
 
     // time tracker
-    private Time lastUpdateTime = Seconds.of(0);
-
+    private static final Distance kServoLength = Millimeters.of(100);
+    private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
+    private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
 
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
@@ -47,30 +46,41 @@ public class HoodSubsystem extends SubsystemBase {
         leftServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
+        // move hood to 50% on initialization
         setPosition(currentPosition);
+
+        // adds value for SmartDashboard update function
+        SmartDashboard.putNumber("Set Target Position", 0.5);
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /**
+     * Expects a position between 0.0 and 1.0, sets position to given percentage
+     * position
+     */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
+
         leftServo.set(clampedPosition);
         rightServo.set(clampedPosition);
+
         targetPosition = clampedPosition;
-
-        SmartDashboard.putData(this);
-
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /**
+     * Expects a position between 0.0 and 1.0, sets the position to given value and
+     * ends when position is within tolerance
+     */
     public Command setCommand(double position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
+    /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
         return MathUtil.isNear(targetPosition, currentPosition, kPositionTolerance);
     }
 
+    /** updates position with slew */
     private void updateCurrentPosition() {
         final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
         final Time elapsedTime = currentTime.minus(lastUpdateTime);
@@ -90,16 +100,19 @@ public class HoodSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // slew
         updateCurrentPosition();
-        SmartDashboard.putData(this);
+
+        // uncomment below to update hood based on smartdashboard
+        // updateSpeedWithSmartDashboard();
+
+        // telemetry
+        SmartDashboard.putNumber("Current Position", currentPosition);
+        SmartDashboard.putNumber("Target Position", targetPosition);
     }
 
-    @Override
-    public void initSendable(SendableBuilder sendableBuilder) {
-        sendableBuilder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
-                null);
-        sendableBuilder.addDoubleProperty("Current Position", () -> currentPosition, null);
-        sendableBuilder.addDoubleProperty("Target Position", () -> targetPosition, value -> setPosition(value));
-        
+    public void updateSpeedWithSmartDashboard() {
+        setPosition(SmartDashboard.getNumber("Set Target Position", currentPosition));
     }
+
 }

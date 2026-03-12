@@ -4,8 +4,8 @@
 
 package frc.robot.Subsystems;
 
-import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meter;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +14,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import org.dyn4j.geometry.Rotation;
-import org.photonvision.PhotonCamera;
-import org.photonvision.targeting.PhotonPipelineResult;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -29,10 +25,8 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
-import frc.robot.Constants;
-import frc.robot.Constants.SwerveConstants;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -40,7 +34,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -51,11 +44,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.SwerveConstants;
+import frc.robot.LandMarks;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
-
-import com.pathplanner.lib.auto.AutoBuilder;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -70,8 +63,11 @@ public class SwerveSubsystem extends SubsystemBase {
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
 
+    // checks alliance
     boolean blueAlliance = DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Blue;
+
+    // sets starting pose based on alliance
     Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(0),
         Meter.of(0)),
         Rotation2d.fromDegrees(0))
@@ -79,28 +75,26 @@ public class SwerveSubsystem extends SubsystemBase {
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
 
+    // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
       swerveDrive = new SwerveParser(directory).createSwerveDrive(SwerveConstants.MAX_SPEED, startingPose);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    // Correct for skew that gets worse as angular velocity increases. Start with a
+    // coefficient of 0.1.
     swerveDrive.setAngularVelocityCompensation(true,
         true,
-        0.1); // Correct for skew that gets worse as angular velocity increases. Start with a
-              // coefficient of 0.1.
+        0.1);
+
+    // resynchronize absolute encoders and motor encoders periodically when they are
+    // not moving
     swerveDrive.setModuleEncoderAutoSynchronize(false,
-        1); // resynchronize absolute encoders and motor encoders periodically when they are
-            // not moving
+        1);
 
     setupPathPlanner();
-
-    // SmartDashboard.putData(this);
-    // SmartDashboard.putData("swerve + photon field", field);
-    // // Command name
-    // SmartDashboard.putString(
-    // "Command",
-    // getCurrentCommand() != null ? getCurrentCommand().getName() : "null");
 
     // Module absolute positions
 
@@ -108,12 +102,9 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
 
-    // SmartDashboard.putNumber("Robot X", currentPose.getTranslation().getX());
-    // SmartDashboard.putNumber("Robot Y", currentPose.getTranslation().getY());
-    // SmartDashboard.putNumber("Robot Heading (deg)",
-    // currentPose.getRotation().getDegrees());
   }
 
+  /** sets up path planner */
   public void setupPathPlanner() {
     RobotConfig config;
     try {
@@ -176,6 +167,9 @@ public class SwerveSubsystem extends SubsystemBase {
     PathfindingCommand.warmupCommand().schedule();
   }
 
+  /**
+   * sets swervedrive to at a given velocity, parameters: ChassisSpeeds velocity
+   */
   public void drive(ChassisSpeeds velocity) {
     swerveDrive.drive(velocity);
   }
@@ -195,16 +189,6 @@ public class SwerveSubsystem extends SubsystemBase {
     return fieldOrientedHeading;
   }
 
-  public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, Rotation2d angle) {
-    Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
-
-    return swerveDrive.swerveController.getTargetSpeeds(scaledInputs.getX(),
-        scaledInputs.getY(),
-        angle.getRadians(),
-        getHeading().getRadians(),
-        SwerveConstants.MAX_SPEED);
-  }
-
   public void resetOdometry(Pose2d initialHolonomicPose) {
     swerveDrive.resetOdometry(initialHolonomicPose);
   }
@@ -221,6 +205,44 @@ public class SwerveSubsystem extends SubsystemBase {
     return getPose().getRotation();
   }
 
+  public boolean isAimed() {
+    return MathUtil.isNear(getTargetHeadingInOperatorPerspective().getDegrees(),
+        getHeadingInOperaturPerspective().getDegrees(),
+        SwerveConstants.AIM_TOLERANCE.magnitude(), -360, 360);
+  }
+
+  private Rotation2d getHeadingInOperaturPerspective() {
+    final Rotation2d currentHeadingInBlueAlliancePerspective = swerveDrive.getPose().getRotation();
+    final Rotation2d currentHeadingInOperatorPerspective = currentHeadingInBlueAlliancePerspective
+        .minus(getOperatorForwardDirection());
+
+    return currentHeadingInOperatorPerspective;
+  }
+
+  public Rotation2d getTargetHeadingInOperatorPerspective() {
+    return getTargetHeadingInFieldFrame().minus(getOperatorForwardDirection());
+  }
+
+  public String aimSuggestion() {
+    if (isAimed()) {
+      return "Aimed!";
+    }
+    
+    Rotation2d headingInOperatorPerspective = getHeadingInOperaturPerspective();
+    Rotation2d targetHeading = getTargetHeadingInOperatorPerspective();
+    
+    // implement 
+    return "";
+  }
+
+  public Rotation2d getTargetHeadingInFieldFrame() {
+    final Translation2d hubPosition = LandMarks.hubPosition();
+    final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
+
+    return hubPosition.minus(robotPosition).getAngle();
+  }
+
+  /** drives to a given pose2d */
   public Command driveToPose(Pose2d pose) {
     // Create the constraints to use while pathfinding
     PathConstraints constraints = new PathConstraints(
@@ -234,6 +256,7 @@ public class SwerveSubsystem extends SubsystemBase {
     );
   }
 
+  /** centers all 4 modules to heading 0 */
   public Command centerModulesCommand() {
     return run(() -> Arrays.asList(swerveDrive.getModules())
         .forEach(it -> it.setAngle(0.0)));
@@ -243,6 +266,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return swerveDrive.getRobotVelocity();
   }
 
+  /** drives robot given joystick left x, left y, and right x values */
   public Command driveCommand(DoubleSupplier translationX, DoubleSupplier translationY,
       DoubleSupplier angularRotationX) {
     return run(() -> {
@@ -256,6 +280,7 @@ public class SwerveSubsystem extends SubsystemBase {
     });
   }
 
+  /** sets swerve to drive field oriented, updates as velocity updates */
   public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
     return run(() -> {
       swerveDrive.driveFieldOriented(velocity.get());
@@ -308,10 +333,25 @@ public class SwerveSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
 
+    // telemetry
     SmartDashboard.putNumber("Module 1 (abs)", swerveDrive.getModules()[0].getAbsolutePosition());
     SmartDashboard.putNumber("Module 2 (new)", swerveDrive.getModules()[1].getAbsoluteEncoder().getAbsolutePosition());
     SmartDashboard.putNumber("Module 3 (abs)", swerveDrive.getModules()[2].getRawAbsolutePosition());
     SmartDashboard.putNumber("Module 4 (new)", swerveDrive.getModules()[3].getAbsoluteEncoder().getAbsolutePosition());
+
+    // field2d
+    Pose2d currentPose = swerveDrive.getPose();
+    field.setRobotPose(currentPose);
+    SmartDashboard.putData("swerve + photon field", field);
+
+    // odometry
+    SmartDashboard.putNumber("Robot X", currentPose.getTranslation().getX());
+    SmartDashboard.putNumber("Robot Y", currentPose.getTranslation().getY());
+    SmartDashboard.putNumber("Robot Heading (deg)",
+        currentPose.getRotation().getDegrees());
+
+    // telemetry for manual aim
+    SmartDashboard.putBoolean("Is Aimed?", isAimed());
   }
 
   public void addVisionMeasurement(
