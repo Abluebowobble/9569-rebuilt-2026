@@ -26,18 +26,13 @@ public class HoodSubsystem extends SubsystemBase {
     private static final double kPositionTolerance = 0;
 
     // sets current position and setpoint
-    private double currentPosition = 0.5;
+    private static final double kStartingPosition = 0.5;
     private double targetPosition = 0.5;
 
     // servos
     private final Servo leftServo;
     private final Servo rightServo;
-
-    // time tracker
-    private static final Distance kServoLength = Millimeters.of(100);
-    private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
-    private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
-
+    
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
         rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
@@ -47,7 +42,7 @@ public class HoodSubsystem extends SubsystemBase {
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
         // move hood to 50% on initialization
-        setPosition(currentPosition);
+        setPosition(kStartingPosition);
 
         // adds value for SmartDashboard update function
         SmartDashboard.putNumber("Set Target Position", 0.5);
@@ -77,42 +72,20 @@ public class HoodSubsystem extends SubsystemBase {
 
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, currentPosition, kPositionTolerance);
-    }
-
-    /** updates position with slew */
-    private void updateCurrentPosition() {
-        final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
-        final Time elapsedTime = currentTime.minus(lastUpdateTime);
-        lastUpdateTime = currentTime;
-
-        if (isPositionWithinTolerance()) {
-            currentPosition = targetPosition;
-            return;
-        }
-
-        final Distance maxDistanceTraveled = kMaxServoSpeed.times(elapsedTime);
-        final double maxPercentageTraveled = maxDistanceTraveled.div(kServoLength).in(Value);
-        currentPosition = targetPosition > currentPosition
-                ? Math.min(targetPosition, currentPosition + maxPercentageTraveled)
-                : Math.max(targetPosition, currentPosition - maxPercentageTraveled);
+        return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);
     }
 
     @Override
     public void periodic() {
-        // slew
-        updateCurrentPosition();
-
         // uncomment below to update hood based on smartdashboard
         // updateSpeedWithSmartDashboard();
 
         // telemetry
-        SmartDashboard.putNumber("Current Position", currentPosition);
+        SmartDashboard.putNumber("Current Position", leftServo.getPosition());
         SmartDashboard.putNumber("Target Position", targetPosition);
     }
 
     public void updateSpeedWithSmartDashboard() {
-        setPosition(SmartDashboard.getNumber("Set Target Position", currentPosition));
+        setPosition(SmartDashboard.getNumber("Set Target Position", targetPosition));
     }
-
 }

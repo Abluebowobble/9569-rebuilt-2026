@@ -41,7 +41,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   /** Creates a new ConveyorSubsystem. */
   public ConveyorSubsystem() {
-    SparkBaseConfig config = new SparkMaxConfig(); // might absstract to parent class?
+    SparkBaseConfig config = new SparkMaxConfig(); 
     motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 

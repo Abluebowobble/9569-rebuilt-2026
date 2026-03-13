@@ -46,13 +46,15 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   // pidf
-  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0.15, 0.19, 0.58); // to tune
+  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0, 0); // 0.15, 0.19, 0.58)
   private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
+    private double targetRPM = 0; // desired RPM we want the wheels to turn at
+
 
   private static final double kVelocityTolerance = 1; // if current RPM is within desired RPM +- velocity tolerance,
                                                       // then its within tolerance
   private static final double kRPMShooter = 1;
-  private double targetRPM = 0; // desired RPM we want the wheels to turn at
+
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {

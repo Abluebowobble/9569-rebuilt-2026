@@ -70,7 +70,6 @@ public class RobotContainer {
       driveFieldOrientedAnglularVelocity);
 
   public RobotContainer() {
-    CanandEventLoop.getInstance();
 
     // NamedCommands.registerCommand("FeedCommand", GeneralRobotCommands.feed());
 
@@ -93,6 +92,11 @@ public class RobotContainer {
   public void compBindings() {
     ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feed());
+
+    xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
+    xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
+    xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
+    xboxController.rightTrigger().whileTrue(intakeSubsystem.agitatePivotCommand());
   }
 
   public Command getAutonomousCommand() {
@@ -100,10 +104,12 @@ public class RobotContainer {
   }
 
   public Command testDriveForwardAuton() {
-    return swerve.driveToPose(new Pose2d(Meter.of(0.2), Meter.of(0), new Rotation2d(0)));
+    return swerve.driveToPose(new Pose2d(Meter.of(2.47), Meter.of(4), new Rotation2d(0)));
   }
 
   public Command testSpinAuton() {
     return swerve.driveToPose(new Pose2d(Meter.of(0), Meter.of(0), new Rotation2d(Degree.of(90))));
   }
+
+  
 }
