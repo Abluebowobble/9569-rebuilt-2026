@@ -33,18 +33,14 @@ public class AimCommand extends Command {
     private final SwerveSubsystem swerve;
     private boolean poseWarningIssued = false;
     private double rotationalVelocity;
-    private DoubleSupplier leftYSupplier;
-    private DoubleSupplier leftXSupplier;
     private Command operatorSwerveDefaulCommand;
 
     private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
 
     /** Creates a new AimAndDriveCommand. */
-    public AimCommand(SwerveSubsystem s, DoubleSupplier leftYSupplier, DoubleSupplier leftXSupplier,
+    public AimCommand(SwerveSubsystem s,
             Command operatorSwerveDefaulCommand) {
         this.swerve = s;
-        this.leftYSupplier = leftYSupplier;
-        this.leftXSupplier = leftXSupplier;
         this.operatorSwerveDefaulCommand = operatorSwerveDefaulCommand;
 
         // Use addRequirements() here to declare subsystem dependencies.
@@ -75,6 +71,8 @@ public class AimCommand extends Command {
     /**
      * sketchy asf would not trust, needs limit on angular velocity and linear
      * velocity
+     * 
+     * added slew?
      */
     public double rotation() {
         final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
@@ -96,14 +94,13 @@ public class AimCommand extends Command {
         if (pose == null) {
             return false;
         }
-        
         final Translation2d translation = pose.getTranslation();
         final double x = translation.getX();
         final double y = translation.getY();
         if (!Double.isFinite(x) || !Double.isFinite(y)) {
             return false;
         }
-
+        
         return x >= -kPoseEdgeMarginMeters
                 && x <= LandMarks.fieldLength + kPoseEdgeMarginMeters
                 && y >= -kPoseEdgeMarginMeters
@@ -125,26 +122,13 @@ public class AimCommand extends Command {
 
     @Override
     public void initialize() {
-        poseWarningIssued = false;
-        ensurePoseValidWithWarning();
 
-        // create swerve input stream for aim command
-        SwerveInputStream driveAutoHeadingAngularVelocity = SwerveInputStream.of(swerve.getSwerveDrive(),
-                leftYSupplier,
-                leftXSupplier)
-                .withControllerRotationAxis(this::rotation)
-                .deadband(OperatorConstants.DEADBAND)
-                .scaleTranslation(0.8)
-                .allianceRelativeControl(true);
-        Command driveFieldOrientedAutoHeadingAnglularVelocity = swerve
-                .driveFieldOriented(driveAutoHeadingAngularVelocity);
-        // override default command
-        swerve.setDefaultCommand(driveFieldOrientedAutoHeadingAnglularVelocity);
+        swerve.driveToPose(new Pose2d(swerve.getPose().getX(), swerve.getPose().getY(), swerve.getTargetHeadingInFieldFrame()));
     }
 
     @Override
     public boolean isFinished() {
-        return !ensurePoseValidWithWarning();
+        return swerve.isAimed();
     }
 
     @Override

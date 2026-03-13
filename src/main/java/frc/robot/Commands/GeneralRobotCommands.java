@@ -46,35 +46,48 @@ public class GeneralRobotCommands {
     }
 
     // public Command AimAndShootCommand() {
-    //     AimCommand aimCommand = new AimCommand(swerveSubsystem, leftYSupplier, leftXSupplier,
-    //             operatorSwerveDefaulCommand);
-    //     PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-    //             () -> swerveSubsystem.getPose());
+    // AimCommand aimCommand = new AimCommand(swerveSubsystem, leftYSupplier,
+    // leftXSupplier,
+    // operatorSwerveDefaulCommand);
+    // PrepareShooterCommand prepareShooterCommand = new
+    // PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    // () -> swerveSubsystem.getPose());
 
-    //     return Commands.deadline(
-    //             Commands.waitUntil(() -> swerveSubsystem.isAimed()
-    //                     && prepareShooterCommand.isReadyToShoot())
-    //                     .andThen(feed()),
-    //             aimCommand,
-    //             Commands.waitSeconds(0.25).andThen(prepareShooterCommand));
+    // return Commands.deadline(
+    // Commands.waitUntil(() -> swerveSubsystem.isAimed()
+    // && prepareShooterCommand.isReadyToShoot())
+    // .andThen(feed()),
+    // aimCommand,
+    // Commands.waitSeconds(0.25).andThen(prepareShooterCommand));
     // }
 
     // public Command autoShooterNoAimCommand() {
-    //     PrepareShooterCommand prepareShooterCommand = new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-    //             () -> swerveSubsystem.getPose());
+    // PrepareShooterCommand prepareShooterCommand = new
+    // PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    // () -> swerveSubsystem.getPose());
 
-    //     Command feedWhenReady = Commands.waitUntil(prepareShooterCommand::isReadyToShoot)
-    //             .andThen(feed());
+    // Command feedWhenReady =
+    // Commands.waitUntil(prepareShooterCommand::isReadyToShoot)
+    // .andThen(feed());
 
-    //     return Commands.parallel(prepareShooterCommand, feedWhenReady);
+    // return Commands.parallel(prepareShooterCommand, feedWhenReady);
     // }
 
+    public Command aimSwerveCommand() {
+        return new AimStandingStillCommand(swerveSubsystem);
+    }
+
     public Command feed() {
+        // return Commands.sequence(
+        // Commands.waitSeconds(0.25),
+        // Commands.parallel(
+        // feederSubsystem.runCommand(),
+        // Commands.waitSeconds(0.125)
+        // .andThen(conveyorSubsystem.runCommand().alongWith(intakeSubsystem.agitatePivotCommand()))));
+
         return Commands.sequence(
-                Commands.waitSeconds(0.25),
-                Commands.parallel(
-                        feederSubsystem.runCommand(),
-                        Commands.waitSeconds(0.125)
-                                .andThen(conveyorSubsystem.runCommand().alongWith(intakeSubsystem.agitatePivotCommand()))));
+                feederSubsystem.runCommand(),
+                Commands.waitSeconds(0.125)
+                        .andThen(conveyorSubsystem.runCommand().alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 }

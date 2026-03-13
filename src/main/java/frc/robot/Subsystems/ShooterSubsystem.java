@@ -2,11 +2,6 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-/** debugging the shooter steps:
- * 1. remove feedforward
- * 2. 
- */
-
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
@@ -46,15 +41,30 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   // pidf
-  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0, 0); // 0.15, 0.19, 0.58)
+  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0, 0);//0.15, 0, 0.03); 
   private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
-    private double targetRPM = 0; // desired RPM we want the wheels to turn at
-
+  private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
   private static final double kVelocityTolerance = 1; // if current RPM is within desired RPM +- velocity tolerance,
                                                       // then its within tolerance
-  private static final double kRPMShooter = 1;
 
+  private Voltage voltage = Volts.of(0);
+
+  // speed for roller motor
+  public enum Speed {
+    STOP(Volts.of(0)),
+    INFRONTOFHUB(Volts.of(10)); // to tune
+
+    private final Voltage voltage;
+
+    private Speed(Voltage voltage) {
+      this.voltage = voltage;
+    }
+
+    public Voltage voltage() {
+      return voltage;
+    }
+  }
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -65,10 +75,9 @@ public class ShooterSubsystem extends SubsystemBase {
         PersistMode.kPersistParameters);
     rightShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    // for live debugging
-    SmartDashboard.putNumber("Left Pivot RPM", 0);
-    SmartDashboard.putNumber("Middle Pivot RPM", 0);
-    SmartDashboard.putNumber("Right Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Left Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Middle Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Right Pivot RPM", 0);
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -88,8 +97,8 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /**
-   * This function updates the rpm based on the value in smart dashboard. Updates
-   * each motor separately.
+   * this function updates the rpm based on the value in smart dashboard, updates
+   * each motor separately
    */
   public void updateSpeedWithSmartDashboard() {
     double targetL = SmartDashboard.getNumber("Left Pivot RPM", 0);
@@ -98,13 +107,13 @@ public class ShooterSubsystem extends SubsystemBase {
     double[] targets = { targetL, targetM, targetR };
 
     for (int i = 0; i < 3; i++) {
-      double pidVoltage = controller.calculate(encoders[i].getVelocity(), targets[i]) * motors[i].getBusVoltage();
-      motors[i].setVoltage(feedForward.calculate(targets[i]) + pidVoltage);
+      set(Volts.of(targets[i]));
     }
   }
 
   /** update speed for all three motors */
   public void updateCurrentSpeed() {
+    // updateCurrentSpeedOfMotor(encoders[0], motors[0]);
     for (int i = 0; i < 3; i++) {
       updateCurrentSpeedOfMotor(encoders[i], motors[i]);
     }
@@ -113,6 +122,19 @@ public class ShooterSubsystem extends SubsystemBase {
   /** set target RPM for all motors */
   public void set(double rpm) {
     targetRPM = rpm;
+  }
+
+  public void set(Speed volts) {
+    voltage = volts.voltage();
+    leftShooterMotor.setVoltage(volts.voltage());
+    middleShooterMotor.setVoltage(volts.voltage());
+    rightShooterMotor.setVoltage(volts.voltage());
+  }
+
+  public void set(Voltage volts) {
+    leftShooterMotor.setVoltage(volts.magnitude());
+    middleShooterMotor.setVoltage(volts.magnitude());
+    rightShooterMotor.setVoltage(volts.magnitude());
   }
 
   /** sets rpm to 0 */
@@ -132,21 +154,17 @@ public class ShooterSubsystem extends SubsystemBase {
     return true;
   }
 
-  /** sets rpm to double value given, ends when velocity is within tolerance */
-  public Command runCommand(double rpm) {
-    return runOnce(() -> set(rpm))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
-  }
-
+  /** sets voltage to shoot in front of Hub */
   public Command runCommand() {
-    return runCommand(kRPMShooter)
-      .handleInterrupt(() -> set(0));
+    // return runOnce(() -> set(rpm))
+    // .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+    return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 
   @Override
   public void periodic() {
     // pid
-    updateCurrentSpeed();
+    // updateCurrentSpeed();
 
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
@@ -155,5 +173,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("left RPM", leftEncoder.getVelocity());
     SmartDashboard.putNumber("middle RPM", middleEncoder.getVelocity());
     SmartDashboard.putNumber("right RPM", rightEncoder.getVelocity());
+
+    SmartDashboard.putNumber("shooter voltage (each)", voltage.magnitude());
   }
 }

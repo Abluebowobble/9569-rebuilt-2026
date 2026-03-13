@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.IntakeSubsystem;
@@ -77,21 +79,44 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    testBindings();
+    // compBindings();
+    // compBindingsWithManualAgitate();
+  }
 
-    // ps5Controller.triangle().onTrue(intakeSubsystem.intakeCommand());
-    // ps5Controller.circle().onTrue(intakeSubsystem.returnCommand());
-    // ps5Controller.cross().whileTrue(intakeSubsystem.agitateCommand());
-    // ps5Controller.square().whileTrue(shooterSubsystem.runCommand(0.1));
+  public void testBindings() {
+    // swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+
+    // ps5Controller.triangle().whileTrue(new StartEndCommand(() -> intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
+    // ps5Controller.circle().onTrue(intakeSubsystem.intakePositionCommand());
+    // ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    // ps5Controller.square().whileTrue(intakeSubsystem.returnPositionCommand());
 
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
-    // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
+
+    // ps5Controller.square().whileTrue(new StartEndCommand(() -> shooterSubsystem.set(Volts.of(0.8)), () -> shooterSubsystem.set(Volts.of(0))));
   }
 
   public void compBindings() {
+    swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+
+    // ps5
     ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feed());
+
+    // xbox
+    xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
+    xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
+    xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
+  }
+
+  public void compBindingsWithManualAgitate() {
+    swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
 
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
