@@ -48,7 +48,7 @@ public final class Constants {
   public static class HardwareMap {
 
     // NEO
-    public static final int INTAKE_ROLLER = 0; //
+    public static final int INTAKE_ROLLER = 16;
     public static final int INTAKE_PIVOT = 9;
     public static final int CONVEYOR = 14;
     public static final int FEEDER = 15;

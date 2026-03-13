@@ -42,17 +42,34 @@ public class ShooterSubsystem extends SubsystemBase {
 
   // pidf
   private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0.15, 0.19, 0.58); // to tune
-  private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
+  private final PIDController controller = new PIDController(0.001, 0, 0); // to tune
 
   private static final double kVelocityTolerance = 1; // if current RPM is within desired RPM +- velocity tolerance,
                                                       // then its within tolerance
-  private static final double kRPMShooter = 1;
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
   // for tuning
   private double targetL = 0;
   private double targetM = 0;
   private double targetR = 0;
+
+  private Voltage voltage = Volts.of(0);
+
+    // speed for roller motor
+  public enum Speed {
+    STOP(Volts.of(0)),
+    RUN(Volts.of(10)); // to tune
+
+    private final Voltage voltage;
+
+    private Speed(Voltage voltage) {
+      this.voltage = voltage;
+    }
+
+    public Voltage voltage() {
+      return voltage;
+    }
+  }
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -62,9 +79,9 @@ public class ShooterSubsystem extends SubsystemBase {
         PersistMode.kPersistParameters);
     rightShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    SmartDashboard.putNumber("Left Pivot RPM", 0);
-    SmartDashboard.putNumber("Middle Pivot RPM", 0);
-    SmartDashboard.putNumber("Right Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Left Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Middle Pivot RPM", 0);
+    SmartDashboard.putNumber("Set Right Pivot RPM", 0);
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -88,27 +105,33 @@ public class ShooterSubsystem extends SubsystemBase {
    * each motor separately.
    */
   public void updateSpeedWithSmartDashboard() {
-    targetL = SmartDashboard.getNumber("Left Pivot RPM", 0);
-    targetM = SmartDashboard.getNumber("Middle Pivot RPM", 0);
-    targetR = SmartDashboard.getNumber("Right Pivot RPM", 0);
+    targetL = SmartDashboard.getNumber("Set Left Pivot RPM", 0);
+    targetM = SmartDashboard.getNumber("Set Middle Pivot RPM", 0);
+    targetR = SmartDashboard.getNumber("Set Right Pivot RPM", 0);
     double[] targets = { targetL, targetM, targetR };
 
     for (int i = 0; i < 3; i++) {
-      double pidVoltage = controller.calculate(encoders[i].getVelocity(), targets[i]) * motors[i].getBusVoltage();
-      motors[i].setVoltage(feedForward.calculate(targets[i]) + pidVoltage);
+      set(Volts.of(targets[i]));
     }
   }
 
   /** update speed for all three motors */
   public void updateCurrentSpeed() {
-    for (int i = 0; i < 3; i++) {
-      updateCurrentSpeedOfMotor(encoders[i], motors[i]);
-    }
+    updateCurrentSpeedOfMotor(encoders[0], motors[0]);
+    // for (int i = 0; i < 3; i++) {
+    // updateCurrentSpeedOfMotor(encoders[i], motors[i]);
+    // }
   }
 
   /** set target RPM for all motors */
   public void set(double rpm) {
     targetRPM = rpm;
+  }
+
+  public void set(Speed volts) {
+    leftShooterMotor.setVoltage(volts.voltage());
+    middleShooterMotor.setVoltage(volts.voltage());
+    rightShooterMotor.setVoltage(volts.voltage());
   }
 
   /** sets rpm to 0 */
@@ -128,21 +151,17 @@ public class ShooterSubsystem extends SubsystemBase {
     return true;
   }
 
-  /** sets rpm to double value given, ends when velocity is within tolerance */
-  public Command runCommand(double rpm) {
-    return runOnce(() -> set(rpm))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
-  }
-
+  /** sets voltage to shoot in front of Hub */
   public Command runCommand() {
-    return runCommand(kRPMShooter)
-      .handleInterrupt(() -> set(0));
+    // return runOnce(() -> set(rpm))
+    //     .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+    return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
 
   @Override
   public void periodic() {
     // pid
-    updateCurrentSpeed();
+    // updateCurrentSpeed();
 
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
@@ -151,5 +170,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("left RPM", leftEncoder.getVelocity());
     SmartDashboard.putNumber("middle RPM", middleEncoder.getVelocity());
     SmartDashboard.putNumber("right RPM", rightEncoder.getVelocity());
+
+    SmartDashboard.putNumber("left voltage", voltage.magnitude());
   }
 }

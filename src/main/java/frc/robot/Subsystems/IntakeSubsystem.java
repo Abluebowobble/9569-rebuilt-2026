@@ -43,7 +43,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
 
   // set point for pid
-  private Angle setPointAngle;
+  private Angle setPointAngle = Degrees.of(0);
 
   // range of allowed positions
   private static final Angle kPositionTolerance = Degrees.of(1.5); // to tune
@@ -57,12 +57,12 @@ public class IntakeSubsystem extends SubsystemBase {
   private Voltage currentOutput = Volts.of(0);
 
   // gear reduction
-  private double degreesPerRotation = 2;
+  private final double kDegreesPerRotation = 2;
 
   // speed for roller motor
   public enum Speed {
     STOP(0),
-    INTAKE(0.75); // to tune
+    INTAKE(0.5); // to tune
 
     private final double percentOutput;
 
@@ -79,7 +79,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(8),
     INTAKE(83.7),
-    AGITATE(20);
+    AGITATE(60);
 
     private final double degrees;
 
@@ -100,14 +100,23 @@ public class IntakeSubsystem extends SubsystemBase {
     pivotEncoder.setPosition(0);
   }
 
+  // public Command zeroCommand() {
+  //   pivotEncoder.setPosition(0);
+  // }
+
   /** set roller to percentage output given speed enum */
   public void set(Speed speed) {
-    pivotMotor.setVoltage(speed.voltage());
+    rollerMotor.setVoltage(speed.voltage());
+  }
+
+   /** set roller to percentage output given speed enum */
+  public void set(Voltage volts) {
+    rollerMotor.setVoltage(volts);
   }
 
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
-    setPointAngle = position.degrees().div(degreesPerRotation);
+    setPointAngle = position.degrees();
   }
 
   /** set pivot motor to go to intake position */
@@ -147,7 +156,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** checks if angle of pivot is within kPositionTolerance */
   public boolean isPositionWithinTolerance() {
-    final Angle cur = Degrees.of(pivotEncoder.getPosition() * degreesPerRotation);
+    final Angle cur = Degrees.of(pivotEncoder.getPosition() * kDegreesPerRotation);
     final Angle target = setPointAngle;
 
     return cur.isNear(target, kPositionTolerance);
@@ -168,7 +177,7 @@ public class IntakeSubsystem extends SubsystemBase {
     lastUpdateTime = currentTime;
 
     final double currentPosition = pivotEncoder.getPosition();
-    final double targetPosition = setPointAngle.magnitude();
+    final double targetPosition = setPointAngle.magnitude() / kDegreesPerRotation;
 
     // get new voltage according to pid controller
     double pidOutput = pivotMotorController.calculate(currentPosition,
@@ -183,7 +192,7 @@ public class IntakeSubsystem extends SubsystemBase {
         : Math.max(pidOutput, currentOutput.minus(maxStep).magnitude()));
 
     // tuned pid for voltage
-    pivotMotor.setVoltage(currentOutput);
+    pivotMotor.setVoltage(pidOutput);
   }
 
 }
