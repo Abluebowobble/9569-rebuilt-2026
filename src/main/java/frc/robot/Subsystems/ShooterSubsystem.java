@@ -2,6 +2,11 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+/** debugging the shooter steps:
+ * 1. remove feedforward
+ * 2. 
+ */
+
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
@@ -49,19 +54,16 @@ public class ShooterSubsystem extends SubsystemBase {
   private static final double kRPMShooter = 1;
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
-  // for tuning
-  private double targetL = 0;
-  private double targetM = 0;
-  private double targetR = 0;
-
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
+    // initialize motors
     SparkBaseConfig config = new SparkMaxConfig();
     leftShooterMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     middleShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
     rightShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    // for live debugging
     SmartDashboard.putNumber("Left Pivot RPM", 0);
     SmartDashboard.putNumber("Middle Pivot RPM", 0);
     SmartDashboard.putNumber("Right Pivot RPM", 0);
@@ -79,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * SparkMax motor
    */
   public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax motor) {
-    double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM) * motor.getBusVoltage();
+    double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM);
     motor.setVoltage(feedForward.calculate(targetRPM) + pidVoltage);
   }
 
@@ -88,9 +90,9 @@ public class ShooterSubsystem extends SubsystemBase {
    * each motor separately.
    */
   public void updateSpeedWithSmartDashboard() {
-    targetL = SmartDashboard.getNumber("Left Pivot RPM", 0);
-    targetM = SmartDashboard.getNumber("Middle Pivot RPM", 0);
-    targetR = SmartDashboard.getNumber("Right Pivot RPM", 0);
+    double targetL = SmartDashboard.getNumber("Left Pivot RPM", 0);
+    double targetM = SmartDashboard.getNumber("Middle Pivot RPM", 0);
+    double targetR = SmartDashboard.getNumber("Right Pivot RPM", 0);
     double[] targets = { targetL, targetM, targetR };
 
     for (int i = 0; i < 3; i++) {
