@@ -29,6 +29,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -49,6 +50,8 @@ import frc.robot.LandMarks;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
+import swervelib.telemetry.SwerveDriveTelemetry;
+import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -74,7 +77,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(new Translation2d(Meter.of(0),
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
-
+    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -82,6 +85,8 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    swerveDrive.setGyroOffset(new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(180)));
 
     // Correct for skew that gets worse as angular velocity increases. Start with a
     // coefficient of 0.1.
@@ -333,22 +338,9 @@ public class SwerveSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
 
-    // telemetry
-    SmartDashboard.putNumber("Module 1 (abs)", swerveDrive.getModules()[0].getAbsolutePosition());
-    SmartDashboard.putNumber("Module 2 (new)", swerveDrive.getModules()[1].getAbsoluteEncoder().getAbsolutePosition());
-    SmartDashboard.putNumber("Module 3 (abs)", swerveDrive.getModules()[2].getRawAbsolutePosition());
-    SmartDashboard.putNumber("Module 4 (new)", swerveDrive.getModules()[3].getAbsoluteEncoder().getAbsolutePosition());
-
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
-    SmartDashboard.putData("swerve + photon field", field);
-
-    // odometry
-    SmartDashboard.putNumber("Robot X", currentPose.getTranslation().getX());
-    SmartDashboard.putNumber("Robot Y", currentPose.getTranslation().getY());
-    SmartDashboard.putNumber("Robot Heading (deg)",
-        currentPose.getRotation().getDegrees());
 
     // telemetry for manual aim
     SmartDashboard.putBoolean("Is Aimed?", isAimed());

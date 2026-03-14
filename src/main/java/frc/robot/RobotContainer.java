@@ -53,8 +53,8 @@ public class RobotContainer {
    * by angular velocity.
    */
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(swerve.getSwerveDrive(),
-      leftYSupplier,
-      leftXSupplier)
+      () -> ps5Controller.getLeftY() * -1,
+      () -> ps5Controller.getLeftX() * -1)
       .withControllerRotationAxis(ps5Controller::getRightX)
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
@@ -79,25 +79,38 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    testBindings();
+    // testBindings();
     // compBindings();
-    // compBindingsWithManualAgitate();
+    compBindingsWithManualAgitate();
   }
 
   public void testBindings() {
-    // swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
-    // ps5Controller.triangle().whileTrue(new StartEndCommand(() -> intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
+    // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
+    // intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
     // ps5Controller.circle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
     // ps5Controller.square().whileTrue(intakeSubsystem.returnPositionCommand());
 
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
-    ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
-    ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
+    // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    // ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
+    // ps5Controller.triangle().whileTrue(shooterSubsystem.runCommand());
 
-    // ps5Controller.square().whileTrue(new StartEndCommand(() -> shooterSubsystem.set(Volts.of(0.8)), () -> shooterSubsystem.set(Volts.of(0))));
+    // ps5Controller.square().whileTrue(new StartEndCommand(() ->
+    // shooterSubsystem.set(Volts.of(0.8)), () ->
+    // shooterSubsystem.set(Volts.of(0))));
+
+     // ps5
+    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
+
+    // xbox
+    ps5Controller.square().onTrue(intakeSubsystem.returnPositionCommand());
+    ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
+    ps5Controller.square().whileTrue(intakeSubsystem.runRollerCommand());
   }
 
   public void compBindings() {
@@ -125,7 +138,15 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return testDriveForwardAuton();
+    return shootAuton();
+  }
+
+  public Command shootAuton() {
+    return shooterSubsystem.runCommand().alongWith(generalRobotCommands.feed());
+  }
+
+  public Command testDriveForwardRobotRelativeAuton() {
+    return swerve.driveToPose(new Pose2d(Meter.of(20), Meter.of(0), new Rotation2d(0)));
   }
 
   public Command testDriveForwardAuton() {
@@ -136,5 +157,4 @@ public class RobotContainer {
     return swerve.driveToPose(new Pose2d(Meter.of(0), Meter.of(0), new Rotation2d(Degree.of(90))));
   }
 
-  
 }

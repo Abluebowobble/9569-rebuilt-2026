@@ -100,15 +100,15 @@ public class IntakeSubsystem extends SubsystemBase {
     pivotEncoder.setPosition(0);
   }
 
-  // public Command zeroCommand() {
-  // pivotEncoder.setPosition(0);
-  // }
+  public Command zeroCommand() {
+    return Commands.runOnce(() -> pivotEncoder.setPosition(0));
+  }
 
   /** set roller to percentage output given speed enum */
   public void set(Speed speed) {
     rollerMotor.setVoltage(speed.voltage());
   }
-  
+
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
     setPointAngle = position.degrees();
@@ -179,12 +179,13 @@ public class IntakeSubsystem extends SubsystemBase {
         targetPosition);
 
     // // get maximum allowed distance for this round
-    // final Voltage maxStep = Volts.of(kMaxPivotVoltageChange * elapsedTime.magnitude());
+    // final Voltage maxStep = Volts.of(kMaxPivotVoltageChange *
+    // elapsedTime.magnitude());
 
     // // apply slew
     // currentOutput = Volts.of(pidOutput > currentOutput.magnitude()
-    //     ? Math.min(pidOutput, currentOutput.plus(maxStep).magnitude())
-    //     : Math.max(pidOutput, currentOutput.minus(maxStep).magnitude()));
+    // ? Math.min(pidOutput, currentOutput.plus(maxStep).magnitude())
+    // : Math.max(pidOutput, currentOutput.minus(maxStep).magnitude()));
 
     // tuned pid for voltage
     pivotMotor.setVoltage(pidOutput);
