@@ -33,7 +33,8 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.5); // to tune
+    RUN(0.5), // to tune
+    REVERSE(-0.5); // to tune
 
     private final double percentOutput;
 
@@ -70,7 +71,10 @@ public class ConveyorSubsystem extends SubsystemBase {
   public Command runCommand() {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
-
+ /** reverse the conveyor, stops on end */
+  public Command reverseCommand() {
+    return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
+  }
   @Override
   public void periodic() {
     updateVoltage();

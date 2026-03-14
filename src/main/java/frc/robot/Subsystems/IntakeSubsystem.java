@@ -62,7 +62,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed {
     STOP(0),
-    INTAKE(0.5); // to tune
+    INTAKE(0.5), // to tune
+    REVERSE(-0.5); // to tune
 
     private final double percentOutput;
 
@@ -142,11 +143,15 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command runRollerCommand() {
-    return run(() -> set(Speed.INTAKE));
+    return startEnd(() -> set(Speed.INTAKE), () -> set(Speed.STOP));
   }
 
   public Command stopRollerCommand() {
     return run(() -> set(Speed.STOP));
+  }
+
+  public Command reverseRollerCommand() {
+    return startEnd(() -> set(Speed.REVERSE), ()->set(Speed.STOP));
   }
 
   /** checks if angle of pivot is within kPositionTolerance */

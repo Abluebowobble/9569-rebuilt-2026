@@ -16,6 +16,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.Commands.GeneralRobotCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -103,7 +104,7 @@ public class RobotContainer {
     // shooterSubsystem.set(Volts.of(0.8)), () ->
     // shooterSubsystem.set(Volts.of(0))));
 
-     // ps5
+    // ps5
     ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feed());
 
@@ -128,13 +129,16 @@ public class RobotContainer {
 
   public void compBindingsWithManualAgitate() {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+
     ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
     ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
 
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
     xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
     xboxController.rightTrigger().whileTrue(intakeSubsystem.agitatePivotCommand());
+    xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
   }
 
   public Command getAutonomousCommand() {
@@ -142,6 +146,7 @@ public class RobotContainer {
   }
 
   public Command shootAuton() {
+    Command driveVelocity = swerve.driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(0.02, 0, 0, new Rotation2d(0)));
     return shooterSubsystem.runCommand().alongWith(generalRobotCommands.feed());
   }
 

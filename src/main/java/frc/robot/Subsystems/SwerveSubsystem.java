@@ -292,7 +292,7 @@ public class SwerveSubsystem extends SubsystemBase {
     });
   }
 
-  private Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeed)
+  public Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeed)
       throws IOException, ParseException, org.json.simple.parser.ParseException {
     SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(RobotConfig.fromGUISettings(),
         swerveDrive.getMaximumChassisAngularVelocity());
