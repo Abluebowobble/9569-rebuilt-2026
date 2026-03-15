@@ -71,7 +71,7 @@ public class Vision extends SubsystemBase {
    */
   public Vision(EstimateConsumer consumer) {
     this.consumer = consumer;
-    camera = new PhotonCamera("camera");
+    camera = new PhotonCamera("alice");
     PhotonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kRobotToCam);
   }
 

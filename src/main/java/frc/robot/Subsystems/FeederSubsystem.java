@@ -23,7 +23,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.45),
+    RUN(0.9),
     REVERSE(-0.7);
 
     private final double percentOutput;
@@ -35,7 +35,7 @@ public class FeederSubsystem extends SubsystemBase {
     public Voltage voltage() {
       return Volts.of(percentOutput * 12.0);
     }
-  }
+  } 
 
   /** Creates a new FeederSubsystem. */
   public FeederSubsystem() {

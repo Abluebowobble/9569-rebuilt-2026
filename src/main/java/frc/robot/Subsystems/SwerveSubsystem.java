@@ -63,11 +63,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private final Field2d field = new Field2d();
 
+  private boolean isLocked = false;
+  boolean blueAlliance;
+
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
 
     // checks alliance
-    boolean blueAlliance = DriverStation.getAlliance().isPresent()
+    blueAlliance = DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Blue;
 
     // sets starting pose based on alliance
@@ -77,6 +80,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(new Translation2d(Meter.of(0),
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
+
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
     try {
@@ -85,8 +89,6 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-
-    swerveDrive.setGyroOffset(new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(180)));
 
     // Correct for skew that gets worse as angular velocity increases. Start with a
     // coefficient of 0.1.
@@ -203,7 +205,13 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void zeroGyro() {
-    swerveDrive.zeroGyro();
+    if (!blueAlliance) {
+      swerveDrive.zeroGyro();
+
+      swerveDrive.resetOdometry(new Pose2d(swerveDrive.getPose().getTranslation(), new Rotation2d(180)));
+    } else {
+      swerveDrive.zeroGyro();
+    }
   }
 
   public Rotation2d getHeading() {
@@ -232,11 +240,11 @@ public class SwerveSubsystem extends SubsystemBase {
     if (isAimed()) {
       return "Aimed!";
     }
-    
+
     Rotation2d headingInOperatorPerspective = getHeadingInOperaturPerspective();
     Rotation2d targetHeading = getTargetHeadingInOperatorPerspective();
-    
-    // implement 
+
+    // implement
     return "";
   }
 
@@ -315,6 +323,22 @@ public class SwerveSubsystem extends SubsystemBase {
           previousTime.set(newTime);
 
         });
+  }
+
+  public void lockPose() {
+    if (!isLocked) {
+      swerveDrive.lockPose();
+    }
+
+    isLocked = !isLocked;
+  }
+
+  public Command swerveLockCommand() {
+    return runOnce(() -> swerveDrive.lockPose());
+  }
+
+  public Command zeroGyroCommand() {
+    return runOnce(() -> swerveDrive.zeroGyro());
   }
 
   public Command driveWithSetpointGeneratorFieldRelative(Supplier<ChassisSpeeds> fieldRelativeSpeeds) {

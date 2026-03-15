@@ -17,9 +17,11 @@ import frc.robot.Commands.GeneralRobotCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -71,6 +73,8 @@ public class RobotContainer {
   GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerve, shooterSubsystem, intakeSubsystem,
       feederSubsystem, conveyorSubsystem, leftYSupplier, leftXSupplier,
       driveFieldOrientedAnglularVelocity);
+
+  private boolean isSwerveLocked = false;
 
   public RobotContainer() {
 
@@ -133,6 +137,13 @@ public class RobotContainer {
     ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
     ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
+    ps5Controller.povDown().onTrue(swerve.zeroGyroCommand());
+    ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked = !isSwerveLocked));
+
+    if (isSwerveLocked) {
+      CommandScheduler commandScheduler = CommandScheduler.getInstance();
+      commandScheduler.schedule(swerve.swerveLockCommand().repeatedly());
+    }
 
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
@@ -146,8 +157,55 @@ public class RobotContainer {
   }
 
   public Command shootAuton() {
-    Command driveVelocity = swerve.driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(0.02, 0, 0, new Rotation2d(0)));
-    return shooterSubsystem.runCommand().alongWith(generalRobotCommands.feed());
+    Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
+    Command shoot = Commands.deadline(
+        Commands.waitSeconds(10),
+        Commands.parallel(
+            shooterSubsystem.runCommand(),
+            Commands.waitSeconds(3).andThen(feed)));
+
+    try {
+      Command driveVelocity1 = swerve
+          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
+          Command driveVelocity2 = swerve
+          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
+      return Commands.sequence(
+          Commands.deadline(Commands.waitSeconds(0.3), driveVelocity1),
+          shoot,
+          Commands.deadline(Commands.waitSeconds(2), driveVelocity2));
+    } catch (Exception e) {
+      DriverStation.reportError("VELOCITY DID NOT WORK", false);
+      return shoot;
+    }
+  }
+
+  public Command shootFeederShootAuton() {
+    Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
+    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(),
+        Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
+            .andThen(feed)));
+    // 7 to fully unload
+    try {
+      Command driveVelocity1_1 = swerve
+          .driveWithSetpointGenerator(
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.592, -0.67, Math.PI, new Rotation2d(0)));
+      Command driveVelocity1_4 = swerve
+          .driveWithSetpointGenerator(
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(0.592, 0.67, Math.PI, new Rotation2d(0)));
+      Command driveVelocity2_2 = swerve
+          .driveWithSetpointGenerator(
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.592, -0.67, Math.PI, new Rotation2d(180)));
+      Command driveVelocity2_3 = swerve
+          .driveWithSetpointGenerator(
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(0.592, 0.67, Math.PI, new Rotation2d(180)));
+
+      return Commands.sequence(
+          shoot,
+          Commands.deadline(Commands.waitSeconds(2), driveVelocity1_1));
+    } catch (Exception e) {
+      DriverStation.reportError("VELOCITY DID NOT WORK", false);
+      return shoot;
+    }
   }
 
   public Command testDriveForwardRobotRelativeAuton() {

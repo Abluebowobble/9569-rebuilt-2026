@@ -45,15 +45,15 @@ public class ShooterSubsystem extends SubsystemBase {
   private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
-  private static final double kVelocityTolerance = 1; // if current RPM is within desired RPM +- velocity tolerance,
+  private static final double kVelocityTolerance = 10; // if current RPM is within desired RPM +- velocity tolerance,
                                                       // then its within tolerance
-
+  private static final double kTargetVelocity = 4800;
   private Voltage voltage = Volts.of(0);
 
   // speed for roller motor
   public enum Speed {
     STOP(Volts.of(0)),
-    INFRONTOFHUB(Volts.of(10)); // to tune
+    INFRONTOFHUB(Volts.of(10.2)); // to tune
 
     private final Voltage voltage;
 
@@ -144,14 +144,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** checks if each shooter has their velocity is within tolerance */
   public boolean isVelocityWithinTolerance() {
-    for (RelativeEncoder e : encoders) {
-      double currentRPM = e.getVelocity();
-      if (!MathUtil.isNear(targetRPM, currentRPM, kVelocityTolerance)) {
-        return false;
-      }
-    }
-
-    return true;
+    return MathUtil.isNear(kTargetVelocity, leftEncoder.getVelocity(), kVelocityTolerance);
   }
 
   /** sets voltage to shoot in front of Hub */
@@ -173,7 +166,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("left RPM", leftEncoder.getVelocity());
     SmartDashboard.putNumber("middle RPM", middleEncoder.getVelocity());
     SmartDashboard.putNumber("right RPM", rightEncoder.getVelocity());
-
+    SmartDashboard.putBoolean("is Velocity within tolerance", isVelocityWithinTolerance());
     SmartDashboard.putNumber("shooter voltage (each)", voltage.magnitude());
   }
 }

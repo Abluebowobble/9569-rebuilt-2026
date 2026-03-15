@@ -46,7 +46,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private Angle setPointAngle = Degrees.of(0);
 
   // range of allowed positions
-  private static final Angle kPositionTolerance = Degrees.of(1.5); // to tune
+  private static final Angle kPositionTolerance = Degrees.of(3); // to tune
 
   // pivot motor controller
   private final PIDController pivotMotorController = new PIDController(0.45, 0, 0); // to tune
@@ -62,8 +62,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed {
     STOP(0),
-    INTAKE(0.5), // to tune
-    REVERSE(-0.5); // to tune
+    INTAKE(0.9), // to tune
+    REVERSE(-0.9); // to tune
 
     private final double percentOutput;
 
@@ -80,7 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(8),
     INTAKE(83.7),
-    AGITATE(60);
+    AGITATE(20);
 
     private final double degrees;
 
@@ -132,13 +132,16 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   public Command agitatePivotCommand() {
     return Commands.sequence(
-        runOnce(() -> set(Position.AGITATE)),
-        Commands.waitUntil(this::isPositionWithinTolerance),
-        runOnce(() -> set(Position.INTAKE)),
-        Commands.waitUntil(this::isPositionWithinTolerance))
-        .repeatedly()
+        Commands.runOnce(() -> set(Speed.INTAKE)),
+        Commands.sequence(
+            runOnce(() -> set(Position.AGITATE)),
+            Commands.waitUntil(this::isPositionWithinTolerance),
+            runOnce(() -> set(Position.INTAKE)),
+            Commands.waitUntil(this::isPositionWithinTolerance))
+            .repeatedly())
         .handleInterrupt(() -> {
           set(Position.INTAKE);
+          set(Speed.STOP);
         });
   }
 
@@ -151,7 +154,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command reverseRollerCommand() {
-    return startEnd(() -> set(Speed.REVERSE), ()->set(Speed.STOP));
+    return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
   }
 
   /** checks if angle of pivot is within kPositionTolerance */
