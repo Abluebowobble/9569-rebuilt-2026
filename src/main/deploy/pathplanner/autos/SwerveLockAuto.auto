@@ -9,18 +9,6 @@
           "data": {
             "pathName": "Blue1-DefenseBump"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Blue1-DefenseTransition"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Blue1-DefenseIntake"
-          }
         }
       ]
     }

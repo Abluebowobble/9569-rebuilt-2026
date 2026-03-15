@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.719728525415892,
-        "y": 5.53
+        "x": 8.280381402612102,
+        "y": 4.405116052864713
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.719728525415892,
-        "y": 5.53
+        "x": 9.280381402612102,
+        "y": 4.405116052864713
       },
       "isLocked": false,
       "linkedName": "B1DefenseBump"
@@ -41,11 +41,11 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.5,
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Blue1",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

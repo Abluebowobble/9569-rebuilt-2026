@@ -45,9 +45,9 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Blue1",
+  "folder": null,
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.5,
     "rotation": -90.0
   },
   "useDefaultConstraints": true
