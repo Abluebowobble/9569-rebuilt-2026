@@ -53,7 +53,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed {
     STOP(Volts.of(0)),
-    INFRONTOFHUB(Volts.of(10.2)); // to tune
+    INFRONTOFHUB(Volts.of(10.5)); // to tune
 
     private final Voltage voltage;
 

@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.304320752142627,
+        "y": 1.8295155600958628
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.3035049449215568,
+        "y": 3.1095153001187184
+      },
+      "isLocked": false,
+      "linkedName": "BottomRight"
+    },
+    {
+      "anchor": {
+        "x": 3.3100933304918696,
+        "y": 6.0459140666058575
+      },
+      "prevControl": {
+        "x": 3.307242312018036,
+        "y": 5.262029724121094
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "TopRight"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Odometry Testing",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

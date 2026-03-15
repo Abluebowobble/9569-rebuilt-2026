@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LowerHorizontal"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RightVertical"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UpperHorizontal"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftVertical"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Rotate"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Odometry Testing",
+  "choreoAuto": false
+}

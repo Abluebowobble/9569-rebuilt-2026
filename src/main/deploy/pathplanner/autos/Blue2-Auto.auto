@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "New New Path"
+            "pathName": "Blue2-Score"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue2",
   "choreoAuto": false
 }

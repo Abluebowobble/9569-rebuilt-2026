@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "New New Path"
+            "pathName": "Blue2-HumanIntake1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Blue2-HumanIntake2"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue2",
   "choreoAuto": false
 }

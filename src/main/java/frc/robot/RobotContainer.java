@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -35,7 +36,10 @@ import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 public class RobotContainer {
 
@@ -70,6 +74,8 @@ public class RobotContainer {
   ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
 
+  private final SendableChooser<Command> autoChooser;
+
   GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerve, shooterSubsystem, intakeSubsystem,
       feederSubsystem, conveyorSubsystem, leftYSupplier, leftXSupplier,
       driveFieldOrientedAnglularVelocity);
@@ -78,7 +84,24 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-    // NamedCommands.registerCommand("FeedCommand", GeneralRobotCommands.feed());
+    NamedCommands.registerCommand("reverse feeder",
+        conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
+    NamedCommands.registerCommand("run feeder",
+        conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    NamedCommands.registerCommand("run shooter",
+        shooterSubsystem.runCommand());
+    NamedCommands.registerCommand("intake up",
+        intakeSubsystem.returnPositionCommand());
+    NamedCommands.registerCommand("intake down",
+        intakeSubsystem.intakePositionCommand());
+    NamedCommands.registerCommand("run intake roller",
+        intakeSubsystem.runRollerCommand());
+    NamedCommands.registerCommand("reverse intake roller",
+        intakeSubsystem.reverseRollerCommand());
+    NamedCommands.registerCommand("agitate intake",
+        intakeSubsystem.reverseRollerCommand());
+
+    autoChooser = AutoBuilder.buildAutoChooser();
 
     configureBindings();
   }
@@ -153,7 +176,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return shootAuton();
+    return new PathPlannerAuto("New Auto");
+    // return shootAuton();
   }
 
   public Command shootAuton() {
@@ -166,11 +190,12 @@ public class RobotContainer {
 
     try {
       Command driveVelocity1 = swerve
+          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-1, 0, 0, new Rotation2d(0)));
+      Command driveVelocity2 = swerve
           .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
-          Command driveVelocity2 = swerve
-          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
+
       return Commands.sequence(
-          Commands.deadline(Commands.waitSeconds(0.3), driveVelocity1),
+          Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),
           shoot,
           Commands.deadline(Commands.waitSeconds(2), driveVelocity2));
     } catch (Exception e) {
