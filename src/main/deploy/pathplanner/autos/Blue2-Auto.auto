@@ -11,15 +11,28 @@
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Score"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "run shooter"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 1.0
+                }
+              }
+            ]
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Blue2",
+  "folder": null,
   "choreoAuto": false
 }

@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue3-HumanIntake2"
+            "pathName": "Red2-HumanIntake1"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 5.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Blue3-Score2"
+            "pathName": "Red2-HumanIntake2"
           }
         },
         {
@@ -35,7 +35,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 1.0
+                  "waitTime": 20.0
                 }
               }
             ]

@@ -14,6 +14,7 @@
           "type": "named",
           "data": {
             "name": "intake down"
+            "name": "intake down"
           }
         },
         {
@@ -30,7 +31,22 @@
         },
         {
           "type": "deadline",
+          "type": "deadline",
           "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "run shooter"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 1.0
+                }
+              }
+            ]
             "commands": [
               {
                 "type": "named",
@@ -67,6 +83,7 @@
         },
         {
           "type": "deadline",
+          "type": "deadline",
           "data": {
             "commands": []
           }
@@ -75,6 +92,7 @@
     }
   },
   "resetOdom": true,
+  "folder": null,
   "folder": null,
   "choreoAuto": false
 }

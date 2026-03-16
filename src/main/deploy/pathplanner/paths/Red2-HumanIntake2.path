@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.540335849481666,
-        "y": 4.035469549655876
+        "x": 16.109663423881184,
+        "y": 7.377390182909651
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.9886194211951458,
-        "y": 2.677174463008241
+        "x": 16.707131958879124,
+        "y": 7.54534260979616
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Red2HumanIntake"
     },
     {
       "anchor": {
-        "x": 0.45758829509147914,
-        "y": 0.6469272770456018
+        "x": 12.995254098909484,
+        "y": 4.025406369385713
       },
       "prevControl": {
-        "x": 1.4584163388407576,
-        "y": 1.2915878358244304
+        "x": 12.747768090909599,
+        "y": 4.060771265034944
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "B2Human1"
+      "linkedName": "Red2Start"
     }
   ],
   "rotationTargets": [],
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
+    "velocity": 0,
     "rotation": 180.0
   },
   "reversed": false,

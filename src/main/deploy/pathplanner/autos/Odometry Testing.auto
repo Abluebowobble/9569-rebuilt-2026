@@ -38,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Odometry Testing",
+  "folder": null,
   "choreoAuto": false
 }

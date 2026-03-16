@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 12.995254098909484,
+        "y": 4.025406369385713
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8396282051282067,
-        "y": 5.011769230769231
+        "x": 13.149547289064408,
+        "y": 5.163057165532349
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Red2Start"
     },
     {
       "anchor": {
-        "x": 1.8396025641025648,
-        "y": 6.5932051282051285
+        "x": 16.109663423881184,
+        "y": 7.377390182909651
       },
       "prevControl": {
-        "x": 0.8396025641025648,
-        "y": 6.5932051282051285
+        "x": 15.228302893799693,
+        "y": 6.682495502137505
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Red2HumanIntake"
     }
   ],
   "rotationTargets": [],
@@ -48,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
