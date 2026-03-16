@@ -41,13 +41,13 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   // pidf
-  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0, 0);//0.15, 0, 0.03); 
+  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0, 0, 0);// 0.15, 0, 0.03);
   private final PIDController controller = new PIDController(0.09, 0, 0); // to tune
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
-  private static final double kVelocityTolerance = 10; // if current RPM is within desired RPM +- velocity tolerance,
-                                                      // then its within tolerance
-  private static final double kTargetVelocity = 4800;
+  private static final double kVelocityTolerance = 200; // if current RPM is within desired RPM +- velocity tolerance,
+                                                       // then its within tolerance
+  private static final double kTargetVelocity = 5000;
   private Voltage voltage = Volts.of(0);
 
   // speed for roller motor
@@ -149,8 +149,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand() {
-    // return runOnce(() -> set(rpm))
-    // .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+    // return runOnce(() -> set(4800))
+    //     .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
     return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 

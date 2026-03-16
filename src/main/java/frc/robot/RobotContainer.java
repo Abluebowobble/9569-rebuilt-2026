@@ -100,7 +100,7 @@ public class RobotContainer {
         intakeSubsystem.reverseRollerCommand());
     NamedCommands.registerCommand("agitate intake",
         intakeSubsystem.reverseRollerCommand());
-
+    
     autoChooser = AutoBuilder.buildAutoChooser();
 
     configureBindings();
@@ -161,12 +161,14 @@ public class RobotContainer {
     ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
     ps5Controller.povDown().onTrue(swerve.zeroGyroCommand());
-    ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked = !isSwerveLocked));
+    // ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked = !isSwerveLocked));
 
-    if (isSwerveLocked) {
-      CommandScheduler commandScheduler = CommandScheduler.getInstance();
-      commandScheduler.schedule(swerve.swerveLockCommand().repeatedly());
-    }
+    // if (isSwerveLocked) {
+    //   CommandScheduler commandScheduler = CommandScheduler.getInstance();
+    //   commandScheduler.schedule(swerve.swerveLockCommand().repeatedly());
+    // }
+
+    ps5Controller.L3().whileTrue(swerve.swerveLockCommand().repeatedly());
 
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
@@ -176,8 +178,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return new PathPlannerAuto("New Auto");
-    // return shootAuton();
+    // return new PathPlannerAuto("New Auto");
+    return shootAuton();
   }
 
   public Command shootAuton() {
@@ -189,13 +191,12 @@ public class RobotContainer {
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
-      Command driveVelocity1 = swerve
-          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-1, 0, 0, new Rotation2d(0)));
+
       Command driveVelocity2 = swerve
-          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
+          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, swerve.getHeading()));
 
       return Commands.sequence(
-          Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),
+          // Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),
           shoot,
           Commands.deadline(Commands.waitSeconds(2), driveVelocity2));
     } catch (Exception e) {
