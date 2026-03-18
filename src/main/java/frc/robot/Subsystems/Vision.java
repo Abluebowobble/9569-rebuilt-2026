@@ -37,6 +37,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
@@ -48,22 +50,25 @@ public class Vision extends SubsystemBase {
   public static final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
       .loadField(AprilTagFields.k2026RebuiltAndymark);
 
+  private final Field2d field = new Field2d();
+
   // Photon related values
   private final PhotonCamera camera;
-  private final PhotonPoseEstimator PhotonPoseEstimator;
+  private final PhotonPoseEstimator photonPoseEstimator;
 
-  // darrien said: 1.709034 in y and 25.353391 in x
+  private Optional<EstimatedRobotPose> latestEstimatedPose = Optional.empty();
+
   private final Transform3d kRobotToCam = new Transform3d(
-      new Translation3d(Inches.of(0), Inches.of(1.709034), Inches.of(25.353391)),
-      new Rotation3d(Degrees.of(0), Degrees.of(61.9), Degrees.of(0)));
+      new Translation3d(0.0434094, 0, -0.6439748),
+      new Rotation3d(0, -1.080359, 0));
 
   // swerve related values
   private final EstimateConsumer consumer;
-  private Matrix<N3, N1> curStdDevs;
 
   // confidence based on different states of vision
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+  private Matrix<N3, N1> curStdDevs = kMultiTagStdDevs;
 
   /**
    * This object expects a function as an initial parameter. i.e. in yagsl:
@@ -72,26 +77,41 @@ public class Vision extends SubsystemBase {
   public Vision(EstimateConsumer consumer) {
     this.consumer = consumer;
     camera = new PhotonCamera("alice");
-    PhotonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kRobotToCam);
+    photonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, PoseStrategy.AVERAGE_BEST_TARGETS, kRobotToCam);
   }
 
   @Override
   public void periodic() {
     // make consumer use camera
-    useBestCameraResults();
+    // useBestCameraResults();
+    useBestPoseFieldRelative();
+
+    SmartDashboard.putData("Localized Field", field);
   }
 
   /** Gets latest april tags stored in pipeline */
-  private List<PhotonTrackedTarget> updateTargets() {
+  private void useBestPoseFieldRelative() {
     List<PhotonTrackedTarget> targets = new ArrayList<>();
 
     PhotonPipelineResult result = camera.getLatestResult();
 
     if (result.hasTargets()) {
       targets = result.getTargets();
-    }
+      latestEstimatedPose = photonPoseEstimator.update(result);
+      PhotonTrackedTarget bestTarget = result.getBestTarget();
 
-    return targets;
+      // Calculate robot's field relative pose
+      if (kAprilTagField.getTagPose(bestTarget.getFiducialId()).isPresent()) {
+        Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(bestTarget.getBestCameraToTarget(),
+            kAprilTagField.getTagPose(bestTarget.getFiducialId()).get(), kRobotToCam);
+
+        Pose2d robotPose2d = robotPose.toPose2d();
+        field.setRobotPose(robotPose2d);
+      }
+
+      if (latestEstimatedPose.isPresent())
+        consumer.accept(latestEstimatedPose.get().estimatedPose.toPose2d(), latestEstimatedPose.get().timestampSeconds);
+    }
   }
 
   /** Makes the given consumer use camera results for telemetry */
@@ -102,17 +122,18 @@ public class Vision extends SubsystemBase {
 
       // process estimated pose using multitags, use lowest ambiguity pose as fall
       // back
-      visionEstimate = PhotonPoseEstimator.estimateCoprocMultiTagPose(result);
+      visionEstimate = photonPoseEstimator.estimateCoprocMultiTagPose(result);
       if (visionEstimate.isEmpty()) {
-        visionEstimate = PhotonPoseEstimator.estimateLowestAmbiguityPose(result);
+        visionEstimate = photonPoseEstimator.estimateLowestAmbiguityPose(result);
       }
 
-      // update confidence
-      updateEstimationStdDevs(visionEstimate, result.getTargets());
-    }
+      if (visionEstimate.isPresent()) {
+        // update confidence
+        updateEstimationStdDevs(visionEstimate, result.getTargets());
 
-    // feed values to swerve
-    consumer.accept(visionEstimate.get().estimatedPose.toPose2d(), visionEstimate.get().timestampSeconds, curStdDevs);
+        consumer.accept(visionEstimate.get().estimatedPose.toPose2d(), visionEstimate.get().timestampSeconds);
+      }
+    }
   }
 
   /** updates our current confidence in the reliability of the vision */
@@ -130,7 +151,7 @@ public class Vision extends SubsystemBase {
       // Precalculation - see how many tags we found, and calculate an
       // average-distance metric
       for (var tgt : targets) {
-        var tagPose = PhotonPoseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+        var tagPose = photonPoseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
 
         if (tagPose.isEmpty())
           continue;
@@ -173,7 +194,7 @@ public class Vision extends SubsystemBase {
 
   @FunctionalInterface
   public static interface EstimateConsumer {
-    public void accept(Pose2d pose, double timestamp, Matrix<N3, N1> estimationStdDevs);
+    public void accept(Pose2d pose, double timestamp);
   }
-  
+
 }

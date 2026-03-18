@@ -57,7 +57,7 @@ public final class Constants {
     public static final int SHOOTER_RIGHT = 13;
 
     // PWM
-    public static final int ACTUATOR_LEFT = 2;
-    public static final int ACTUATOR_RIGHT = 3;
+    public static final int ACTUATOR_LEFT = 0;
+    public static final int ACTUATOR_RIGHT = 1;
   }
 }

@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Value;
 
+import java.util.function.DoubleSupplier;
+
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -22,8 +24,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class HoodSubsystem extends SubsystemBase {
     // position variables, to tune
     private static final double kMinPosition = 0;
-    private static final double kMaxPosition = 0;
-    private static final double kPositionTolerance = 0;
+    private static final double kMaxPosition = 0.804;
+    private static final double kPositionTolerance = 0.01;
 
     // sets current position and setpoint
     private static final double kStartingPosition = 0.5;
@@ -41,19 +43,19 @@ public class HoodSubsystem extends SubsystemBase {
         leftServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
-        // move hood to 50% on initialization
-        setPosition(kStartingPosition);
+        // // move hood to 50% on initialization
+        // setPosition(kStartingPosition);
 
-        // adds value for SmartDashboard update function
-        SmartDashboard.putNumber("Set Target Position", 0.5);
+        // // adds value for SmartDashboard update function
+        // SmartDashboard.putNumber("Set Target Position", 0.5);
     }
 
     /**
      * Expects a position between 0.0 and 1.0, sets position to given percentage
      * position
      */
-    public void setPosition(double position) {
-        final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
+    public void setPosition(DoubleSupplier position) {
+        final double clampedPosition = MathUtil.clamp(position.getAsDouble(), kMinPosition, kMaxPosition);
 
         leftServo.set(clampedPosition);
         rightServo.set(clampedPosition);
@@ -65,7 +67,7 @@ public class HoodSubsystem extends SubsystemBase {
      * Expects a position between 0.0 and 1.0, sets the position to given value and
      * ends when position is within tolerance
      */
-    public Command setCommand(double position) {
+    public Command setCommand(DoubleSupplier position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
@@ -81,11 +83,12 @@ public class HoodSubsystem extends SubsystemBase {
         // updateSpeedWithSmartDashboard();
 
         // telemetry
-        SmartDashboard.putNumber("Current Position", leftServo.getPosition());
+        SmartDashboard.putNumber("Current Position Left", leftServo.getPosition());
+        SmartDashboard.putNumber("Current Position Right", rightServo.getPosition());
         SmartDashboard.putNumber("Target Position", targetPosition);
     }
 
     public void updateSpeedWithSmartDashboard() {
-        setPosition(SmartDashboard.getNumber("Set Target Position", targetPosition));
+        // setPosition(SmartDashboard.getNumber("Set Target Position", targetPosition));
     }
 }
