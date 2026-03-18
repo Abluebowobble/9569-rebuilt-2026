@@ -15,8 +15,13 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
@@ -28,6 +33,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -43,9 +49,9 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder rightEncoder = rightShooterMotor.getEncoder();
   private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
+  private final SparkClosedLoopController controller = leftShooterMotor.getClosedLoopController();
+
   // pidf
-  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0.15, 12/5676, 0.03);
-  private final PIDController controller = new PIDController(0.001, 0, 0); // to tune
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
   private static final double kVelocityTolerance = 5; // if current RPM is within desired RPM +- velocity tolerance,
@@ -72,16 +78,33 @@ public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
     // initialize motors
-    SparkBaseConfig config = new SparkMaxConfig();
-    leftShooterMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    middleShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters,
+    SparkMaxConfig leaderConfig = new SparkMaxConfig();
+    leaderConfig
+        .inverted(false)
+        .voltageCompensation(12.0);
+
+    leaderConfig.closedLoop
+        .pid(0.0002, 0.0, 0.0, ClosedLoopSlot.kSlot0).feedForward
+        .sva(0.15, 12.0 / 6000.0, 0.03, ClosedLoopSlot.kSlot0);
+
+    leftShooterMotor.configure(
+        leaderConfig,
+        ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-    rightShooterMotor.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    SmartDashboard.putNumber("Set Left Pivot RPM", 0);
-    SmartDashboard.putNumber("Set Middle Pivot RPM", 0);
-    SmartDashboard.putNumber("Set Right Pivot RPM", 0);
+    SparkMaxConfig middleFollower = new SparkMaxConfig();
+    middleFollower.follow(leftShooterMotor, true); // invert follow if needed
+    middleShooterMotor.configure(
+        middleFollower,
+        ResetMode.kResetSafeParameters,
+        PersistMode.kPersistParameters);
 
+    SparkMaxConfig rightFollower = new SparkMaxConfig();
+    rightFollower.follow(leftShooterMotor, true); // invert follow if needed
+    rightShooterMotor.configure(
+        rightFollower,
+        ResetMode.kResetSafeParameters,
+        PersistMode.kPersistParameters);
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -95,11 +118,12 @@ public class ShooterSubsystem extends SubsystemBase {
    * updates speed of given motor via pidf, requires RelativeEncoder encoder,
    * SparkMax motor
    */
-  public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax motor) {
-    double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM);
-    double ff = feedForward.calculate(targetRPM);
-    motor.setVoltage(ff + pidVoltage);
-  }
+  // public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax
+  // motor) {
+  // double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM);
+  // double ff = feedForward.calculate(targetRPM);
+  // motor.setVoltage(ff + pidVoltage);
+  // }
 
   /**
    * this function updates the rpm based on the value in smart dashboard, updates
@@ -117,16 +141,16 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /** update speed for all three motors */
-  public void updateCurrentSpeed() {
-    updateCurrentSpeedOfMotor(encoders[0], motors[0]);
-    // for (int i = 0; i < 3; i++) {
-    // updateCurrentSpeedOfMotor(encoders[i], motors[i]);
-    // }
-  }
+  // public void updateCurrentSpeed() {
+  // updateCurrentSpeedOfMotor(encoders[0], motors[0]);
+  // for (int i = 0; i < 3; i++) {
+  // updateCurrentSpeedOfMotor(encoders[i], motors[i]);
+  // }
+  // }
 
   /** set target RPM for all motors */
   public void set(double rpm) {
-    targetRPM = rpm;
+    controller.setSetpoint(rpm, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   }
 
   public void set(Speed volts) {
@@ -165,9 +189,9 @@ public class ShooterSubsystem extends SubsystemBase {
         .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
     // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
- 
+
   public Command stopCommand() {
-    return runOnce(() -> set(0))
+    return runOnce(() -> stop())
         .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
   }
 
@@ -178,7 +202,7 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // pid
-    updateCurrentSpeed();
+    // updateCurrentSpeed();
 
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();

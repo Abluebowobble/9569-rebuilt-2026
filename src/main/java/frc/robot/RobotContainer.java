@@ -75,7 +75,6 @@ public class RobotContainer {
   ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   HoodSubsystem hoodSubsystem = new HoodSubsystem();
 
-  Vision vision = new Vision(swerve::addVisionMeasurement);
 
   private final SendableChooser<Command> autoChooser;
 

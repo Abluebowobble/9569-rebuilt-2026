@@ -114,6 +114,7 @@ public class SwerveSubsystem extends SubsystemBase {
     field.setRobotPose(currentPose);
 
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroCommand));
+    vision = new Vision();
   }
 
   /** sets up path planner */
@@ -371,12 +372,14 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
 
+    vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
+
     // telemetry for manual aim
     SmartDashboard.putBoolean("Is Aimed?", isAimed());
   }
 
   public void addVisionMeasurement(
-      Pose2d visionMeasurement, double timestampSeconds) {
-    swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds);
+      Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> curStdDevs) {
+    swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, curStdDevs);
   }
 }
