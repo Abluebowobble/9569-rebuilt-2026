@@ -28,6 +28,7 @@ import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -60,6 +61,10 @@ public class ShooterSubsystem extends SubsystemBase {
                                                        // then its within tolerance
   private static final double kTargetVelocity = 5000;
   private Voltage voltage = Volts.of(0);
+
+  // for slew + feedforward
+  private final SlewRateLimiter slewRateLimiter = new SlewRateLimiter(4000); // RPM per second (tune)
+  private final SimpleMotorFeedforward feedForward = new SimpleMotorFeedforward(0.115, 0.00203);
 
   // speed for roller motor
   public enum Speed {
@@ -118,6 +123,18 @@ public class ShooterSubsystem extends SubsystemBase {
     leftShooterMotor.setVoltage(voltage.magnitude());
     middleShooterMotor.setVoltage(voltage.magnitude());
     rightShooterMotor.setVoltage(voltage.magnitude());
+  }
+
+  /** sets voltage of all motors given a target RPM */
+  public void setVoltage(double targetRPM) {
+    double slewedRPM = slewRateLimiter.calculate(targetRPM);
+
+    double slewedVoltage = feedForward.calculate(slewedRPM);
+    double targetVoltage = feedForward.calculate(targetRPM);
+
+    double outputVoltage = Math.min(slewedVoltage, targetVoltage);
+
+    setVoltage(Volts.of(outputVoltage));
   }
 
   /**
