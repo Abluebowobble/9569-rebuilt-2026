@@ -37,6 +37,7 @@ import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
 
+import com.ctre.phoenix6.HootAutoReplay;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -73,6 +74,8 @@ public class RobotContainer {
   FeederSubsystem feederSubsystem = new FeederSubsystem();
   ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  HoodSubsystem hoodSubsystem = new HoodSubsystem();
+
 
   private final SendableChooser<Command> autoChooser;
 
@@ -84,32 +87,32 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-    NamedCommands.registerCommand("reverse feeder",
-        conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
-    NamedCommands.registerCommand("run feeder",
-        conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
-    NamedCommands.registerCommand("run shooter",
-        shooterSubsystem.runCommand());
-    NamedCommands.registerCommand("intake up",
-        intakeSubsystem.returnPositionCommand());
-    NamedCommands.registerCommand("intake down",
-        intakeSubsystem.intakePositionCommand());
-    NamedCommands.registerCommand("run intake roller",
-        intakeSubsystem.runRollerCommand());
-    NamedCommands.registerCommand("reverse intake roller",
-        intakeSubsystem.reverseRollerCommand());
-    NamedCommands.registerCommand("agitate intake",
-        intakeSubsystem.reverseRollerCommand());
+    // NamedCommands.registerCommand("reverse feeder",
+    //     conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
+    // NamedCommands.registerCommand("run feeder",
+    //     conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    // NamedCommands.registerCommand("run shooter",
+    //     shooterSubsystem.runCommand());
+    // NamedCommands.registerCommand("intake up",
+    //     intakeSubsystem.returnPositionCommand());
+    // NamedCommands.registerCommand("intake down",
+    //     intakeSubsystem.intakePositionCommand());
+    // NamedCommands.registerCommand("run intake roller",
+    //     intakeSubsystem.runRollerCommand());
+    // NamedCommands.registerCommand("reverse intake roller",
+    //     intakeSubsystem.reverseRollerCommand());
+    // NamedCommands.registerCommand("agitate intake",
+    //     intakeSubsystem.reverseRollerCommand());
 
     autoChooser = AutoBuilder.buildAutoChooser();
-
+    
     configureBindings();
   }
 
   private void configureBindings() {
-    // testBindings();
+    testBindings();
     // compBindings();
-    compBindingsWithManualAgitate();
+    // compBindingsWithManualAgitate();
   }
 
   public void testBindings() {
@@ -117,35 +120,42 @@ public class RobotContainer {
 
     // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
-    // ps5Controller.circle().onTrue(intakeSubsystem.intakePositionCommand());
-    // ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
+    ps5Controller.circle().onTrue(intakeSubsystem.returnPositionCommand());
+    ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    ps5Controller.square().whileTrue(generalRobotCommands.feed());
     // ps5Controller.square().whileTrue(intakeSubsystem.returnPositionCommand());
 
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
     // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     // ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
-    // ps5Controller.triangle().whileTrue(shooterSubsystem.runCommand());
+    // ps5Controller.triangle().onTrue(shooterSubsystem.runCommand());
+    // ps5Controller.circle().onTrue(shooterSubsystem.stopCommand());
 
+    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runVoltageCommand(() -> -ps5Controller.getLeftY()));
     // ps5Controller.square().whileTrue(new StartEndCommand(() ->
     // shooterSubsystem.set(Volts.of(0.8)), () ->
     // shooterSubsystem.set(Volts.of(0))));
 
-    // ps5
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
-    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
+    // // ps5
+    // ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    // ps5Controller.R2().whileTrue(generalRobotCommands.feed());
 
-    // xbox
-    ps5Controller.square().onTrue(intakeSubsystem.returnPositionCommand());
-    ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
-    ps5Controller.square().whileTrue(intakeSubsystem.runRollerCommand());
+    // // xbox
+    // ps5Controller.square().onTrue(intakeSubsystem.returnPositionCommand());
+    // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
+    // ps5Controller.square().whileTrue(intakeSubsystem.runRollerCommand());
+
+    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -xboxController.getLeftY()));
+    // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() -> -xboxController.getLeftY()));
   }
 
   public void compBindings() {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // ps5
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(4000));
     ps5Controller.R2().whileTrue(generalRobotCommands.feed());
 
     // xbox
@@ -157,27 +167,35 @@ public class RobotContainer {
   public void compBindingsWithManualAgitate() {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
-    ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    // ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(4000));
+    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
     ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
     ps5Controller.povDown().onTrue(swerve.zeroGyroCommand());
-    ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked = !isSwerveLocked));
+    // ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked =
+    // !isSwerveLocked));
 
-    if (isSwerveLocked) {
-      CommandScheduler commandScheduler = CommandScheduler.getInstance();
-      commandScheduler.schedule(swerve.swerveLockCommand().repeatedly());
-    }
+    // if (isSwerveLocked) {
+    // CommandScheduler commandScheduler = CommandScheduler.getInstance();
+    // commandScheduler.schedule(swerve.swerveLockCommand().repeatedly());
+    // }
+
+    ps5Controller.L3().whileTrue(swerve.swerveLockCommand().repeatedly());
 
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
     xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
-    xboxController.rightTrigger().whileTrue(intakeSubsystem.agitatePivotCommand());
     xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
+
+    // //test
+    shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
+    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -xboxController.getRightY()));
+    // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
+    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
   }
 
   public Command getAutonomousCommand() {
-    return new PathPlannerAuto("New Auto");
-    // return shootAuton();
+    // return new PathPlannerAuto("New Auto");
+    return shootAuton();
   }
 
   public Command shootAuton() {
@@ -185,17 +203,16 @@ public class RobotContainer {
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
         Commands.parallel(
-            shooterSubsystem.runCommand(),
+            shooterSubsystem.runCommand(4000),
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
-      Command driveVelocity1 = swerve
-          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-1, 0, 0, new Rotation2d(0)));
+
       Command driveVelocity2 = swerve
-          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, new Rotation2d(0)));
+          .driveWithSetpointGenerator(() -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, swerve.getHeading()));
 
       return Commands.sequence(
-          Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),
+          // Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),
           shoot,
           Commands.deadline(Commands.waitSeconds(2), driveVelocity2));
     } catch (Exception e) {
@@ -204,12 +221,12 @@ public class RobotContainer {
     }
   }
 
+
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
-    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(),
+    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(4000),
         Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
             .andThen(feed)));
-    // 7 to fully unload
     try {
       Command driveVelocity1_1 = swerve
           .driveWithSetpointGenerator(

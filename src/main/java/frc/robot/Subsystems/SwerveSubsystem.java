@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonUtils;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
@@ -45,6 +47,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.LandMarks;
 import swervelib.SwerveDrive;
@@ -59,7 +62,8 @@ public class SwerveSubsystem extends SubsystemBase {
   private final SwerveDrive swerveDrive;
 
   // PhotonVision class for full field localization
-  // private Vision vision;
+  private Vision vision;
+  private final Field2d photonField2d = new Field2d();
 
   private final Field2d field = new Field2d();
 
@@ -81,7 +85,7 @@ public class SwerveSubsystem extends SubsystemBase {
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
 
-    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    // SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -111,6 +115,8 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
 
+    RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroCommand));
+    vision = new Vision();
   }
 
   /** sets up path planner */
@@ -207,12 +213,10 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void zeroGyro() {
-    if (!blueAlliance) {
-      swerveDrive.zeroGyro();
+    swerveDrive.zeroGyro();
 
+    if (!blueAlliance) {
       swerveDrive.resetOdometry(new Pose2d(swerveDrive.getPose().getTranslation(), new Rotation2d(180)));
-    } else {
-      swerveDrive.zeroGyro();
     }
   }
 
@@ -363,17 +367,20 @@ public class SwerveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    SmartDashboard.putNumber("Distance FRom Blue HUb", vision.distanceToBlueHub(swerveDrive.getPose()));
 
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
     field.setRobotPose(currentPose);
+
+    vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
 
     // telemetry for manual aim
     SmartDashboard.putBoolean("Is Aimed?", isAimed());
   }
 
   public void addVisionMeasurement(
-      Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> stdDevs) {
-    swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, stdDevs);
+      Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> curStdDevs) {
+    swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, curStdDevs);
   }
 }

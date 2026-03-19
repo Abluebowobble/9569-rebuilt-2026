@@ -49,7 +49,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private static final Angle kPositionTolerance = Degrees.of(3); // to tune
 
   // pivot motor controller
-  private final PIDController pivotMotorController = new PIDController(0.45, 0, 0); // to tune
+  private final PIDController pivotMotorController = new PIDController(0.9, 0, 0); // to tune
 
   // for slew
   private static final double kMaxPivotVoltageChange = 0.07;
@@ -79,8 +79,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(8),
-    INTAKE(83.7),
-    AGITATE(20);
+    INTAKE(80), //83.7
+    AGITATE(50); //50
 
     private final double degrees;
 
@@ -137,8 +137,9 @@ public class IntakeSubsystem extends SubsystemBase {
             runOnce(() -> set(Position.AGITATE)),
             Commands.waitUntil(this::isPositionWithinTolerance),
             runOnce(() -> set(Position.INTAKE)),
-            Commands.waitUntil(this::isPositionWithinTolerance))
-            .repeatedly())
+            Commands.waitUntil(this::isPositionWithinTolerance)),
+            Commands.waitSeconds(0.25)
+            ).repeatedly()
         .handleInterrupt(() -> {
           set(Position.INTAKE);
           set(Speed.STOP);

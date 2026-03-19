@@ -85,9 +85,10 @@ public class GeneralRobotCommands {
         // Commands.waitSeconds(0.125)
         // .andThen(conveyorSubsystem.runCommand().alongWith(intakeSubsystem.agitatePivotCommand()))));
 
-        return Commands.sequence(
+        return Commands.parallel(
                 feederSubsystem.runCommand(),
                 Commands.waitSeconds(0.125)
-                        .andThen(conveyorSubsystem.runCommand().alongWith(intakeSubsystem.agitatePivotCommand())));
+                        .andThen(conveyorSubsystem.runCommand()
+                                .alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 }
