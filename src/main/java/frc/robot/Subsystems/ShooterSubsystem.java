@@ -58,7 +58,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static final double kVelocityTolerance = 50; // if current RPM is within desired RPM +- velocity tolerance,
                                                        // then its within tolerance
-  private static final double kTargetVelocity = 5000;
   private Voltage voltage = Volts.of(0);
 
   // speed for roller motor
@@ -87,10 +86,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     leaderConfig.closedLoop
         .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward
-        .sva(0.115, 0.00203, 0, ClosedLoopSlot.kSlot0);
-    // 0001: minimal oscillation
-    // high oscillation: 000001
-    // 0.00000001, 0.000001, 0.005,
+        .sva(0.115, 0.00203, 0, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leftShooterMotor.configure(
         leaderConfig,
         ResetMode.kResetSafeParameters,
@@ -111,6 +107,7 @@ public class ShooterSubsystem extends SubsystemBase {
         PersistMode.kPersistParameters);
 
     controller.setSetpoint(1000, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    targetRPM = 1000;
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -119,17 +116,6 @@ public class ShooterSubsystem extends SubsystemBase {
     middleShooterMotor.setVoltage(voltage.magnitude());
     rightShooterMotor.setVoltage(voltage.magnitude());
   }
-
-  /**
-   * updates speed of given motor via pidf, requires RelativeEncoder encoder,
-   * SparkMax motor
-   */
-  // public void updateCurrentSpeedOfMotor(RelativeEncoder encoder, SparkMax
-  // motor) {
-  // double pidVoltage = controller.calculate(encoder.getVelocity(), targetRPM);
-  // double ff = feedForward.calculate(targetRPM);
-  // motor.setVoltage(ff + pidVoltage);
-  // }
 
   /**
    * this function updates the rpm based on the value in smart dashboard, updates
@@ -146,21 +132,14 @@ public class ShooterSubsystem extends SubsystemBase {
     }
   }
 
-  /** update speed for all three motors */
-  // public void updateCurrentSpeed() {
-  // updateCurrentSpeedOfMotor(encoders[0], motors[0]);
-  // for (int i = 0; i < 3; i++) {
-  // updateCurrentSpeedOfMotor(encoders[i], motors[i]);
-  // }
-  // }
-
   /** set target RPM for all motors */
   public void set(DoubleSupplier rpm) {
-    controller.setSetpoint(rpm.getAsDouble(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    set(rpm.getAsDouble());
   }
 
   public void set(double rpm) {
     controller.setSetpoint(rpm, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    targetRPM = rpm;
   }
 
   public void set(Speed volts) {
@@ -177,13 +156,11 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   // public void set(DoubleSupplier volts) {
-  //   voltage = Volts.of(volts.getAsDouble());
-  //   leftShooterMotor.setVoltage(volts.getAsDouble());
-  //   middleShooterMotor.setVoltage(volts.getAsDouble());
-  //   rightShooterMotor.setVoltage(volts.getAsDouble());
+  // voltage = Volts.of(volts.getAsDouble());
+  // leftShooterMotor.setVoltage(volts.getAsDouble());
+  // middleShooterMotor.setVoltage(volts.getAsDouble());
+  // rightShooterMotor.setVoltage(volts.getAsDouble());
   // }
-
-  private final EventLoop m_loop = new EventLoop();
 
   /** sets rpm to 0 */
   public void stop() {
@@ -192,18 +169,20 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** checks if each shooter has their velocity is within tolerance */
   public boolean isVelocityWithinTolerance() {
-    return MathUtil.isNear(kTargetVelocity, leftEncoder.getVelocity(), kVelocityTolerance);
+    return MathUtil.isNear(targetRPM, leftEncoder.getVelocity(), kVelocityTolerance);
   }
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(double rpm) {
-    return runOnce(() -> set(rpm));
+    return runOnce(() -> set(rpm))
+        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
     // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 
-   /** sets voltage to shoot in front of Hub */
+  /** sets voltage to shoot in front of Hub */
   public Command runTestCommand(DoubleSupplier rpm) {
-    return runOnce(() -> set(rpm));
+    return runOnce(() -> set(rpm))
+        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
     // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 
@@ -227,12 +206,18 @@ public class ShooterSubsystem extends SubsystemBase {
     // leftShooterLog.append(leftEncoder.getVelocity());
 
     // telemetry
-    SmartDashboard.putNumber("left RPM", leftEncoder.getVelocity());
-    SmartDashboard.putNumber("middle RPM", middleEncoder.getVelocity());
-    SmartDashboard.putNumber("right RPM", rightEncoder.getVelocity());
-    SmartDashboard.putBoolean("is Velocity within tolerance",
-        isVelocityWithinTolerance());
-    SmartDashboard.putNumber("shooter voltage (each)", voltage.magnitude());
-    SmartDashboard.putNumber("Target rpm", targetRPM);
+    SmartDashboard.putData(this);
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    builder.setSmartDashboardType("Shooter");
+
+    builder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
+    builder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
+    builder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);
+    builder.addBooleanProperty("is Velocity within tolerance", this::isVelocityWithinTolerance, null);
+    builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
+    builder.addDoubleProperty("Target rpm", () -> targetRPM, null);
   }
 }

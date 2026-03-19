@@ -22,18 +22,19 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
-    // position variables, to tune
+    // position variables
     private static final double kMinPosition = 0;
     private static final double kMaxPosition = 0.804;
     private static final double kPositionTolerance = 0.01;
+    public static final double kStartingPosition = kMaxPosition / 2;
 
     // sets current position and setpoint
-    private double targetPosition = 0.5;
+    private double targetPosition = kStartingPosition;
 
     // servos
     private final Servo leftServo;
     private final Servo rightServo;
-    
+
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
         rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
@@ -44,6 +45,9 @@ public class HoodSubsystem extends SubsystemBase {
 
         // // adds value for SmartDashboard update function
         // SmartDashboard.putNumber("Set Target Position", 0.5);
+
+        // prep hood at maximal position
+        setPosition(kStartingPosition);
     }
 
     /**
@@ -51,12 +55,7 @@ public class HoodSubsystem extends SubsystemBase {
      * position
      */
     public void setPosition(DoubleSupplier position) {
-        final double clampedPosition = MathUtil.clamp(position.getAsDouble(), kMinPosition, kMaxPosition);
-
-        leftServo.set(clampedPosition);
-        rightServo.set(clampedPosition);
-
-        targetPosition = clampedPosition;
+        setPosition(position.getAsDouble());
     }
 
     public void setPosition(double position) {
@@ -96,10 +95,16 @@ public class HoodSubsystem extends SubsystemBase {
         // uncomment below to update hood based on smartdashboard
         // updateSpeedWithSmartDashboard();
 
-        // telemetry
-        SmartDashboard.putNumber("Current Position Left", leftServo.getPosition());
-        SmartDashboard.putNumber("Current Position Right", rightServo.getPosition());
-        SmartDashboard.putNumber("Target Position", targetPosition);
+        SmartDashboard.putData(this);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.setSmartDashboardType("Hood");
+
+        builder.addDoubleProperty("Hood Current Position Left", () -> leftServo.getPosition(), null);
+        builder.addDoubleProperty("Hood Current Position Right", () -> rightServo.getPosition(), null);
+        builder.addDoubleProperty("Hood Target Position", () -> targetPosition, null);
     }
 
     public void updateSpeedWithSmartDashboard() {

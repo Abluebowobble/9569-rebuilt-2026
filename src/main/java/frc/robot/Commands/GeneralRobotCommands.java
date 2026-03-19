@@ -19,7 +19,7 @@ public class GeneralRobotCommands {
     SwerveSubsystem swerveSubsystem;
     ShooterSubsystem shooterSubsystem;
     IntakeSubsystem intakeSubsystem;
-    // HoodSubsystem hoodSubsystem;
+    HoodSubsystem hoodSubsystem;
     FeederSubsystem feederSubsystem;
     ConveyorSubsystem conveyorSubsystem;
 
@@ -29,13 +29,13 @@ public class GeneralRobotCommands {
     Command operatorSwerveDefaulCommand;
 
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
-            IntakeSubsystem intakeSubsystem, FeederSubsystem feederSubsystem,
+            IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
             ConveyorSubsystem conveyorSubsystem, DoubleSupplier leftYSupplier, DoubleSupplier leftXSupplier,
             Command operatorSwerveDefaulCommand) {
         this.swerveSubsystem = swerveSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.intakeSubsystem = intakeSubsystem;
-        // this.hoodSubsystem = hoodSubsystem;
+        this.hoodSubsystem = hoodSubsystem;
         this.feederSubsystem = feederSubsystem;
         this.conveyorSubsystem = conveyorSubsystem;
 
@@ -74,7 +74,11 @@ public class GeneralRobotCommands {
     // }
 
     public Command aimSwerveCommand() {
-        return new AimStandingStillCommand(swerveSubsystem);
+        return new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier);
+    }
+
+    public Command prepareShooterCommand() {
+        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);
     }
 
     public Command feed() {
@@ -90,5 +94,10 @@ public class GeneralRobotCommands {
                 Commands.waitSeconds(0.125)
                         .andThen(conveyorSubsystem.runCommand()
                                 .alongWith(intakeSubsystem.agitatePivotCommand())));
+                    // .onlyWhile(this::isReadyToShoot);
+    }
+
+    public boolean isReadyToShoot() {
+        return shooterSubsystem.isVelocityWithinTolerance() && hoodSubsystem.isPositionWithinTolerance();
     }
 }

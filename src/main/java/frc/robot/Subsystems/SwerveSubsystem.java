@@ -6,6 +6,7 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Meters;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -37,6 +39,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -69,6 +72,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private boolean isLocked = false;
   boolean blueAlliance;
+  private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
@@ -189,15 +193,10 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.drive(velocity);
   }
 
-  /**
-   * If the operator is in the Blue Alliance Station, this should be 0 degrees. If
-   * the operator is in the Red Alliance Station, this should be 180 degrees.
-   */
   public Rotation2d getOperatorForwardDirection() {
     Rotation2d fieldOrientedHeading = swerveDrive.getPose().getRotation();
-    Optional<DriverStation.Alliance> currentAlliance = DriverStation.getAlliance();
 
-    if (currentAlliance.isPresent() && currentAlliance.get() == DriverStation.Alliance.Red) {
+    if (!blueAlliance) {
       return fieldOrientedHeading.rotateBy(new Rotation2d(Degrees.of(180)));
     }
 
@@ -224,13 +223,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return getPose().getRotation();
   }
 
-  public boolean isAimed() {
-    return MathUtil.isNear(getTargetHeadingInOperatorPerspective().getDegrees(),
-        getHeadingInOperaturPerspective().getDegrees(),
-        SwerveConstants.AIM_TOLERANCE.magnitude(), -360, 360);
-  }
-
-  private Rotation2d getHeadingInOperaturPerspective() {
+  private Rotation2d getHeadingInOperatorPerspective() {
     final Rotation2d currentHeadingInBlueAlliancePerspective = swerveDrive.getPose().getRotation();
     final Rotation2d currentHeadingInOperatorPerspective = currentHeadingInBlueAlliancePerspective
         .minus(getOperatorForwardDirection());
@@ -240,18 +233,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getTargetHeadingInOperatorPerspective() {
     return getTargetHeadingInFieldFrame().minus(getOperatorForwardDirection());
-  }
-
-  public String aimSuggestion() {
-    if (isAimed()) {
-      return "Aimed!";
-    }
-
-    Rotation2d headingInOperatorPerspective = getHeadingInOperaturPerspective();
-    Rotation2d targetHeading = getTargetHeadingInOperatorPerspective();
-
-    // implement
-    return "";
   }
 
   public Rotation2d getTargetHeadingInFieldFrame() {
@@ -364,6 +345,33 @@ public class SwerveSubsystem extends SubsystemBase {
     return swerveDrive;
   }
 
+  public Vision getVision() {
+    return vision;
+  }
+
+  public boolean currentPoseIsValidForShooting() {
+    Pose2d pose = getPose();
+
+    if (pose == null) {
+      return false;
+    }
+
+    final Translation2d translation = pose.getTranslation();
+    final double x = translation.getX();
+    final double y = translation.getY();
+
+    if (!Double.isFinite(x) || !Double.isFinite(y)) {
+      return false;
+    }
+
+    double poseEdgeMargin = kPoseEdgeMargin.magnitude();
+
+    return x >= -poseEdgeMargin
+        && x <= LandMarks.fieldLength + poseEdgeMargin
+        && y >= -poseEdgeMargin
+        && y <= LandMarks.fieldWidth + poseEdgeMargin;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -374,9 +382,6 @@ public class SwerveSubsystem extends SubsystemBase {
     field.setRobotPose(currentPose);
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
-
-    // telemetry for manual aim
-    SmartDashboard.putBoolean("Is Aimed?", isAimed());
   }
 
   public void addVisionMeasurement(
