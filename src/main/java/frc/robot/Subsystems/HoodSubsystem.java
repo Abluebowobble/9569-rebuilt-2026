@@ -28,7 +28,6 @@ public class HoodSubsystem extends SubsystemBase {
     private static final double kPositionTolerance = 0.01;
 
     // sets current position and setpoint
-    private static final double kStartingPosition = 0.5;
     private double targetPosition = 0.5;
 
     // servos
@@ -42,9 +41,6 @@ public class HoodSubsystem extends SubsystemBase {
         // tune
         leftServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
-
-        // // move hood to 50% on initialization
-        // setPosition(kStartingPosition);
 
         // // adds value for SmartDashboard update function
         // SmartDashboard.putNumber("Set Target Position", 0.5);
@@ -74,13 +70,17 @@ public class HoodSubsystem extends SubsystemBase {
 
     /**
      * Expects a position between 0.0 and 1.0, sets the position to given value and
-     * ends when position is within tolerance
+     * ends when position is within tolerance, for testing
      */
     public Command setCommand(DoubleSupplier position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
+    /**
+     * Expects a position between 0.0 and 1.0, sets the position to given value and
+     * ends when position is within tolerance
+     */
     public Command setCommand(double position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));

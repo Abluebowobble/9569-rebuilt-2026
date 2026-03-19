@@ -110,9 +110,9 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    // testBindings();
+    testBindings();
     // compBindings();
-    compBindingsWithManualAgitate();
+    // compBindingsWithManualAgitate();
   }
 
   public void testBindings() {
@@ -120,8 +120,10 @@ public class RobotContainer {
 
     // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
-    // ps5Controller.circle().onTrue(intakeSubsystem.intakePositionCommand());
-    // ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
+    ps5Controller.circle().onTrue(intakeSubsystem.returnPositionCommand());
+    ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    ps5Controller.square().whileTrue(generalRobotCommands.feed());
     // ps5Controller.square().whileTrue(intakeSubsystem.returnPositionCommand());
 
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
@@ -166,7 +168,7 @@ public class RobotContainer {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(4000));
-    ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
+    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
     ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
     ps5Controller.povDown().onTrue(swerve.zeroGyroCommand());
     // ps5Controller.L3().onTrue(Commands.runOnce(() -> isSwerveLocked =
@@ -182,7 +184,6 @@ public class RobotContainer {
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
     xboxController.a().onTrue(intakeSubsystem.intakePositionCommand());
     xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
-    xboxController.rightTrigger().whileTrue(intakeSubsystem.agitatePivotCommand());
     xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
 
     // //test
