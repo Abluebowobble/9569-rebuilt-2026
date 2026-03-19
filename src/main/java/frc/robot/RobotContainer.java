@@ -37,6 +37,7 @@ import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
 
+import com.ctre.phoenix6.HootAutoReplay;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -109,13 +110,13 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    testBindings();
+    // testBindings();
     // compBindings();
-    // compBindingsWithManualAgitate();
+    compBindingsWithManualAgitate();
   }
 
   public void testBindings() {
-    // swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
@@ -127,8 +128,8 @@ public class RobotContainer {
     // ps5Controller.square().whileTrue(conveyorSubsystem.runCommand());
     // ps5Controller.cross().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     // ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
-    ps5Controller.triangle().whileTrue(shooterSubsystem.runCommand());
-    ps5Controller.triangle().onFalse(shooterSubsystem.stopCommand());
+    // ps5Controller.triangle().onTrue(shooterSubsystem.runCommand());
+    // ps5Controller.circle().onTrue(shooterSubsystem.stopCommand());
 
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runVoltageCommand(() -> -ps5Controller.getLeftY()));
     // ps5Controller.square().whileTrue(new StartEndCommand(() ->
@@ -152,7 +153,7 @@ public class RobotContainer {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // ps5
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(4000));
     ps5Controller.R2().whileTrue(generalRobotCommands.feed());
 
     // xbox
@@ -164,7 +165,7 @@ public class RobotContainer {
   public void compBindingsWithManualAgitate() {
     swerve.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand());
+    // ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(4000));
     ps5Controller.R2().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     ps5Controller.R1().whileTrue(conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
     ps5Controller.povDown().onTrue(swerve.zeroGyroCommand());
@@ -183,6 +184,12 @@ public class RobotContainer {
     xboxController.leftTrigger().whileTrue(intakeSubsystem.runRollerCommand());
     xboxController.rightTrigger().whileTrue(intakeSubsystem.agitatePivotCommand());
     xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
+
+    // //test
+    shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
+    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -xboxController.getRightY()));
+    // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
+    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
   }
 
   public Command getAutonomousCommand() {
@@ -195,7 +202,7 @@ public class RobotContainer {
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
         Commands.parallel(
-            shooterSubsystem.runCommand(),
+            shooterSubsystem.runCommand(4000),
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
@@ -213,12 +220,12 @@ public class RobotContainer {
     }
   }
 
+
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
-    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(),
+    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(4000),
         Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
             .andThen(feed)));
-    // 7 to fully unload
     try {
       Command driveVelocity1_1 = swerve
           .driveWithSetpointGenerator(

@@ -23,10 +23,10 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.3),
+    RUN(0.5),
     REVERSE(-0.9);
 
-    private final double percentOutput;
+    private final double percentOutput; 
 
     private Speed(double percentOutput) {
       this.percentOutput = percentOutput;

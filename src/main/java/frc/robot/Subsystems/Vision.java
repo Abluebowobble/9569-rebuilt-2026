@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -40,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -63,9 +65,9 @@ public class Vision extends SubsystemBase {
 
   private Optional<EstimatedRobotPose> latestEstimatedPose = Optional.empty();
 
-  private final Transform3d kRobotToCam = new Transform3d(
-      new Translation3d(-0.0434094, 0, 0.6439748),
-      new Rotation3d(0, Units.degreesToRadians(-61.9), 0));
+  private final Transform3d kCamToRobot = new Transform3d(
+      new Translation3d(Units.inchesToMeters(13.717), Units.inchesToMeters(0), Units.inchesToMeters(-25.353391)),
+      new Rotation3d(0, Units.degreesToRadians(-63), 0));
 
   private static final Set<Integer> PRIORITY_TAGS = Set.of(
       8, 5, 9, 10, 4, 3, 11, 2, 18, 27, 19, 20, 26, 25, 21, 24);
@@ -85,7 +87,7 @@ public class Vision extends SubsystemBase {
    */
   public Vision() {
     camera = new PhotonCamera("alice");
-    photonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kRobotToCam);
+    photonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kCamToRobot);
     curStdDevs = kSingleTagStdDevs;
   }
 
@@ -95,6 +97,9 @@ public class Vision extends SubsystemBase {
     // useBestCameraResults();
     // useBestPoseFieldRelative();
     // useBestPoseFieldRelativeTEST();
+    if (DriverStation.getAlliance().isPresent())
+      SmartDashboard.putString("alliance",
+          DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? "Blue" : "Red");
 
     SmartDashboard.putData("Localized Field", field);
   }
@@ -155,6 +160,15 @@ public class Vision extends SubsystemBase {
     }
   }
 
+  public PhotonCamera getCamera() {
+    return camera;
+  }
+
+  public double distanceToBlueHub(Pose2d robotPose) {
+    double distanceToTarget = PhotonUtils.getDistanceToPose(field.getRobotPose(), kAprilTagField.getTagPose(26).get().toPose2d());
+    return distanceToTarget;
+  }
+
   // /** Gets latest april tags stored in pipeline */
   // private void useBestPoseFieldRelative(EstimateConsumer estimateConsumer,
   // ChassisSpeeds speeds) {
@@ -173,7 +187,7 @@ public class Vision extends SubsystemBase {
   // if (kAprilTagField.getTagPose(bestTarget.getFiducialId()).isPresent()) {
   // Pose3d robotPose =
   // PhotonUtils.estimateFieldToRobotAprilTag(bestTarget.getBestCameraToTarget(),
-  // kAprilTagField.getTagPose(bestTarget.getFiducialId()).get(), kRobotToCam);
+  // kAprilTagField.getTagPose(bestTarget.getFiducialId()).get(), kCamToRobot);
 
   // Pose2d robotPose2d = robotPose.toPose2d();
   // field.setRobotPose(robotPose2d);
@@ -342,5 +356,4 @@ public class Vision extends SubsystemBase {
   public static interface EstimateConsumer {
     public void accept(Pose2d pose, double timestamp, Matrix<N3, N1> curStdDevs);
   }
-
 }

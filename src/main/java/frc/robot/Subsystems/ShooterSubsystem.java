@@ -33,6 +33,8 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.event.BooleanEvent;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -54,8 +56,8 @@ public class ShooterSubsystem extends SubsystemBase {
   // pidf
   private double targetRPM = 0; // desired RPM we want the wheels to turn at
 
-  private static final double kVelocityTolerance = 5; // if current RPM is within desired RPM +- velocity tolerance,
-                                                      // then its within tolerance
+  private static final double kVelocityTolerance = 50; // if current RPM is within desired RPM +- velocity tolerance,
+                                                       // then its within tolerance
   private static final double kTargetVelocity = 5000;
   private Voltage voltage = Volts.of(0);
 
@@ -84,9 +86,11 @@ public class ShooterSubsystem extends SubsystemBase {
         .voltageCompensation(12.0);
 
     leaderConfig.closedLoop
-        .pid(0.0002, 0.0, 0.0, ClosedLoopSlot.kSlot0).feedForward
-        .sva(0.15, 12.0 / 6000.0, 0.03, ClosedLoopSlot.kSlot0);
-
+        .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward
+        .sva(0.115, 0.00203, 0, ClosedLoopSlot.kSlot0);
+    // 0001: minimal oscillation
+    // high oscillation: 000001
+    // 0.00000001, 0.000001, 0.005,
     leftShooterMotor.configure(
         leaderConfig,
         ResetMode.kResetSafeParameters,
@@ -105,6 +109,8 @@ public class ShooterSubsystem extends SubsystemBase {
         rightFollower,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+
+    controller.setSetpoint(1000, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -149,6 +155,10 @@ public class ShooterSubsystem extends SubsystemBase {
   // }
 
   /** set target RPM for all motors */
+  public void set(DoubleSupplier rpm) {
+    controller.setSetpoint(rpm.getAsDouble(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+  }
+
   public void set(double rpm) {
     controller.setSetpoint(rpm, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   }
@@ -166,16 +176,18 @@ public class ShooterSubsystem extends SubsystemBase {
     rightShooterMotor.setVoltage(volts.magnitude());
   }
 
-  public void set(DoubleSupplier volts) {
-    voltage = Volts.of(volts.getAsDouble());
-    leftShooterMotor.setVoltage(volts.getAsDouble());
-    middleShooterMotor.setVoltage(volts.getAsDouble());
-    rightShooterMotor.setVoltage(volts.getAsDouble());
-  }
+  // public void set(DoubleSupplier volts) {
+  //   voltage = Volts.of(volts.getAsDouble());
+  //   leftShooterMotor.setVoltage(volts.getAsDouble());
+  //   middleShooterMotor.setVoltage(volts.getAsDouble());
+  //   rightShooterMotor.setVoltage(volts.getAsDouble());
+  // }
+
+  private final EventLoop m_loop = new EventLoop();
 
   /** sets rpm to 0 */
   public void stop() {
-    set(400);
+    set(1000);
   }
 
   /** checks if each shooter has their velocity is within tolerance */
@@ -184,9 +196,14 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /** sets voltage to shoot in front of Hub */
-  public Command runCommand() {
-    return runOnce(() -> set(2000))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+  public Command runCommand(double rpm) {
+    return runOnce(() -> set(rpm));
+    // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
+  }
+
+   /** sets voltage to shoot in front of Hub */
+  public Command runTestCommand(DoubleSupplier rpm) {
+    return runOnce(() -> set(rpm));
     // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 

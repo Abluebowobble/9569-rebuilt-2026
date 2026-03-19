@@ -63,11 +63,25 @@ public class HoodSubsystem extends SubsystemBase {
         targetPosition = clampedPosition;
     }
 
+    public void setPosition(double position) {
+        final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
+
+        leftServo.set(clampedPosition);
+        rightServo.set(clampedPosition);
+
+        targetPosition = clampedPosition;
+    }
+
     /**
      * Expects a position between 0.0 and 1.0, sets the position to given value and
      * ends when position is within tolerance
      */
     public Command setCommand(DoubleSupplier position) {
+        return runOnce(() -> setPosition(position))
+                .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
+    }
+
+    public Command setCommand(double position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
