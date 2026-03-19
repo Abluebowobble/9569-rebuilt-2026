@@ -51,11 +51,6 @@ public class IntakeSubsystem extends SubsystemBase {
   // pivot motor controller
   private final PIDController pivotMotorController = new PIDController(0.9, 0, 0); // to tune
 
-  // for slew
-  private static final double kMaxPivotVoltageChange = 0.07;
-  private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
-  private Voltage currentOutput = Volts.of(0);
-
   // gear reduction
   private final double kDegreesPerRotation = 2;
 
@@ -79,8 +74,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(8),
-    INTAKE(80), //83.7
-    AGITATE(50); //50
+    INTAKE(80), // 83.7
+    AGITATE(50); // 50
 
     private final double degrees;
 
@@ -138,8 +133,7 @@ public class IntakeSubsystem extends SubsystemBase {
             Commands.waitUntil(this::isPositionWithinTolerance),
             runOnce(() -> set(Position.INTAKE)),
             Commands.waitUntil(this::isPositionWithinTolerance)),
-            Commands.waitSeconds(0.25)
-            ).repeatedly()
+        Commands.waitSeconds(0.25)).repeatedly()
         .handleInterrupt(() -> {
           set(Position.INTAKE);
           set(Speed.STOP);
@@ -168,17 +162,16 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Rotations", pivotEncoder.getPosition());
-
     updatePivotPosition();
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
   }
 
   /** updates pivot position with pid, to add: slew */
   public void updatePivotPosition() {
-    // // update time
-    // final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
-    // final Time elapsedTime = currentTime.minus(lastUpdateTime);
-    // lastUpdateTime = currentTime;
 
     final double currentPosition = pivotEncoder.getPosition();
     final double targetPosition = setPointAngle.magnitude() / kDegreesPerRotation;
@@ -186,15 +179,6 @@ public class IntakeSubsystem extends SubsystemBase {
     // get new voltage according to pid controller
     double pidOutput = pivotMotorController.calculate(currentPosition,
         targetPosition);
-
-    // // get maximum allowed distance for this round
-    // final Voltage maxStep = Volts.of(kMaxPivotVoltageChange *
-    // elapsedTime.magnitude());
-
-    // // apply slew
-    // currentOutput = Volts.of(pidOutput > currentOutput.magnitude()
-    // ? Math.min(pidOutput, currentOutput.plus(maxStep).magnitude())
-    // : Math.max(pidOutput, currentOutput.minus(maxStep).magnitude()));
 
     // tuned pid for voltage
     pivotMotor.setVoltage(pidOutput);

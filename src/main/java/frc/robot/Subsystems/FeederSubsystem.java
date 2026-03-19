@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FeederSubsystem extends SubsystemBase {
-  
+
   private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
 
   public enum Speed {
@@ -26,7 +26,7 @@ public class FeederSubsystem extends SubsystemBase {
     RUN(0.5),
     REVERSE(-0.9);
 
-    private final double percentOutput; 
+    private final double percentOutput;
 
     private Speed(double percentOutput) {
       this.percentOutput = percentOutput;
@@ -35,7 +35,7 @@ public class FeederSubsystem extends SubsystemBase {
     public Voltage voltage() {
       return Volts.of(percentOutput * 12.0);
     }
-  } 
+  }
 
   /** Creates a new FeederSubsystem. */
   public FeederSubsystem() {
@@ -63,7 +63,7 @@ public class FeederSubsystem extends SubsystemBase {
     return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
   }
 
-  /** set to reverse speed enum on start, stop on end*/
+  /** set to reverse speed enum on start, stop on end */
   public Command reverseCommand() {
     return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
   }
