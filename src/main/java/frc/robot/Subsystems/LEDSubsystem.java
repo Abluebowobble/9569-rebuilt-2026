@@ -83,7 +83,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command flashBangCommand() {
-    return runOnce(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.1)), Section.ALL));
+    return run(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.1)), Section.ALL));
   }
 
   public void setRainbowScrolling() {

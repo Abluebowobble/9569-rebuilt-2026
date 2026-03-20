@@ -86,7 +86,7 @@ public class PrepareShooterCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (!swerve.currentPoseIsValidForShooting()) {
+    if (!swerve.currentPoseIsValidForScoring()) {
       hoodSubsystem.setPosition(HoodSubsystem.kStartingPosition);
       return;
     }
