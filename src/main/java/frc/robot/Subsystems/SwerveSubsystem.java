@@ -39,6 +39,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -71,6 +72,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
+
+  private static final Angle kAimTolerance = Degrees.of(5);
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
@@ -180,7 +183,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean isAimed() {
     return Math.abs(
-        getTargetHeadingInFieldFrame().minus(getHeading()).getDegrees()) < SwerveConstants.AIM_TOLERANCE
+        getTargetHeadingInFieldFrame().minus(getHeading()).getDegrees()) < kAimTolerance
             .magnitude();
   }
 

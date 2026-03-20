@@ -37,6 +37,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
  
 import edu.wpi.first.math.VecBuilder;
@@ -54,7 +55,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 public class Vision extends SubsystemBase {
 
   // field
-  public static final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
+  public final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
       .loadField(AprilTagFields.k2026RebuiltAndymark);
 
   private final Field2d field = new Field2d();
@@ -65,7 +66,7 @@ public class Vision extends SubsystemBase {
 
   private Optional<EstimatedRobotPose> latestEstimatedPose = Optional.empty();
 
-  private final Transform3d kCamToRobot = new Transform3d(
+  private static final Transform3d kCamToRobot = new Transform3d(
       new Translation3d(Units.inchesToMeters(13.717), Units.inchesToMeters(0), Units.inchesToMeters(-25.353391)),
       new Rotation3d(0, Units.degreesToRadians(-63), 0));
 
@@ -73,13 +74,13 @@ public class Vision extends SubsystemBase {
       8, 5, 9, 10, 4, 3, 11, 2, 18, 27, 19, 20, 26, 25, 21, 24);
 
   // Distance Thresholds
-  private static final double kMaxDistTrusted = 6.0; // 6m for priority tags
-  private static final double kMaxDistNormal = 3.0; // 3m for non-priority tags
+  private static final Distance kMaxDistTrusted = Meters.of(6); // 6m for priority tags
+  private static final Distance kMaxDistNormal = Meters.of(3); // 3m for non-priority tags
 
   // confidence based on different states of vision
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   private Matrix<N3, N1> curStdDevs;
-  private double kMaxAmbiguity = 0.7;
+  private static final double kMaxAmbiguity = 0.7;
 
   /**
    * This object expects a function as an initial parameter. i.e. in yagsl:
@@ -298,7 +299,7 @@ public class Vision extends SubsystemBase {
 
     // If a priority tag is visible, allow trusting single-tag measurements
     // from a bit farther away.
-    double maxAllowedDist = seesPriorityTag ? kMaxDistTrusted : kMaxDistNormal;
+    double maxAllowedDist = seesPriorityTag ? kMaxDistTrusted.magnitude() : kMaxDistNormal.magnitude();
 
     // Reject this measurement entirely if the average ambiguity is too high.
     if (avgAmbiguity > kMaxAmbiguity) {

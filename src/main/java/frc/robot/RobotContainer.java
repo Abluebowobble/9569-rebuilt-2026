@@ -8,6 +8,7 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.RPM;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Commands.GeneralRobotCommands;
@@ -187,7 +188,7 @@ public class RobotContainer {
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
         Commands.parallel(
-            shooterSubsystem.runCommand(4000),
+            shooterSubsystem.runCommand(RPM.of(5300)),
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
@@ -208,7 +209,7 @@ public class RobotContainer {
  
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
-    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(4000),
+    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(RPM.of(5300)),
         Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
             .andThen(feed)));
     try {

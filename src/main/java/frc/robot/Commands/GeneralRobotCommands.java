@@ -1,5 +1,7 @@
 package frc.robot.Commands;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -96,7 +98,7 @@ public class GeneralRobotCommands {
 
     public Command runShooterCommand() {
         return Commands.parallel(
-                shooterSubsystem.runCommand(5300),
+                shooterSubsystem.runCommand(RPM.of(5300)),
                 shooterLightsCommand());
     }
 
