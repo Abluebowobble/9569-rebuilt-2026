@@ -91,7 +91,7 @@ public class GeneralRobotCommands {
                                 .alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 
-    // change to use isReadToShoot
+    // change to use isReadToShoot adw
     public Command runShooterCommand() {
         return Commands.parallel(
                 shooterSubsystem.runCommand(5300),
