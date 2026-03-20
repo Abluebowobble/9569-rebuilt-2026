@@ -14,6 +14,8 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -54,6 +56,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // gear reduction
   private final double kDegreesPerRotation = 2;
 
+  private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
+
   // speed for roller motor
   public enum Speed {
     STOP(0),
@@ -89,9 +93,10 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public IntakeSubsystem() {
-    SparkBaseConfig config = new SparkMaxConfig();
-    pivotMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    rollerMotor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    SparkBaseConfig pivotConfig = new SparkMaxConfig();
+    pivotConfig.inverted(false);
+    pivotConfig.closedLoop.p(0.9);
+    pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     pivotEncoder.setPosition(0);
   }
@@ -107,7 +112,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
-    setPointAngle = position.degrees();
+    // setPointAngle = position.degrees();
+    controller.setSetpoint(position.degrees().magnitude() / kDegreesPerRotation, ControlType.kPosition);
   }
 
   /** set pivot motor to go to intake position */
@@ -162,7 +168,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    updatePivotPosition();
+    // updatePivotPosition();
   }
 
   @Override
@@ -170,18 +176,19 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
   }
 
-  /** updates pivot position with pid, to add: slew */
-  public void updatePivotPosition() {
+  // /** updates pivot position with pid, to add: slew */
+  // public void updatePivotPosition() {
 
-    final double currentPosition = pivotEncoder.getPosition();
-    final double targetPosition = setPointAngle.magnitude() / kDegreesPerRotation;
+  // final double currentPosition = pivotEncoder.getPosition();
+  // final double targetPosition = setPointAngle.magnitude() /
+  // kDegreesPerRotation;
 
-    // get new voltage according to pid controller
-    double pidOutput = pivotMotorController.calculate(currentPosition,
-        targetPosition);
+  // // get new voltage according to pid controller
+  // double pidOutput = pivotMotorController.calculate(currentPosition,
+  // targetPosition);
 
-    // tuned pid for voltage
-    pivotMotor.setVoltage(pidOutput);
-  }
+  // // tuned pid for voltage
+  // pivotMotor.setVoltage(pidOutput);
+  // }
 
 }

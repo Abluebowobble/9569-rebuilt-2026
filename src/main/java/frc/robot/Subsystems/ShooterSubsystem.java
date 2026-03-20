@@ -5,6 +5,7 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.Percent;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
@@ -82,11 +83,13 @@ public class ShooterSubsystem extends SubsystemBase {
     SparkMaxConfig leaderConfig = new SparkMaxConfig();
     leaderConfig
         .inverted(false)
-        .voltageCompensation(12.0);
-
+        .voltageCompensation(12.0)
+        .openLoopRampRate(1)
+        .closedLoopRampRate(1);
     leaderConfig.closedLoop
         .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward
-        .sva(0.115, 0.00203, 0, ClosedLoopSlot.kSlot0); // might wanna increase kV
+        .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
+
     leftShooterMotor.configure(
         leaderConfig,
         ResetMode.kResetSafeParameters,
@@ -106,6 +109,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
+    // set initial velocity
     controller.setSetpoint(1000, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
     targetRPM = 1000;
   }
@@ -138,6 +142,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void set(double rpm) {
+
     controller.setSetpoint(rpm, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
     targetRPM = rpm;
   }
@@ -176,14 +181,12 @@ public class ShooterSubsystem extends SubsystemBase {
   public Command runCommand(double rpm) {
     return runOnce(() -> set(rpm))
         .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
-    // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 
   /** sets voltage to shoot in front of Hub */
   public Command runTestCommand(DoubleSupplier rpm) {
     return runOnce(() -> set(rpm))
         .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
-    // return startEnd(() -> set(Speed.INFRONTOFHUB), () -> set(Speed.STOP));
   }
 
   public Command stopCommand() {
@@ -207,6 +210,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
+  }
+
+  public double progress() {
+    if (isVelocityWithinTolerance())
+      return 1;
+
+    double avgVelocity = (middleEncoder.getVelocity() + rightEncoder.getVelocity() + leftEncoder.getVelocity()) / 3;
+    return avgVelocity / targetRPM;
   }
 
   @Override
