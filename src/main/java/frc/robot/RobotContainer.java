@@ -148,7 +148,7 @@ public class RobotContainer {
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
     ledSubsystem
-        .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL)));
+        .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL), ledSubsystem));
   }
 
   public void compBindings() {
