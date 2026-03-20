@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
-    // position variables
+    // position variables, between 0-1
     public static final double kMinPosition = 0;
     public static final double kMaxPosition = 0.804;
     public static final double kStartingPosition = kMaxPosition / 2;
