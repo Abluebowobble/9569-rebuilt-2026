@@ -125,7 +125,7 @@ public class LEDSubsystem extends SubsystemBase {
     // } else {
     //   base = LEDPattern.solid(Color.kWhite);
     // }
-
+ 
     LEDPattern pattern = LEDPattern.progressMaskLayer(progress);
     pattern = base.mask(pattern);
     pattern.atBrightness(Percent.of(50));

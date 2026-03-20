@@ -113,7 +113,7 @@ public class HoodSubsystem extends SubsystemBase {
             return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
         }
     }
-
+ 
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
         return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);

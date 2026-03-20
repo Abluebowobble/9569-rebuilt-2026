@@ -175,7 +175,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
   }
-
+ 
   // /** updates pivot position with pid, to add: slew */
   // public void updatePivotPosition() {
 

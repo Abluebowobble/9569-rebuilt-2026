@@ -81,3 +81,4 @@ public class FeederSubsystem extends SubsystemBase {
     sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
   }
 }
+ 

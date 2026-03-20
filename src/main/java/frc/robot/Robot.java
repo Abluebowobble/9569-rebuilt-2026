@@ -24,8 +24,6 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
-
-    FollowPathCommand.warmupCommand().schedule();
   }
 
   @Override
@@ -36,7 +34,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
   }
-
+ 
   @Override
   public void disabledPeriodic() {
   }

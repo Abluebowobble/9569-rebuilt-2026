@@ -12,7 +12,7 @@
 // import static edu.wpi.first.units.Units.Radians;
 // import static edu.wpi.first.units.Units.Seconds;
 
-// import edu.wpi.first.math.MathUtil;
+// import edu.wpi.first.math.M athUtil;
 // import edu.wpi.first.math.geometry.Pose2d;
 // import edu.wpi.first.math.geometry.Rotation2d;
 // import edu.wpi.first.math.geometry.Translation2d;
