@@ -152,7 +152,7 @@ public class RobotContainer {
     // -xboxController.getRightY()));
     // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
-    ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
+    ps5Controller.touchpad().whileTrue(ledSubsystem.flashbangCommand());
     ledSubsystem
         .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL)));
   }
@@ -168,7 +168,7 @@ public class RobotContainer {
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     ps5Controller.touchpad().whileTrue(generalRobotCommands.aimSwerveCommand());
     ps5Controller.povUp().toggleOnTrue(hoodSubsystem.feedFromNeutralCommand());
-    ps5Controller.povRight().toggleOnTrue(ledSubsystem.flashBangCommand());
+    ps5Controller.povRight().toggleOnTrue(ledSubsystem.flashbangCommand());
 
     // xbox
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());

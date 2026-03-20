@@ -82,7 +82,7 @@ public class LEDSubsystem extends SubsystemBase {
     }
   }
 
-  public Command flashBangCommand() {
+  public Command flashbangCommand() {
     return run(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.1)), Section.ALL));
   }
 
@@ -115,16 +115,16 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public void setProgressMask(DoubleSupplier progress, Section sec) {
-    LEDPattern base;
-    if (alliance.isPresent()) {
-      if (alliance.get() == DriverStation.Alliance.Blue) {
-        base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kAliceBlue, Color.kAzure);
-      } else {
-        base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kAliceBlue, Color.kAzure);
-      }
-    } else {
-      base = LEDPattern.solid(Color.kWhite);
-    }
+    LEDPattern base = LEDPattern.solid(Color.kWhite);
+    // if (alliance.isPresent()) {
+    //   if (alliance.get() == DriverStation.Alliance.Blue) {
+    //     base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kAliceBlue, Color.kAzure);
+    //   } else {
+    //     base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, Color.kDarkRed);
+    //   }
+    // } else {
+    //   base = LEDPattern.solid(Color.kWhite);
+    // }
 
     LEDPattern pattern = LEDPattern.progressMaskLayer(progress);
     pattern = base.mask(pattern);

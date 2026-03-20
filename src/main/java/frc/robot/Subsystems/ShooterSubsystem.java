@@ -230,17 +230,26 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public double progress() {
-    if (isVelocityWithinTolerance())
-      return 1;
+    if (isVelocityWithinTolerance()) {
+      return 1.0;
+    }
 
-    double avgVelocity = (middleEncoder.getVelocity() + rightEncoder.getVelocity() + leftEncoder.getVelocity()) / 3;
-    return avgVelocity / targetRPM;
+    double avgVelocity = (leftEncoder.getVelocity() + middleEncoder.getVelocity() + rightEncoder.getVelocity()) / 3.0;
+
+    double current = Math.abs(avgVelocity);
+
+    // dont divide by zero :)
+    if (targetRPM < 1e-9) {
+      return 1.0;
+    }
+
+    double error = Math.abs(current - targetRPM);
+    return MathUtil.clamp(1.0 - (error / targetRPM), 0.0, 1.0);
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Shooter");
-
     builder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
     builder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
     builder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);

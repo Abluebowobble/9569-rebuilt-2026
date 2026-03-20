@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.Value;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.signals.Led1OffColorValue;
+
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -26,10 +28,10 @@ public class HoodSubsystem extends SubsystemBase {
     public static final double kMinPosition = 0;
     public static final double kMaxPosition = 0.804;
     public static final double kStartingPosition = kMaxPosition / 2;
-    
+
     // tolerance
     private static final double kPositionTolerance = 0.01;
-    
+
     // sets current position and setpoint
     private double targetPosition = kStartingPosition;
 
@@ -87,8 +89,29 @@ public class HoodSubsystem extends SubsystemBase {
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
-    public Command feedFromNeutral() {
+    public Command feedFromNeutralCommand() {
         return setCommand(kMaxPosition);
+    }
+
+    public double progress() {
+        if (isPositionWithinTolerance()) {
+            return 1.0;
+        }
+
+        double servoPosition = leftServo.getPosition();
+
+        if (servoPosition < targetPosition) {
+            if (targetPosition <= 1e-9) {
+                return 1.0;
+            }
+            return MathUtil.clamp(servoPosition / targetPosition, 0.0, 1.0);
+        } else {
+            double remainingRange = 1.0 - targetPosition;
+            if (remainingRange <= 1e-9) {
+                return 1.0;
+            }
+            return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
+        }
     }
 
     /** checks if current position is within given tolerance */

@@ -49,8 +49,7 @@ public class AutoAimNoCorrectionCommand extends Command {
 
     if (!swerveSubsystem.isAimed()) {
       double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
-      turn = -yaw * kP * maxOmega;
-      turn = MathUtil.clamp(turn, -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
+      turn = MathUtil.clamp(-yaw * kP * maxOmega, -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
     }
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
