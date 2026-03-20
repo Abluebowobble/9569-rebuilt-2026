@@ -47,12 +47,6 @@ public class ConveyorSubsystem extends SubsystemBase {
     }
   }
 
-  /** Creates a new ConveyorSubsystem. */
-  public ConveyorSubsystem() {
-    SparkBaseConfig config = new SparkMaxConfig();
-    motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-  }
-
   /** sets speed based on speed enum in percentage output */
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
