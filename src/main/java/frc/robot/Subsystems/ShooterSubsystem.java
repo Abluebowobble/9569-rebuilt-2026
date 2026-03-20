@@ -225,7 +225,7 @@ public class ShooterSubsystem extends SubsystemBase {
     if (targetRPM < 1e-9) {
       return 1.0;
     }
-
+ 
     double error = Math.abs(current - targetRPM);
     return MathUtil.clamp(1.0 - (error / targetRPM), 0.0, 1.0);
   }

@@ -205,7 +205,7 @@ public class RobotContainer {
       return shoot;
     }
   }
-
+ 
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
     Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(4000),
