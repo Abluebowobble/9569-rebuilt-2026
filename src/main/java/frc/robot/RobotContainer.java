@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.IntakeSubsystem;
+import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
 import frc.robot.Subsystems.ConveyorSubsystem;
@@ -63,13 +64,12 @@ public class RobotContainer {
   private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
   private final SendableChooser<Command> autoChooser;
 
   private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
-      intakeSubsystem,
-      hoodSubsystem, feederSubsystem, conveyorSubsystem, leftYSupplier, leftXSupplier,
-      driveFieldOrientedAnglularVelocity);
+      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, leftYSupplier, leftXSupplier);
 
   public RobotContainer() {
 
@@ -102,14 +102,15 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
-    // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
-    // intakeSubsystem.set(Volts.of(6)), () -> intakeSubsystem.set(Volts.of(0))));
-    ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
-    ps5Controller.circle().onTrue(intakeSubsystem.returnPositionCommand());
-    ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
-    ps5Controller.square().whileTrue(generalRobotCommands.feed());
+    // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
+    // // intakeSubsystem.set(Volts.of(6)), () ->
+    // intakeSubsystem.set(Volts.of(0))));
+    // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
+    // ps5Controller.circle().onTrue(intakeSubsystem.returnPositionCommand());
+    // ps5Controller.cross().whileTrue(intakeSubsystem.agitatePivotCommand());
+    // ps5Controller.square().whileTrue(generalRobotCommands.feedCommand());
     // ps5Controller.square().whileTrue(intakeSubsystem.returnPositionCommand());
 
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
@@ -140,10 +141,14 @@ public class RobotContainer {
     // -xboxController.getLeftY()));
 
     // //test
-    shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
-    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -xboxController.getRightY()));
+    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
+    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
+    // -xboxController.getRightY()));
     // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
+    ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
+    ledSubsystem
+        .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL)));
   }
 
   public void compBindings() {
@@ -152,10 +157,11 @@ public class RobotContainer {
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
     // ps5
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(5300));
-    ps5Controller.R2().whileTrue(generalRobotCommands.feed());
+    ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
+    ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     ps5Controller.L3().toggleOnTrue(swerveSubsystem.swerveLockCommand().repeatedly());
+    ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
 
     // xbox
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());

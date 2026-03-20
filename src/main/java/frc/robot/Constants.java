@@ -59,5 +59,6 @@ public final class Constants {
     // PWM
     public static final int ACTUATOR_LEFT = 0;
     public static final int ACTUATOR_RIGHT = 1;
+    public static final int LED = 9;
   }
 }
