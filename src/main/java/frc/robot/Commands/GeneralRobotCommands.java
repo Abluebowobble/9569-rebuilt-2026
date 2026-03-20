@@ -108,8 +108,25 @@ public class GeneralRobotCommands {
                     }
                 });
     }
-// auto aim lights
-    // public Command 
+
+    public Command feedFromNeutralCommand() {
+        return Commands.parallel(hoodSubsystem.feedFromNeutralCommand(),
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kDeepPink, LEDSubsystem.Section.SHOOTER)));
+    }
+
+    // auto aim lights
+    // public Command
+    public Command autoAimLights() {
+        return Commands.run(() -> {
+            if (swerveSubsystem.isAimed()) {
+
+            }
+        });
+    }
+
+    public Command reverseFeedCommand() {
+        return conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand());
+    }
 
     public boolean isReadyToShoot() {
         return shooterSubsystem.isVelocityWithinTolerance() && hoodSubsystem.isPositionWithinTolerance();

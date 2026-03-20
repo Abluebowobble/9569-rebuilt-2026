@@ -23,11 +23,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
     // position variables
-    private static final double kMinPosition = 0;
-    private static final double kMaxPosition = 0.804;
-    private static final double kPositionTolerance = 0.01;
+    public static final double kMinPosition = 0;
+    public static final double kMaxPosition = 0.804;
     public static final double kStartingPosition = kMaxPosition / 2;
-
+    
+    // tolerance
+    private static final double kPositionTolerance = 0.01;
+    
     // sets current position and setpoint
     private double targetPosition = kStartingPosition;
 
@@ -83,6 +85,10 @@ public class HoodSubsystem extends SubsystemBase {
     public Command setCommand(double position) {
         return runOnce(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
+    }
+
+    public Command feedFromNeutral() {
+        return setCommand(kMaxPosition);
     }
 
     /** checks if current position is within given tolerance */
