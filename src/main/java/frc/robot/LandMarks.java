@@ -25,13 +25,5 @@ public class LandMarks {
         }
 
         return new Translation2d(Inches.of(469.115), Inches.of(158.845));
-    }
-
-    public static double allianceSectionLength() {
-        if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
-            return allianceFieldLength;
-        }
-
-        return fieldLength - allianceFieldLength;
-    }
+    } 
 }

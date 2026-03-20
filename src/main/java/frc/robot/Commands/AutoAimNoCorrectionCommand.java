@@ -42,7 +42,7 @@ public class AutoAimNoCorrectionCommand extends Command {
     double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), OperatorConstants.DEADBAND)
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double turn = 0.0;
-
+ 
     double yaw = swerveSubsystem.getTargetHeadingInFieldFrame()
         .minus(swerveSubsystem.getHeading())
         .getDegrees();
