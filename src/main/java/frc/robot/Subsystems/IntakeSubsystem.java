@@ -48,7 +48,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private Angle setPointAngle = Degrees.of(0);
 
   // range of allowed positions
-  private static final Angle kPositionTolerance = Degrees.of(3); // to tune
+  private static final Angle kPositionTolerance = Degrees.of(5); // to tune
 
   // pivot motor controller
   private final PIDController pivotMotorController = new PIDController(0.9, 0, 0); // to tune
@@ -94,8 +94,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public IntakeSubsystem() {
     SparkBaseConfig pivotConfig = new SparkMaxConfig();
-    pivotConfig.inverted(false);
-    pivotConfig.closedLoop.p(0.9);
+    pivotConfig.closedLoop.p(0.7);
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     pivotEncoder.setPosition(0);
@@ -168,6 +167,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putData(this);
     // updatePivotPosition();
   }
 

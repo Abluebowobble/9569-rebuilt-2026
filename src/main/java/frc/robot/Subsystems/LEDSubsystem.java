@@ -58,7 +58,8 @@ public class LEDSubsystem extends SubsystemBase {
     alliance = DriverStation.getAlliance();
 
     // runDefaultColor();
-    setRainbowScrolling();
+    // setRainbowScrolling();
+    setOff();
   }
 
   @Override

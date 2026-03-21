@@ -236,7 +236,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public Rotation2d getTargetHeadingInFieldFrame() {
-    final Translation2d hubPosition = LandMarks.hubPosition();
+    // final Translation2d hubPosition = LandMarks.hubPosition();
+    final Translation2d hubPosition = Vision.kAprilTagField.getTagPose(26).get().toPose2d().getTranslation();
     final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
 
     return hubPosition.minus(robotPosition).getAngle();

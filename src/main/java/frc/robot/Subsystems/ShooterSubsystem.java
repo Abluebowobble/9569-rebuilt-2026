@@ -6,6 +6,7 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.RPM;
 
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
@@ -29,6 +30,7 @@ import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -60,6 +62,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private static final double kVelocityTolerance = 50; // if current RPM is within desired RPM +- velocity tolerance,
                                                        // then its within tolerance
   private Voltage voltage = Volts.of(0);
+
+  private static final AngularVelocity kStartingVelocity = RPM.of(2000);
 
   // speed for roller motor
   public enum Speed {
@@ -110,8 +114,8 @@ public class ShooterSubsystem extends SubsystemBase {
         PersistMode.kPersistParameters);
 
     // set initial velocity
-    controller.setSetpoint(1000, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-    targetRPM = 1000;
+    controller.setSetpoint(kStartingVelocity.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    targetRPM = kStartingVelocity.magnitude();
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -231,4 +235,4 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM, null);
   }
-}
+} 
