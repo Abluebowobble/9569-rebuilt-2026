@@ -55,7 +55,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 public class Vision extends SubsystemBase {
 
   // field
-  public final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
+  public static final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
       .loadField(AprilTagFields.k2026RebuiltAndymark);
 
   private final Field2d field = new Field2d();
