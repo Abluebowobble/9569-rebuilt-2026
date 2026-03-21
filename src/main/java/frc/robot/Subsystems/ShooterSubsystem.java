@@ -117,7 +117,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // set initial velocity
     controller.setSetpoint(kStartingVelocity.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-    targetRPM = kStartingVelocity.magnitude();
+    targetRPM = kStartingVelocity;
   }
 
   /** sets voltage of all motors given Voltage enum */
