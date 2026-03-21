@@ -47,8 +47,15 @@ public class RobotContainer {
   private final DoubleSupplier leftYSupplier = () -> ps5Controller.getLeftY() * -1;
   private final DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
   private final DoubleSupplier turnSupplier = () -> ps5Controller.getRightX();
+
   // subsystems
   private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  private final FeederSubsystem feederSubsystem = new FeederSubsystem();
+  private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
+  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled
@@ -59,22 +66,18 @@ public class RobotContainer {
       leftXSupplier)
       .withControllerRotationAxis(ps5Controller::getRightX)
       .deadband(OperatorConstants.DEADBAND)
+      .cubeTranslationControllerAxis(true)
+      .cubeRotationControllerAxis(true)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
 
   private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
 
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  private final FeederSubsystem feederSubsystem = new FeederSubsystem();
-  private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
-  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
-  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
-
   private final SendableChooser<Command> autoChooser;
 
   private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
-      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, leftYSupplier, leftXSupplier, turnSupplier);
+      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
+      turnSupplier);
 
   public RobotContainer() {
 
@@ -161,8 +164,10 @@ public class RobotContainer {
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
     // ledSubsystem
-    //     .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL), ledSubsystem));
-    //     ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
+    // .setDefaultCommand(Commands.run(() ->
+    // ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL),
+    // ledSubsystem));
+    // ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
     // ps5Controller.circle().toggleOnTrue(generalRobotCommands.aimSwerveCommand());
   }
@@ -175,6 +180,8 @@ public class RobotContainer {
     // ps5
     ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
+    ps5Controller.L3().toggleOnTrue(swerveSubsystem.swerveLockCommand(
+        () -> Math.sqrt(Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     ps5Controller.touchpad().whileTrue(generalRobotCommands.aimSwerveCommand());
     ps5Controller.povUp().toggleOnTrue(hoodSubsystem.feedFromNeutralCommand());
@@ -215,12 +222,13 @@ public class RobotContainer {
       return shoot;
     }
   }
- 
+
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
-    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(RPM.of(5300)),
-        Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
-            .andThen(feed)));
+    Command shoot = Commands.deadline(Commands.waitSeconds(10),
+        Commands.parallel(shooterSubsystem.runCommand(RPM.of(5300)),
+            Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
+                .andThen(feed)));
     try {
       Command driveVelocity1_1 = swerveSubsystem
           .driveWithSetpointGenerator(

@@ -37,6 +37,7 @@ public final class Constants {
     public static final int DRIVER_1_CONTROLLER_PORT = 0;
     public static final int DRIVER_2_CONTROLLER_PORT = 1;
     public static final double DEADBAND = 0.15;
+    public static final double OVERRIDE_DEADBAND = 0.3;
     public static final double TURN_FACTOR = 0.5;
   }
 

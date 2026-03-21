@@ -1,5 +1,6 @@
 package frc.robot.Commands;
 
+import java.lang.constant.Constable;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -7,10 +8,12 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Subsystems.SwerveSubsystem;
@@ -26,6 +29,29 @@ public class AutoAimNoCorrectionCommand extends Command {
   private static final double kMaxTurnScale = 1;
 
   private final PIDController controller = new PIDController(0.014, 0, 0);
+  private final SwerveInputStream driveTestInputStream = SwerveInputStream.of(swerveSubsystem.getSwerveDrive(),
+      leftYSupplier,
+      leftXSupplier)
+      .aim(new Pose2d(LandMarks.hubPosition(), new Rotation2d(0)))
+      .deadband(OperatorConstants.DEADBAND)
+      .cubeTranslationControllerAxis(true)
+      .cubeRotationControllerAxis(true)
+      .scaleTranslation(0.8)
+      .allianceRelativeControl(true);
+
+  private final SwerveInputStream driveAngularVelocity = SwerveInputStream.of(swerveSubsystem.getSwerveDrive(),
+      leftYSupplier,
+      leftXSupplier)
+      .withControllerRotationAxis(turnSupplier)
+      .deadband(OperatorConstants.DEADBAND)
+      .cubeTranslationControllerAxis(true)
+      .cubeRotationControllerAxis(true)
+      .scaleTranslation(0.8)
+      .allianceRelativeControl(true);
+
+  private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
+
+  private final Command driveTestCommand = swerveSubsystem.driveFieldOriented(driveTestInputStream);
 
   public AutoAimNoCorrectionCommand(
       SwerveSubsystem swerveSubsystem,
@@ -42,30 +68,45 @@ public class AutoAimNoCorrectionCommand extends Command {
   }
 
   @Override
+  public void initialize() {
+    swerveSubsystem.setDefaultCommand(driveTestCommand);
+  }
+
+  @Override
   public void execute() {
-    double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(), OperatorConstants.DEADBAND)
-        * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
-    double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), OperatorConstants.DEADBAND)
-        * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
-    double turn = 0.0;
+    // double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(),
+    // OperatorConstants.DEADBAND)
+    // * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
+    // double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(),
+    // OperatorConstants.DEADBAND)
+    // * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
+    // double turn = 0.0;
 
-    double error = swerveSubsystem.getTargetHeadingInFieldFrame()
-        .minus(swerveSubsystem.getHeading())
-        .getDegrees();
+    // double error = swerveSubsystem.getTargetHeadingInFieldFrame()
+    // .minus(swerveSubsystem.getHeading())
+    // .getDegrees();
 
-    if (!swerveSubsystem.isAimed()) {
-      double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
-      turn = MathUtil.clamp(
-          -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
-              swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
-          -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
-    }
+    // if (!swerveSubsystem.isAimed()) {
+    // double maxOmega =
+    // swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
+    // turn = MathUtil.clamp(
+    // -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
+    // swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
+    // -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
+    // }
 
-    swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
+    // swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe),
+    // turn, true, false);
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
   }
 
   @Override
   public boolean isFinished() {
-    return !swerveSubsystem.currentPoseIsValidForScoring() || Math.abs(turnSupplier.getAsDouble()) > 0.5;
+    return !swerveSubsystem.currentPoseIsValidForScoring()
+        || Math.abs(turnSupplier.getAsDouble()) > Constants.OperatorConstants.OVERRIDE_DEADBAND;
   }
 }
