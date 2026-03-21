@@ -8,6 +8,7 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.RPM;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Commands.GeneralRobotCommands;
@@ -16,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -30,6 +32,8 @@ import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 public class RobotContainer {
 
@@ -73,32 +77,35 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-    // NamedCommands.registerCommand("reverse feeder",
-    // conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand()));
-    // NamedCommands.registerCommand("run feeder",
-    // conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
-    // NamedCommands.registerCommand("run shooter",
-    // shooterSubsystem.runCommand());
-    // NamedCommands.registerCommand("intake up",
-    // intakeSubsystem.returnPositionCommand());
-    // NamedCommands.registerCommand("intake down",
-    // intakeSubsystem.intakePositionCommand());
-    // NamedCommands.registerCommand("run intake roller",
-    // intakeSubsystem.runRollerCommand());
-    // NamedCommands.registerCommand("reverse intake roller",
-    // intakeSubsystem.reverseRollerCommand());
-    // NamedCommands.registerCommand("agitate intake",
-    // intakeSubsystem.reverseRollerCommand());
+    // register path planner commands
+    registerCommands();
 
+    // set up auto choose
     autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
 
+    // config bindings
     configureBindings();
+
+    // warm up the path planner library
+    FollowPathCommand.warmupCommand().schedule();
+  }
+
+  private void registerCommands() {
+    NamedCommands.registerCommand("reverse feeder", generalRobotCommands.reverseFeedCommand());
+    NamedCommands.registerCommand("run feeder", generalRobotCommands.feedCommand());
+    NamedCommands.registerCommand("run shooter", generalRobotCommands.runShooterCommand());
+    NamedCommands.registerCommand("intake up", intakeSubsystem.returnPositionCommand());
+    NamedCommands.registerCommand("intake down", intakeSubsystem.intakePositionCommand());
+    NamedCommands.registerCommand("run intake roller", intakeSubsystem.runRollerCommand());
+    NamedCommands.registerCommand("reverse intake roller", intakeSubsystem.reverseRollerCommand());
+    NamedCommands.registerCommand("aim", generalRobotCommands.aimSwerveCommand());
+    NamedCommands.registerCommand("pass back hood position", hoodSubsystem.feedFromNeutralCommand());
   }
 
   private void configureBindings() {
     testBindings();
     // compBindings();
-    // compBindingsWithManualAgitate();
   }
 
   public void testBindings() {
@@ -163,8 +170,9 @@ public class RobotContainer {
     ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-    ps5Controller.L3().toggleOnTrue(swerveSubsystem.swerveLockCommand().repeatedly());
-    ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
+    ps5Controller.touchpad().whileTrue(generalRobotCommands.aimSwerveCommand());
+    ps5Controller.povUp().toggleOnTrue(hoodSubsystem.feedFromNeutralCommand());
+    ps5Controller.povRight().toggleOnTrue(ledSubsystem.flashbangCommand());
 
     // xbox
     xboxController.x().onTrue(intakeSubsystem.returnPositionCommand());
@@ -175,7 +183,7 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     // return new PathPlannerAuto("New Auto");
-    return shootAuton();
+    return autoChooser.getSelected();
   }
 
   public Command shootAuton() {
@@ -183,7 +191,7 @@ public class RobotContainer {
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
         Commands.parallel(
-            shooterSubsystem.runCommand(4000),
+            shooterSubsystem.runCommand(RPM.of(5300)),
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
@@ -201,10 +209,10 @@ public class RobotContainer {
       return shoot;
     }
   }
-
+ 
   public Command shootFeederShootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
-    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(4000),
+    Command shoot = Commands.deadline(Commands.waitSeconds(10), Commands.parallel(shooterSubsystem.runCommand(RPM.of(5300)),
         Commands.waitUntil(() -> shooterSubsystem.isVelocityWithinTolerance())
             .andThen(feed)));
     try {

@@ -39,6 +39,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -66,23 +67,23 @@ public class SwerveSubsystem extends SubsystemBase {
 
   // PhotonVision class for full field localization
   private Vision vision;
-  private final Field2d photonField2d = new Field2d();
 
-  private final Field2d field = new Field2d();
+  private final Field2d kField = new Field2d();
 
-  private boolean isLocked = false;
-  boolean blueAlliance;
+  public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
+
+  private static final Angle kAimTolerance = Degrees.of(5);
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
 
     // checks alliance
-    blueAlliance = DriverStation.getAlliance().isPresent()
+    kIsBlueAlliance = DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == Alliance.Blue;
 
     // sets starting pose based on alliance
-    Pose2d startingPose = blueAlliance ? new Pose2d(new Translation2d(Meter.of(0),
+    Pose2d startingPose = kIsBlueAlliance ? new Pose2d(new Translation2d(Meter.of(0),
         Meter.of(0)),
         Rotation2d.fromDegrees(0))
         : new Pose2d(new Translation2d(Meter.of(0),
@@ -113,13 +114,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
 
-    // Module absolute positions
-
-    // Robot pose
-    Pose2d currentPose = swerveDrive.getPose();
-    field.setRobotPose(currentPose);
-
-    RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroCommand));
+    RobotModeTriggers.autonomous().onTrue(zeroGyroCommand());
     vision = new Vision();
   }
 
@@ -186,21 +181,17 @@ public class SwerveSubsystem extends SubsystemBase {
     PathfindingCommand.warmupCommand().schedule();
   }
 
+  public boolean isAimed() {
+    return Math.abs(
+        getTargetHeadingInFieldFrame().minus(getHeading()).getDegrees()) < kAimTolerance
+            .magnitude();
+  }
+
   /**
    * sets swervedrive to at a given velocity, parameters: ChassisSpeeds velocity
    */
   public void drive(ChassisSpeeds velocity) {
     swerveDrive.drive(velocity);
-  }
-
-  public Rotation2d getOperatorForwardDirection() {
-    Rotation2d fieldOrientedHeading = swerveDrive.getPose().getRotation();
-
-    if (!blueAlliance) {
-      return fieldOrientedHeading.rotateBy(new Rotation2d(Degrees.of(180)));
-    }
-
-    return fieldOrientedHeading;
   }
 
   public void resetOdometry(Pose2d initialHolonomicPose) {
@@ -214,25 +205,13 @@ public class SwerveSubsystem extends SubsystemBase {
   public void zeroGyro() {
     swerveDrive.zeroGyro();
 
-    if (!blueAlliance) {
+    if (!kIsBlueAlliance) {
       swerveDrive.resetOdometry(new Pose2d(swerveDrive.getPose().getTranslation(), new Rotation2d(180)));
     }
   }
 
   public Rotation2d getHeading() {
     return getPose().getRotation();
-  }
-
-  private Rotation2d getHeadingInOperatorPerspective() {
-    final Rotation2d currentHeadingInBlueAlliancePerspective = swerveDrive.getPose().getRotation();
-    final Rotation2d currentHeadingInOperatorPerspective = currentHeadingInBlueAlliancePerspective
-        .minus(getOperatorForwardDirection());
-
-    return currentHeadingInOperatorPerspective;
-  }
-
-  public Rotation2d getTargetHeadingInOperatorPerspective() {
-    return getTargetHeadingInFieldFrame().minus(getOperatorForwardDirection());
   }
 
   public Rotation2d getTargetHeadingInFieldFrame() {
@@ -262,7 +241,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return run(() -> Arrays.asList(swerveDrive.getModules())
         .forEach(it -> it.setAngle(0.0)));
   }
-
+ 
   public ChassisSpeeds getRobotVelocity() {
     return swerveDrive.getRobotVelocity();
   }
@@ -314,19 +293,15 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void lockPose() {
-    if (!isLocked) {
-      swerveDrive.lockPose();
-    }
-
-    isLocked = !isLocked;
+    swerveDrive.lockPose();
   }
 
   public Command swerveLockCommand() {
-    return runOnce(() -> swerveDrive.lockPose());
+    return run(() -> swerveDrive.lockPose());
   }
 
   public Command zeroGyroCommand() {
-    return runOnce(() -> swerveDrive.zeroGyro());
+    return runOnce(this::zeroGyro);
   }
 
   public Command driveWithSetpointGeneratorFieldRelative(Supplier<ChassisSpeeds> fieldRelativeSpeeds) {
@@ -350,7 +325,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return vision;
   }
 
-  public boolean currentPoseIsValidForShooting() {
+  public boolean currentPoseIsValidForScoring() {
     Pose2d pose = getPose();
 
     if (pose == null) {
@@ -366,11 +341,22 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     double poseEdgeMargin = kPoseEdgeMargin.magnitude();
+    double sectionLength = LandMarks.allianceFieldLength;
 
-    return x >= -poseEdgeMargin
-        && x <= LandMarks.fieldLength + poseEdgeMargin
-        && y >= -poseEdgeMargin
+    boolean inYBounds = y >= -poseEdgeMargin
         && y <= LandMarks.fieldWidth + poseEdgeMargin;
+
+    if (!inYBounds) {
+      return false;
+    }
+
+    if (kIsBlueAlliance) {
+      return x >= -poseEdgeMargin
+          && x <= sectionLength + poseEdgeMargin;
+    } else {
+      return x >= LandMarks.fieldLength - sectionLength - poseEdgeMargin
+          && x <= LandMarks.fieldLength + poseEdgeMargin;
+    }
   }
 
   @Override
@@ -380,7 +366,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
-    field.setRobotPose(currentPose);
+    kField.setRobotPose(currentPose);
+    SmartDashboard.putData(kField);
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
   }

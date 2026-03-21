@@ -54,7 +54,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final PIDController pivotMotorController = new PIDController(0.9, 0, 0); // to tune
 
   // gear reduction
-  private final double kDegreesPerRotation = 2;
+  private final Angle kDegreesPerRotation = Degrees.of(2);
 
   private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
 
@@ -77,18 +77,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // set angle for pivot motor
   public enum Position {
-    STOWED(8),
-    INTAKE(80), // 83.7
-    AGITATE(50); // 50
+    STOWED(Degrees.of(8)),
+    INTAKE(Degrees.of(80)), // 83.7
+    AGITATE(Degrees.of(50)); // 50
 
-    private final double degrees;
+    private final Angle degrees;
 
-    private Position(double degrees) {
+    private Position(Angle degrees) {
       this.degrees = degrees;
     }
 
     public Angle degrees() {
-      return Degrees.of(degrees);
+      return degrees;
     }
   }
 
@@ -112,7 +112,7 @@ public class IntakeSubsystem extends SubsystemBase {
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
     // setPointAngle = position.degrees();
-    controller.setSetpoint(position.degrees().magnitude() / kDegreesPerRotation, ControlType.kPosition);
+    controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(), ControlType.kPosition);
   }
 
   /** set pivot motor to go to intake position */
@@ -159,7 +159,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** checks if angle of pivot is within kPositionTolerance */
   public boolean isPositionWithinTolerance() {
-    final Angle cur = Degrees.of(pivotEncoder.getPosition() * kDegreesPerRotation);
+    final Angle cur = Degrees.of(pivotEncoder.getPosition() * kDegreesPerRotation.magnitude());
     final Angle target = setPointAngle;
 
     return cur.isNear(target, kPositionTolerance);
@@ -175,7 +175,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
   }
-
+ 
   // /** updates pivot position with pid, to add: slew */
   // public void updatePivotPosition() {
 

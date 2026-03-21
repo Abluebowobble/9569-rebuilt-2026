@@ -1,8 +1,11 @@
 package frc.robot.Commands;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix.CANifier.LEDChannel;
 import com.ctre.phoenix6.signals.Led1OffColorValue;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,6 +19,7 @@ import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
 import frc.robot.Subsystems.Vision;
+import frc.robot.Subsystems.LEDSubsystem.Section;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class GeneralRobotCommands {
@@ -76,7 +80,8 @@ public class GeneralRobotCommands {
     // }
 
     public Command aimSwerveCommand() {
-        return new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier);
+        return Commands.parallel(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier),
+                autoAimLightsCommand());
     }
 
     public Command prepareShooterCommand() {
@@ -91,13 +96,16 @@ public class GeneralRobotCommands {
                                 .alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 
-    // change to use isReadToShoot adw
     public Command runShooterCommand() {
         return Commands.parallel(
-                shooterSubsystem.runCommand(5300),
+                shooterSubsystem.runCommand(RPM.of(5300)),
                 shooterLightsCommand());
     }
 
+    /**
+     * my skimpy ass cheaped out cuz i'm lazy so this is just how its going to work
+     * (its close enough idgaf im done)
+     */
     public Command shooterLightsCommand() {
         return Commands
                 .run(() -> {
@@ -108,8 +116,35 @@ public class GeneralRobotCommands {
                     }
                 });
     }
-// auto aim lights
-    // public Command 
+
+    public Command feedFromNeutralCommand() {
+        return Commands.parallel(hoodSubsystem.feedFromNeutralCommand(),
+                neutralFeedLightsCommand());
+    }
+
+    public Command neutralFeedLightsCommand() {
+        return Commands.run(() -> {
+            if (hoodSubsystem.isPositionWithinTolerance()) {
+                ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SHOOTER);
+            } else {
+                ledSubsystem.setProgressMask(hoodSubsystem::progress, LEDSubsystem.Section.SHOOTER);
+            }
+        });
+    }
+ 
+    public Command autoAimLightsCommand() {
+        return Commands.run(() -> {
+            if (swerveSubsystem.isAimed()) {
+                ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SIDE);
+            } else {
+                ledSubsystem.setBreathe(Color.kDarkOrange, 3, LEDSubsystem.Section.SIDE);
+            }
+        });
+    }
+
+    public Command reverseFeedCommand() {
+        return conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand());
+    }
 
     public boolean isReadyToShoot() {
         return shooterSubsystem.isVelocityWithinTolerance() && hoodSubsystem.isPositionWithinTolerance();

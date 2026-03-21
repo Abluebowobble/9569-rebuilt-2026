@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.Value;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.signals.Led1OffColorValue;
+
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -22,11 +24,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
-    // position variables
-    private static final double kMinPosition = 0;
-    private static final double kMaxPosition = 0.804;
-    private static final double kPositionTolerance = 0.01;
+    // position variables, between 0-1
+    public static final double kMinPosition = 0;
+    public static final double kMaxPosition = 0.804;
     public static final double kStartingPosition = kMaxPosition / 2;
+
+    // tolerance
+    private static final double kPositionTolerance = 0.01;
 
     // sets current position and setpoint
     private double targetPosition = kStartingPosition;
@@ -85,6 +89,31 @@ public class HoodSubsystem extends SubsystemBase {
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
+    public Command feedFromNeutralCommand() {
+        return setCommand(kMaxPosition);
+    }
+
+    public double progress() {
+        if (isPositionWithinTolerance()) {
+            return 1.0;
+        }
+
+        double servoPosition = leftServo.getPosition();
+
+        if (servoPosition < targetPosition) {
+            if (targetPosition <= 1e-9) {
+                return 1.0;
+            }
+            return MathUtil.clamp(servoPosition / targetPosition, 0.0, 1.0);
+        } else {
+            double remainingRange = 1.0 - targetPosition;
+            if (remainingRange <= 1e-9) {
+                return 1.0;
+            }
+            return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
+        }
+    }
+ 
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
         return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);
