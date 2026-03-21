@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.LandMarks;
 import frc.robot.Subsystems.SwerveSubsystem;
+import frc.robot.Utilities.LandMarks;
 import swervelib.SwerveInputStream;
 
 public class AutoAimNoCorrectionCommand extends Command {
