@@ -102,7 +102,7 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
@@ -133,7 +133,7 @@ public class RobotContainer {
     // // xbox
     // ps5Controller.square().onTrue(intakeSubsystem.returnPositionCommand());
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
-    // ps5Controller.square().whileTrue(intakeSubsystem.runRollerCommand());
+    // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
     // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
     // -xboxController.getLeftY()));
@@ -146,9 +146,12 @@ public class RobotContainer {
     // -xboxController.getRightY()));
     // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
-    ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
-    ledSubsystem
-        .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL), ledSubsystem));
+    // ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
+    // ledSubsystem
+    //     .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL), ledSubsystem));
+    //     ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
+
+    ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
   }
 
   public void compBindings() {
