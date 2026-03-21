@@ -43,17 +43,13 @@ public class ConveyorSubsystem extends SubsystemBase {
     }
 
     public Voltage voltage() {
-      return Volts.of(percentOutput * 12.0);
+      return Volts.of(percentOutput * 12);
     }
   }
-
+  
   /** sets speed based on speed enum in percentage output */
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
-  }
-
-  public void updateVoltage() {
-
   }
 
   /** set speed given a percentage output */
@@ -69,11 +65,6 @@ public class ConveyorSubsystem extends SubsystemBase {
   /** reverse the conveyor, stops on end */
   public Command reverseCommand() {
     return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
-  }
-
-  @Override
-  public void periodic() {
-    updateVoltage();
   }
 
   @Override

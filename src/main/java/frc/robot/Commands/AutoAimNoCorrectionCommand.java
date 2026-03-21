@@ -17,82 +17,47 @@ import frc.robot.Subsystems.SwerveSubsystem;
 import swervelib.SwerveInputStream;
 
 public class AutoAimNoCorrectionCommand extends Command {
-  private SwerveSubsystem swerve;
+  private SwerveSubsystem swerveSubsystem;
   private DoubleSupplier leftYSupplier;
   private DoubleSupplier leftXSupplier;
 
   private static final double kP = 0.014;
   private static final double kMaxTurnScale = 0.4;
-  private boolean poseWarningIssued = false;
 
   public AutoAimNoCorrectionCommand(
-      SwerveSubsystem swerve,
+      SwerveSubsystem swerveSubsystem,
       DoubleSupplier leftYSupplier,
       DoubleSupplier leftXSupplier) {
-    this.swerve = swerve;
+    this.swerveSubsystem = swerveSubsystem;
     this.leftYSupplier = leftYSupplier;
     this.leftXSupplier = leftXSupplier;
 
-    addRequirements(swerve);
-  }
-
-  private boolean ensurePoseValidWithWarning() {
-    final boolean valid = swerve.currentPoseIsValidForShooting();
-
-    if (!valid) {
-      if (!poseWarningIssued) {
-        DriverStation.reportWarning("Auto aim blocked: robot pose outside field bounds", false);
-        poseWarningIssued = true;
-      }
-    } else {
-      poseWarningIssued = false;
-    }
-
-    return valid;
-  }
-
-  @Override
-  public void initialize() {
-    poseWarningIssued = false;
-    ensurePoseValidWithWarning();
+    addRequirements(swerveSubsystem);
   }
 
   @Override
   public void execute() {
     double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(), OperatorConstants.DEADBAND)
-        * swerve.getSwerveDrive().getMaximumChassisVelocity();
+        * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), OperatorConstants.DEADBAND)
-        * swerve.getSwerveDrive().getMaximumChassisVelocity();
-    double turn = 0;
-
-    if (!ensurePoseValidWithWarning())
-      return;
-
-    // get change in yaw
-    double yaw = swerve.getTargetHeadingInFieldFrame()
-        .minus(swerve.getHeading())
+        * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
+    double turn = 0.0;
+ 
+    double yaw = swerveSubsystem.getTargetHeadingInFieldFrame()
+        .minus(swerveSubsystem.getHeading())
         .getDegrees();
 
-    if (!isAimed()) {
-      double maxOmega = swerve.getSwerveDrive().getMaximumChassisAngularVelocity();
-      turn = -yaw * kP * maxOmega;
-      turn = MathUtil.clamp(turn, -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
-    } else {
-      turn = 0.0;
+    if (!swerveSubsystem.isAimed()) {
+      double maxOmega = SwerveConstants.MAX_SWERVE_VELOCITY.magnitude();
+      turn = MathUtil.clamp(-yaw * kP * maxOmega, -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
     }
 
-    swerve.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
-    SmartDashboard.putBoolean("is aimed?", isAimed());
-  }
-
-  public boolean isAimed() {
-    return Math.abs(
-        swerve.getTargetHeadingInFieldFrame().minus(swerve.getHeading()).getDegrees()) < SwerveConstants.AIM_TOLERANCE
-            .magnitude();
+    swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
+    SmartDashboard.putBoolean("is aimed?", swerveSubsystem.isAimed());
   }
 
   @Override
   public boolean isFinished() {
-    return false;
+    return !swerveSubsystem.currentPoseIsValidForScoring();
   }
 }

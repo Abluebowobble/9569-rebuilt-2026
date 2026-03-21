@@ -5,6 +5,7 @@
 package frc.robot;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Second;
@@ -17,6 +18,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Velocity;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -40,7 +42,6 @@ public final class Constants {
 
   public static class SwerveConstants {
     public static final double MAX_SPEED = Units.feetToMeters(10.5);;
-    public static final double SCALE_TRANSLATION = 1;
     public static final LinearVelocity MAX_SWERVE_VELOCITY = Meters.of(2).per(Second);
     public static final Angle AIM_TOLERANCE = Degrees.of(5);
   }
@@ -61,4 +62,4 @@ public final class Constants {
     public static final int ACTUATOR_RIGHT = 1;
     public static final int LED = 9;
   }
-}
+} 
