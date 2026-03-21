@@ -52,8 +52,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.LandMarks;
+import frc.robot.Utilities.LandMarks;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
@@ -298,8 +299,10 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.lockPose();
   }
 
-  public Command swerveLockCommand() {
-    return run(() -> swerveDrive.lockPose());
+  public Command swerveLockCommand(DoubleSupplier leftSupplier) {
+    return run(() -> swerveDrive.lockPose()).until(() -> {
+      return leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND;
+    });
   }
 
   public Command zeroGyroCommand() {
