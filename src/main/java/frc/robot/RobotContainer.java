@@ -26,6 +26,7 @@ import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
+import frc.robot.Utilities.DriverFeedback;
 import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
@@ -89,6 +90,10 @@ public class RobotContainer {
 
     // warm up the path planner library
     FollowPathCommand.warmupCommand().schedule();
+
+    // activate driver feedback
+    DriverFeedback driverFeedback = new DriverFeedback(ps5Controller, xboxController);
+    Commands.run(() -> SmartDashboard.putData(driverFeedback));
   }
 
   private void registerCommands() {
