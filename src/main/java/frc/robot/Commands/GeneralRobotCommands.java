@@ -34,11 +34,12 @@ public class GeneralRobotCommands {
 
     private final DoubleSupplier leftYSupplier;
     private final DoubleSupplier leftXSupplier;
+    private final DoubleSupplier turnSupplier;
 
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
             IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
             ConveyorSubsystem conveyorSubsystem, LEDSubsystem ledSubsystem, DoubleSupplier leftYSupplier,
-            DoubleSupplier leftXSupplier) {
+            DoubleSupplier leftXSupplier, DoubleSupplier turnSupplier) {
         this.swerveSubsystem = swerveSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.intakeSubsystem = intakeSubsystem;
@@ -47,6 +48,7 @@ public class GeneralRobotCommands {
         this.conveyorSubsystem = conveyorSubsystem;
         this.ledSubsystem = ledSubsystem;
 
+        this.turnSupplier = turnSupplier;
         this.leftYSupplier = leftYSupplier;
         this.leftXSupplier = leftXSupplier;
     }
@@ -80,7 +82,7 @@ public class GeneralRobotCommands {
     // }
 
     public Command aimSwerveCommand() {
-        return Commands.parallel(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier),
+        return Commands.parallel(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
                 autoAimLightsCommand());
     }
 
@@ -99,7 +101,7 @@ public class GeneralRobotCommands {
     public Command runShooterCommand() {
         return Commands.parallel(
                 shooterSubsystem.runCommand(RPM.of(5300)),
-                shooterLightsCommand());
+                shooterLightsCommand()).finallyDo(() -> ledSubsystem.setOff());
     }
 
     /**
@@ -119,7 +121,7 @@ public class GeneralRobotCommands {
 
     public Command feedFromNeutralCommand() {
         return Commands.parallel(hoodSubsystem.feedFromNeutralCommand(),
-                neutralFeedLightsCommand());
+                neutralFeedLightsCommand()).finallyDo(() -> ledSubsystem.setOff());
     }
 
     public Command neutralFeedLightsCommand() {
@@ -137,7 +139,7 @@ public class GeneralRobotCommands {
             if (swerveSubsystem.isAimed()) {
                 ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SIDE);
             } else {
-                ledSubsystem.setBreathe(Color.kDarkOrange, 3, LEDSubsystem.Section.SIDE);
+                ledSubsystem.setSolidColor(Color.kDarkOrange, LEDSubsystem.Section.SIDE);
             }
         });
     }

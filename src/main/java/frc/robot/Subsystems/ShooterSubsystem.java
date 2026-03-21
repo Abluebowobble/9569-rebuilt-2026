@@ -159,9 +159,9 @@ public class ShooterSubsystem extends SubsystemBase {
     rightShooterMotor.setVoltage(volts.magnitude());
   }
 
-  /** sets rpm to resting speed, 1000 */
+  /** sets rpm to resting speed, 2000 */
   public void stop() {
-    set(RPM.of(1000));
+    set(RPM.of(kStartingVelocity.magnitude()));
   }
 
   /** checks if each shooter has their velocity is within tolerance */

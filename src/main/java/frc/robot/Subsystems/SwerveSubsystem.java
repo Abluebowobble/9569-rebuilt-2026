@@ -73,7 +73,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
-  private static final Angle kAimTolerance = Degrees.of(5);
+  private static final Angle kAimTolerance = Degrees.of(4);
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
@@ -83,10 +83,12 @@ public class SwerveSubsystem extends SubsystemBase {
         && DriverStation.getAlliance().get() == Alliance.Blue;
 
     // sets starting pose based on alliance
-    Pose2d startingPose = kIsBlueAlliance ? new Pose2d(new Translation2d(Meter.of(0),
+    Pose2d startingPose = kIsBlueAlliance ? new Pose2d(new Translation2d(
+        Meter.of(0),
         Meter.of(0)),
         Rotation2d.fromDegrees(0))
-        : new Pose2d(new Translation2d(Meter.of(0),
+        : new Pose2d(new Translation2d(
+            Meter.of(0),
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
 
@@ -98,8 +100,6 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-
-    zeroGyro();
 
     // Correct for skew that gets worse as angular velocity increases. Start with a
     // coefficient of 0.1.
@@ -113,8 +113,10 @@ public class SwerveSubsystem extends SubsystemBase {
         1);
 
     setupPathPlanner();
+    zeroGyro();
 
     RobotModeTriggers.autonomous().onTrue(zeroGyroCommand());
+    RobotModeTriggers.teleop().onTrue(zeroGyroCommand());
     vision = new Vision();
   }
 
@@ -241,7 +243,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return run(() -> Arrays.asList(swerveDrive.getModules())
         .forEach(it -> it.setAngle(0.0)));
   }
- 
+
   public ChassisSpeeds getRobotVelocity() {
     return swerveDrive.getRobotVelocity();
   }
@@ -363,6 +365,11 @@ public class SwerveSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Distance FRom Blue HUb", vision.distanceToBlueHub(swerveDrive.getPose()));
+    SmartDashboard.putBoolean("is aimed?", isAimed());
+    SmartDashboard.putNumber("YAW FOR AUTO CORRECTION", getTargetHeadingInFieldFrame()
+        .minus(getHeading())
+        .getDegrees());
+    SmartDashboard.putNumber("gyro", getHeading().getDegrees());
 
     // field2d
     Pose2d currentPose = swerveDrive.getPose();

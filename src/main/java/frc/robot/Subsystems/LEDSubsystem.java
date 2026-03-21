@@ -30,13 +30,12 @@ import frc.robot.Constants.HardwareMap;
 public class LEDSubsystem extends SubsystemBase {
   // initialize led
   private final AddressableLED m_led = new AddressableLED(HardwareMap.LED);
-  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(101);
-
+  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(51);
+     
   // create separate sections
-  private final AddressableLEDBufferView rightView = buffer.createView(0, 50);
+  private final AddressableLEDBufferView sideView = buffer.createView(0, 50);
   // private final AddressableLEDBufferView middleView = buffer.createView(26,
   // 75);
-  private final AddressableLEDBufferView leftView = buffer.createView(51, 100);
 
   // patterns
   private LEDPattern shooterPattern;
@@ -58,15 +57,15 @@ public class LEDSubsystem extends SubsystemBase {
     alliance = DriverStation.getAlliance();
 
     // runDefaultColor();
-    // setRainbowScrolling();
-    setOff();
+    setRainbowScrolling();
+    // setOff();
   }
 
   @Override
   public void periodic() {
     // shooterPattern.applyTo(rightView);
-    sidePattern.applyTo(leftView);
-    sidePattern.applyTo(rightView);
+    sidePattern.applyTo(sideView);
+    // sidePattern.applyTo(rightView);
 
     m_led.setData(buffer);
   }

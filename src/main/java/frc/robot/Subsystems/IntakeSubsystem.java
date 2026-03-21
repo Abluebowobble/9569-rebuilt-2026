@@ -50,9 +50,6 @@ public class IntakeSubsystem extends SubsystemBase {
   // range of allowed positions
   private static final Angle kPositionTolerance = Degrees.of(5); // to tune
 
-  // pivot motor controller
-  private final PIDController pivotMotorController = new PIDController(0.9, 0, 0); // to tune
-
   // gear reduction
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
