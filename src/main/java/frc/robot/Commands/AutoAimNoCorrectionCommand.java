@@ -5,6 +5,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -20,17 +21,22 @@ public class AutoAimNoCorrectionCommand extends Command {
   private SwerveSubsystem swerveSubsystem;
   private DoubleSupplier leftYSupplier;
   private DoubleSupplier leftXSupplier;
+  private DoubleSupplier turnSupplier;
 
-  private static final double kP = 0.014;
-  private static final double kMaxTurnScale = 0.4;
+  private static final double kMaxTurnScale = 1;
+
+  private final PIDController controller = new PIDController(0.014, 0, 0);
 
   public AutoAimNoCorrectionCommand(
       SwerveSubsystem swerveSubsystem,
       DoubleSupplier leftYSupplier,
-      DoubleSupplier leftXSupplier) {
+      DoubleSupplier leftXSupplier,
+      DoubleSupplier turnSupplier) {
     this.swerveSubsystem = swerveSubsystem;
     this.leftYSupplier = leftYSupplier;
     this.leftXSupplier = leftXSupplier;
+    this.turnSupplier = turnSupplier;
+    controller.enableContinuousInput(-180, 180);
 
     addRequirements(swerveSubsystem);
   }
@@ -42,22 +48,24 @@ public class AutoAimNoCorrectionCommand extends Command {
     double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), OperatorConstants.DEADBAND)
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double turn = 0.0;
- 
-    double yaw = swerveSubsystem.getTargetHeadingInFieldFrame()
+
+    double error = swerveSubsystem.getTargetHeadingInFieldFrame()
         .minus(swerveSubsystem.getHeading())
         .getDegrees();
 
     if (!swerveSubsystem.isAimed()) {
-      double maxOmega = SwerveConstants.MAX_SWERVE_VELOCITY.magnitude();
-      turn = MathUtil.clamp(-yaw * kP * maxOmega, -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
+      double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
+      turn = MathUtil.clamp(
+          -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
+              swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
+          -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
     }
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
-    SmartDashboard.putBoolean("is aimed?", swerveSubsystem.isAimed());
   }
 
   @Override
   public boolean isFinished() {
-    return !swerveSubsystem.currentPoseIsValidForScoring();
+    return !swerveSubsystem.currentPoseIsValidForScoring() || Math.abs(turnSupplier.getAsDouble()) > 0.5;
   }
 }

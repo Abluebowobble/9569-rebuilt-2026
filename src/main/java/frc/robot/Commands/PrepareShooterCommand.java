@@ -103,7 +103,6 @@ public class PrepareShooterCommand extends Command {
 
     // telemetry
     SmartDashboard.putNumber("Distance to Hub (meters)", distanceToHub.in(Meters));
-    SmartDashboard.putNumber("Distance to Hub (meters)", distanceToHub.in(Meters));
   }
  
   // Called once the command ends or is interrupted.

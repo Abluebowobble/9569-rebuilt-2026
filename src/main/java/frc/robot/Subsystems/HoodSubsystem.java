@@ -67,7 +67,7 @@ public class HoodSubsystem extends SubsystemBase {
 
         leftServo.set(clampedPosition);
         rightServo.set(clampedPosition);
-
+   
         targetPosition = clampedPosition;
     }
 

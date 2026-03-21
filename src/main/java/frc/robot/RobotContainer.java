@@ -43,9 +43,9 @@ public class RobotContainer {
   private final CommandXboxController xboxController = new CommandXboxController(
       OperatorConstants.DRIVER_2_CONTROLLER_PORT);
 
-  private DoubleSupplier leftYSupplier = () -> ps5Controller.getLeftY() * -1;
-  private DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
-
+  private final DoubleSupplier leftYSupplier = () -> ps5Controller.getLeftY() * -1;
+  private final DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
+  private final DoubleSupplier turnSupplier = () -> ps5Controller.getRightX();
   // subsystems
   private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
 
@@ -73,7 +73,7 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
 
   private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
-      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, leftYSupplier, leftXSupplier);
+      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, leftYSupplier, leftXSupplier, turnSupplier);
 
   public RobotContainer() {
 
@@ -151,14 +151,14 @@ public class RobotContainer {
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
     // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
     // -xboxController.getRightY()));
-    // xboxController.y().onTrue(hoodSubsystem.setCommand(0.156));
+    ps5Controller.circle().onTrue(hoodSubsystem.setCommand(0.6));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
     // ledSubsystem
     //     .setDefaultCommand(Commands.run(() -> ledSubsystem.setProgressMask(leftYSupplier, LEDSubsystem.Section.ALL), ledSubsystem));
     //     ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
-    ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
+    // ps5Controller.circle().toggleOnTrue(generalRobotCommands.aimSwerveCommand());
   }
 
   public void compBindings() {

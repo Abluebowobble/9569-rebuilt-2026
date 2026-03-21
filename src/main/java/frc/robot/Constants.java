@@ -36,13 +36,13 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int DRIVER_1_CONTROLLER_PORT = 0;
     public static final int DRIVER_2_CONTROLLER_PORT = 1;
-    public static final double DEADBAND = 0.1;
+    public static final double DEADBAND = 0.15;
     public static final double TURN_FACTOR = 0.5;
   }
 
   public static class SwerveConstants {
     public static final double MAX_SPEED = Units.feetToMeters(10.5);;
-    public static final LinearVelocity MAX_SWERVE_VELOCITY = Meters.of(2).per(Second);
+    public static final AngularVelocity MAX_SWERVE_ANGULAR_VELOCITY = Degrees.of(10).per(Second);
     public static final Angle AIM_TOLERANCE = Degrees.of(5);
   }
 
