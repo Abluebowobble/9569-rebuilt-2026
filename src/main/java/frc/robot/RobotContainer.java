@@ -152,6 +152,7 @@ public class RobotContainer {
     // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
     // -xboxController.getRightY()));
     ps5Controller.circle().onTrue(hoodSubsystem.setCommand(0.6));
+    ps5Controller.square().onTrue(hoodSubsystem.setCommand(0));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.touchpad().whileTrue(ledSubsystem.flashBangCommand());
     // ledSubsystem
