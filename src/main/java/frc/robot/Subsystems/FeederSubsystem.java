@@ -1,16 +1,20 @@
 
 package frc.robot.Subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -21,31 +25,52 @@ public class FeederSubsystem extends SubsystemBase {
 
   private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
 
+  private AngularVelocity targetRPM = RPM.of(0);
+  private final SparkClosedLoopController controller = motor.getClosedLoopController();
+
+  // public enum Speed {
+  // STOP(0),
+  // RUN(0.5),
+  // REVERSE(-0.9);
+
+  // private final double percentOutput;
+
+  // private Speed(double percentOutput) {
+  // this.percentOutput = percentOutput;
+  // }
+
+  // public Voltage voltage() {
+  // return Volts.of(percentOutput * 12.0);
+  // }
+  // }
+
   public enum Speed {
-    STOP(0),
-    RUN(0.5),
-    REVERSE(-0.9);
+    STOP(RPM.of(0)),
+    RUN(RPM.of(150)),
+    REVERSE(RPM.of(500));
 
-    private final double percentOutput;
+    private final AngularVelocity rpm;
 
-    private Speed(double percentOutput) {
-      this.percentOutput = percentOutput;
+    private Speed(AngularVelocity rpm) {
+      this.rpm = rpm;
     }
 
-    public Voltage voltage() {
-      return Volts.of(percentOutput * 12.0);
+    public AngularVelocity rpm() {
+      return rpm;
     }
   }
 
   /** Creates a new FeederSubsystem. */
   public FeederSubsystem() {
     SparkBaseConfig config = new SparkMaxConfig();
-    motor.configure(config.inverted(false), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    config.closedLoop.pid(0.0002, 0, 0).feedForward.kV(1.0 / 6000.0);
+    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
-    motor.setVoltage(speed.voltage());
+    targetRPM = speed.rpm();
+    controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
   }
 
   /** sets speed given Voltage volts */
@@ -79,6 +104,6 @@ public class FeederSubsystem extends SubsystemBase {
         () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
+    sendableBuilder.addDoubleProperty("RPM", () -> motor.getEncoder().getVelocity(), null);
   }
 }
- 

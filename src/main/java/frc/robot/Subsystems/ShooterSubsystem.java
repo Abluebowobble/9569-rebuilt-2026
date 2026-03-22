@@ -66,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(2000);
+  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
 
   // speed for roller motor
   public enum Speed {
@@ -93,7 +93,7 @@ public class ShooterSubsystem extends SubsystemBase {
         .openLoopRampRate(1)
         .closedLoopRampRate(1);
     leaderConfig.closedLoop
-        .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward
+        .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward //test p = 0.00002
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
 
     leftShooterMotor.configure(
@@ -148,7 +148,6 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void set(AngularVelocity rpm) {
-
     controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
     targetRPM = rpm;
   }
@@ -172,7 +171,7 @@ public class ShooterSubsystem extends SubsystemBase {
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
     return runOnce(() -> set(rpm))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance)).handleInterrupt(() -> stop());
   }
 
   /** sets voltage to shoot in front of Hub */
