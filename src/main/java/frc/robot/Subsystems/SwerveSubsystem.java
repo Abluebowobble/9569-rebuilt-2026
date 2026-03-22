@@ -74,7 +74,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
-  private static final Angle kAimTolerance = Degrees.of(4);
+  public static final Angle kAimTolerance = Degrees.of(5);
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
@@ -87,13 +87,13 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d startingPose = kIsBlueAlliance ? new Pose2d(new Translation2d(
         Meter.of(0),
         Meter.of(0)),
-        Rotation2d.fromDegrees(0))
+        new Rotation2d(0))
         : new Pose2d(new Translation2d(
             Meter.of(0),
             Meter.of(0)),
-            Rotation2d.fromDegrees(180));
+            new Rotation2d(Math.PI));
 
-    // SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -121,13 +121,14 @@ public class SwerveSubsystem extends SubsystemBase {
     vision = new Vision();
   }
 
-  /** sets up path planner */
   public void setupPathPlanner() {
+    // Load the RobotConfig from the GUI settings. You should probably
+    // store this in your Constants file
     RobotConfig config;
     try {
       config = RobotConfig.fromGUISettings();
 
-      final boolean enableFeedforward = true;
+      final boolean enableFeedforward = false;
       // Configure AutoBuilder last
       AutoBuilder.configure(
           this::getPose,
@@ -186,8 +187,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean isAimed() {
     return Math.abs(
-        getTargetHeadingInFieldFrame().minus(getHeading()).getDegrees()) < kAimTolerance
-            .magnitude();
+        getTargetHeadingInFieldFrame().minus(getHeading()).getDegrees()) < kAimTolerance.magnitude();
   }
 
   /**

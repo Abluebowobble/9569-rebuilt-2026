@@ -23,7 +23,7 @@ import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import frc.robot.LandMarks;
+import frc.robot.Utilities.LandMarks;
 import frc.robot.Robot;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -39,7 +39,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
- 
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -129,6 +129,7 @@ public class Vision extends SubsystemBase {
       // Use absolute value so we only care about how fast the robot is spinning,
       // not which direction it is spinning
       double omegaDegrees = Math.abs(Units.radiansToDegrees(speeds.omegaRadiansPerSecond));
+      double deltaMeters = Math.sqrt(Math.pow(speeds.vxMetersPerSecond, 2) + Math.pow(speeds.vyMetersPerSecond, 2));
 
       // Only use this vision measurement if the robot is spinning faster than 50
       // deg/sec
@@ -139,7 +140,7 @@ public class Vision extends SubsystemBase {
       field.setRobotPose(pose2d);
 
       // Recompute/update confidence values for this pose measurement
-      updateEstimationStdDevs(latestEstimatedPose, result.getTargets(), omegaDegrees);
+      updateEstimationStdDevs(latestEstimatedPose, result.getTargets(), omegaDegrees, deltaMeters);
 
       // Store the 2D estimated pose again for readability
       Pose2d estimatedPose = latestEstimatedPose.get().estimatedPose.toPose2d();
@@ -166,7 +167,8 @@ public class Vision extends SubsystemBase {
   }
 
   public double distanceToBlueHub(Pose2d robotPose) {
-    double distanceToTarget = PhotonUtils.getDistanceToPose(field.getRobotPose(), kAprilTagField.getTagPose(26).get().toPose2d());
+    double distanceToTarget = PhotonUtils.getDistanceToPose(field.getRobotPose(),
+        kAprilTagField.getTagPose(26).get().toPose2d());
     return distanceToTarget;
   }
 
@@ -242,20 +244,22 @@ public class Vision extends SubsystemBase {
    * is.
    */
   private void updateEstimationStdDevs(
-      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets, double omegaDegrees) {
+      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets, double omegaDegrees, double deltaMeters) {
 
     // If we failed to produce any pose estimate at all,
     // fall back to the default single-tag trust values.
     if (estimatedPose.isEmpty()) {
-      curStdDevs = kSingleTagStdDevs;
+      curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
-    }
+    } 
 
     // Variables used to score how trustworthy this frame is.
     double avgDist = 0;
     double avgAmbiguity = 0;
     boolean seesPriorityTag = false;
     int numTags = 0;
+
+    SmartDashboard.putNumber("delta", deltaMeters);
 
     // Go through each detected target and only use it if it exists
     // in the field layout.
@@ -287,9 +291,9 @@ public class Vision extends SubsystemBase {
     }
 
     // If none of the detected targets were valid field tags,
-    // fall back to default single-tag std devs.
+    // reject measurement.
     if (numTags == 0) {
-      curStdDevs = kSingleTagStdDevs;
+      curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
     }
 
@@ -316,21 +320,21 @@ public class Vision extends SubsystemBase {
 
     // Start with a base XY standard deviation:
     // multi-tag measurements are trusted more than single-tag measurements.
-    double xyStdDev = (numTags > 1) ? 1.0 : 1.5;
+    double xyStdDev = (numTags > 1) ? 1.0 : 2.0;
 
     // Increase XY uncertainty as average distance increases.
     // The quadratic term makes far-away tags get penalized much more strongly.
     xyStdDev *= (1 + (Math.pow(avgDist, 2) / 30.0));
-
-    // Clamp omega so that below 50 deg/s the rotation multiplier stays at 1.0.
-    double clampedOmega = Math.max(50.0, omegaDegrees);
-
-    // Reject vision entirely if the robot is spinning too fast,
-    // since rotating quickly often causes poor AprilTag measurements.
-    if (omegaDegrees > 240) {
+    
+    // Reject vision entirely if the robot is spinning or moving too fast,
+    // since rotating or moving quickly often causes poor AprilTag measurements.
+    if (omegaDegrees > 240 || deltaMeters > 1.5) {
       curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
     }
+
+    // Clamp omega so that below 50 deg/s the rotation multiplier stays at 1.0.
+    double clampedOmega = Math.max(50.0, omegaDegrees);
 
     // Increase XY uncertainty as rotation speed increases.
     // Faster spinning -> trust translation from vision less.

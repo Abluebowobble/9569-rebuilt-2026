@@ -76,7 +76,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(Degrees.of(8)),
     INTAKE(Degrees.of(80)), // 83.7
-    AGITATE(Degrees.of(50)); // 50
+    AGITATE(Degrees.of(60));
 
     private final Angle degrees;
 
@@ -115,7 +115,7 @@ public class IntakeSubsystem extends SubsystemBase {
   /** set pivot motor to go to intake position */
   public Command intakePositionCommand() {
     return runOnce(
-        () -> set(Position.INTAKE));
+        () -> set(Position.INTAKE)).handleInterrupt(() -> set(Position.STOWED));
   }
 
   /** Return to home position */
@@ -128,14 +128,14 @@ public class IntakeSubsystem extends SubsystemBase {
    * humps balls in basket, goes back to intake position and stops on interrupt
    */
   public Command agitatePivotCommand() {
-    return Commands.sequence(
-        Commands.runOnce(() -> set(Speed.INTAKE)),
-        Commands.sequence(
-            runOnce(() -> set(Position.AGITATE)),
-            Commands.waitUntil(this::isPositionWithinTolerance),
-            runOnce(() -> set(Position.INTAKE)),
-            Commands.waitUntil(this::isPositionWithinTolerance)),
-        Commands.waitSeconds(0.25)).repeatedly()
+    return runOnce(() -> set(Speed.INTAKE))
+        .andThen(
+            Commands.sequence(
+                runOnce(() -> set(Position.AGITATE)),
+                Commands.waitUntil(this::isPositionWithinTolerance),
+                runOnce(() -> set(Position.INTAKE)),
+                Commands.waitUntil(this::isPositionWithinTolerance))
+                .repeatedly())
         .handleInterrupt(() -> {
           set(Position.INTAKE);
           set(Speed.STOP);
@@ -172,7 +172,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
   }
- 
+
   // /** updates pivot position with pid, to add: slew */
   // public void updatePivotPosition() {
 

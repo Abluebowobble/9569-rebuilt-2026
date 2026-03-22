@@ -24,16 +24,17 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.HardwareMap;
 
 public class LEDSubsystem extends SubsystemBase {
   // initialize led
   private final AddressableLED m_led = new AddressableLED(HardwareMap.LED);
-  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(51);
+  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(71);
      
   // create separate sections
-  private final AddressableLEDBufferView sideView = buffer.createView(0, 50);
+  private final AddressableLEDBufferView sideView = buffer.createView(0, 70);
   // private final AddressableLEDBufferView middleView = buffer.createView(26,
   // 75);
 
@@ -83,7 +84,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command flashbangCommand() {
-    return run(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.1)), Section.ALL));
+    return run(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.05)), Section.ALL));
   }
 
   public void setRainbowScrolling() {
