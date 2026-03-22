@@ -108,7 +108,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
-    // setPointAngle = position.degrees();
+    setPointAngle = position.degrees();
     controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(), ControlType.kPosition);
   }
 

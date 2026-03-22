@@ -100,8 +100,8 @@ public class GeneralRobotCommands {
 
     public Command runShooterCommand() {
         return Commands.parallel(
-                shooterSubsystem.runCommand(RPM.of(5300)),
-                shooterLightsCommand()).finallyDo(() -> ledSubsystem.setOff());
+                shooterSubsystem.runCommand(RPM.of(5400)),
+                shooterLightsCommand());
     }
 
     /**
@@ -121,7 +121,7 @@ public class GeneralRobotCommands {
 
     public Command feedFromNeutralCommand() {
         return Commands.parallel(hoodSubsystem.feedFromNeutralCommand(),
-                neutralFeedLightsCommand()).finallyDo(() -> ledSubsystem.setOff());
+                neutralFeedLightsCommand());
     }
 
     public Command neutralFeedLightsCommand() {
@@ -132,6 +132,14 @@ public class GeneralRobotCommands {
                 ledSubsystem.setProgressMask(hoodSubsystem::progress, LEDSubsystem.Section.SHOOTER);
             }
         });
+    }
+
+    public Command runIntakeRollerCommand() {
+        return Commands.sequence(rollerLightsCommand(), intakeSubsystem.runRollerCommand());
+    }
+
+    public Command rollerLightsCommand() {
+        return Commands.none();
     }
  
     public Command autoAimLightsCommand() {

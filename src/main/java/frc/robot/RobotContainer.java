@@ -105,6 +105,9 @@ public class RobotContainer {
     NamedCommands.registerCommand("reverseIntakeRoller", intakeSubsystem.reverseRollerCommand());
     NamedCommands.registerCommand("aim", generalRobotCommands.aimSwerveCommand());
     NamedCommands.registerCommand("passBackHoodPosition", hoodSubsystem.feedFromNeutralCommand());
+    NamedCommands.registerCommand(
+        "debugPrint",
+        Commands.print("DEBUG COMMAND: PATH PLANNER IS RUNNING"));
   }
 
   private void configureBindings() {
@@ -213,22 +216,28 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
-    // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
-    // Math.PI/6)),
-    // swerveSubsystem).withTimeout(2);
+    // return autoChooser.getSelected();
+    return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, Math.PI)),
+        swerveSubsystem).withTimeout(2);
   }
+  // bind a button to chassis speeds used for auton
+  // bind a button to '.drive()' used in auto aim
+  // try auton: Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
+  // Math.PI)),
+  // swerveSubsystem).withTimeout(2);
+  // then bind the above to a button and try
+  // revert back to precomp conditions and try auton? if that works then compare
+
 
   public Command shootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
         Commands.parallel(
-            shooterSubsystem.runCommand(RPM.of(5300)),
+            shooterSubsystem.runCommand(RPM.of(5400)),
             Commands.waitSeconds(3).andThen(feed)));
 
     try {
-
       Command driveVelocity2 = swerveSubsystem
           .driveWithSetpointGenerator(
               () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, swerveSubsystem.getHeading()));
@@ -258,7 +267,7 @@ public class RobotContainer {
               () -> ChassisSpeeds.fromRobotRelativeSpeeds(0.592, 0.67, Math.PI, new Rotation2d(0)));
       Command driveVelocity2_2 = swerveSubsystem
           .driveWithSetpointGenerator(
-              () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.592, -0.67, Math.PI, new Rotation2d(180)));
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.592, -0.67, Math.PI, new Rotation2d(Math.PI)));
       Command driveVelocity2_3 = swerveSubsystem
           .driveWithSetpointGenerator(
               () -> ChassisSpeeds.fromRobotRelativeSpeeds(0.592, 0.67, Math.PI, new Rotation2d(180)));

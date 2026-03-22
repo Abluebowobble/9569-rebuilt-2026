@@ -114,10 +114,6 @@ public class SwerveSubsystem extends SubsystemBase {
         1);
 
     setupPathPlanner();
-    zeroGyro();
-
-    RobotModeTriggers.autonomous().onTrue(zeroGyroCommand());
-    RobotModeTriggers.teleop().onTrue(zeroGyroCommand());
     vision = new Vision();
   }
 
@@ -128,7 +124,7 @@ public class SwerveSubsystem extends SubsystemBase {
     try {
       config = RobotConfig.fromGUISettings();
 
-      final boolean enableFeedforward = false;
+      final boolean enableFeedforward = true;
       // Configure AutoBuilder last
       AutoBuilder.configure(
           this::getPose,
@@ -209,7 +205,7 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.zeroGyro();
 
     if (!kIsBlueAlliance) {
-      swerveDrive.resetOdometry(new Pose2d(swerveDrive.getPose().getTranslation(), new Rotation2d(180)));
+      swerveDrive.resetOdometry(new Pose2d(swerveDrive.getPose().getTranslation(), new Rotation2d(Math.PI)));
     }
   }
 
@@ -300,9 +296,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public Command swerveLockCommand(DoubleSupplier leftSupplier) {
-    return run(() -> swerveDrive.lockPose()).until(() -> {
-      return leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND;
-    });
+    return runOnce(() -> swerveDrive.lockPose()).repeatedly()
+        .until(() -> leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND);
   }
 
   public Command zeroGyroCommand() {
