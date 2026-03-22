@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.util.sendable.Sendable;
 
-public class DriverFeedback implements Sendable {
+public class DriverFeedback {
 
   // controllers
   private final PS5Controller ps5Controller;
@@ -22,7 +22,6 @@ public class DriverFeedback implements Sendable {
   public DriverFeedback(PS5Controller ps5Controller, XboxController xboxController) {
     this.ps5Controller = ps5Controller;
     this.xboxController = xboxController;
-    SmartDashboard.putData(this);
   }
 
   /** Calculates the amount of time (seconds) remaining before next shift */
@@ -31,12 +30,22 @@ public class DriverFeedback implements Sendable {
 
     double matchTime = Timer.getMatchTime(); // decreasing value that represents time remaining in match
 
+    if (matchTime < 0) {
+      return 0;
+    }
+
     for (double shift : shiftTimes) {
       if (matchTime > shift) {
         return matchTime - shift;
       }
     }
     return 0;
+  }
+
+  /** Updates the amount of time (seconds) remaining before next shift */
+  public void update() {
+    SmartDashboard.putNumber("time remaining before next shift", timeRemainingBeforeNextShift());
+    // rumbleController();
   }
 
   // public void rumbleController() {
@@ -49,10 +58,4 @@ public class DriverFeedback implements Sendable {
   //     xboxController.setRumble(RumbleType.kBothRumble, 0.0);
   //   }
   // }
-
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("Driver Feedback");
-    builder.addDoubleProperty("time remaining before next shift", () -> timeRemainingBeforeNextShift(), null);
-  }
 }
