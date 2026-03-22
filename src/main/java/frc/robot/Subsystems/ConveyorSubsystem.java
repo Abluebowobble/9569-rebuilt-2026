@@ -33,7 +33,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.5), // to tune
+    RUN(0.4), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;

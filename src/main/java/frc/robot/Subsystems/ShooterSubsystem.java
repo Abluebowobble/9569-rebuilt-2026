@@ -200,6 +200,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
+
+    
   }
 
   public double progress() {

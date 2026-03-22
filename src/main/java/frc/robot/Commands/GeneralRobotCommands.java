@@ -82,7 +82,7 @@ public class GeneralRobotCommands {
     // }
 
     public Command aimSwerveCommand() {
-        return Commands.parallel(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
+        return Commands.race(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
                 autoAimLightsCommand());
     }
 
