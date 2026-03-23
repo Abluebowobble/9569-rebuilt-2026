@@ -91,7 +91,8 @@ public class ShooterSubsystem extends SubsystemBase {
     leaderConfig
         .voltageCompensation(12.0)
         .openLoopRampRate(1)
-        .closedLoopRampRate(1);
+        .closedLoopRampRate(1)
+        .inverted(false);
     leaderConfig.closedLoop
         .pid(0.0001, 0, 0, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
@@ -104,6 +105,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig middleFollower = new SparkMaxConfig();
     middleFollower.follow(leftShooterMotor, true); // invert follow if needed
+    middleFollower.smartCurrentLimit(110, 50);
     middleShooterMotor.configure(
         middleFollower,
         ResetMode.kResetSafeParameters,
@@ -111,6 +113,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig rightFollower = new SparkMaxConfig();
     rightFollower.follow(leftShooterMotor, true); // invert follow if needed
+    middleFollower.smartCurrentLimit(110, 50);
     rightShooterMotor.configure(
         rightFollower,
         ResetMode.kResetSafeParameters,
@@ -201,7 +204,6 @@ public class ShooterSubsystem extends SubsystemBase {
     // telemetry
     SmartDashboard.putData(this);
 
-    
   }
 
   public double progress() {
@@ -233,4 +235,4 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM.magnitude(), null);
   }
-} 
+}
