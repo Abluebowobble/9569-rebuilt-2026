@@ -15,7 +15,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Utilities.LandMarks;
+import frc.robot.LandMarks;
 import frc.robot.Commands.PrepareShooterCommand.Shot;
 import frc.robot.Subsystems.HoodSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;

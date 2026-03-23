@@ -5,14 +5,9 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.Percent;
-import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RPM;
 
-import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.Logger;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
@@ -22,25 +17,16 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.FeedForwardConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.units.DimensionlessUnit;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.event.BooleanEvent;
-import edu.wpi.first.wpilibj.event.EventLoop;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -48,13 +34,11 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SparkMax leftShooterMotor = new SparkMax(HardwareMap.SHOOTER_LEFT, MotorType.kBrushless);
   private final SparkMax middleShooterMotor = new SparkMax(HardwareMap.SHOOTER_MIDDLE, MotorType.kBrushless);
   private final SparkMax rightShooterMotor = new SparkMax(HardwareMap.SHOOTER_RIGHT, MotorType.kBrushless);
-  private final SparkMax[] motors = { leftShooterMotor, middleShooterMotor, rightShooterMotor };
 
   // encoders
   private final RelativeEncoder leftEncoder = leftShooterMotor.getEncoder();
   private final RelativeEncoder middleEncoder = middleShooterMotor.getEncoder();
   private final RelativeEncoder rightEncoder = rightShooterMotor.getEncoder();
-  private final RelativeEncoder[] encoders = { leftEncoder, middleEncoder, rightEncoder };
 
   private final SparkClosedLoopController controller = leftShooterMotor.getClosedLoopController();
 
@@ -67,22 +51,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private Voltage voltage = Volts.of(0);
 
   private static final AngularVelocity kStartingVelocity = RPM.of(2900);
-
-  // speed for roller motor
-  public enum Speed {
-    STOP(Volts.of(0)),
-    INFRONTOFHUB(Volts.of(11)); // to tune
-
-    private final Voltage voltage;
-
-    private Speed(Voltage voltage) {
-      this.voltage = voltage;
-    }
-
-    public Voltage voltage() {
-      return voltage;
-    }
-  }
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -119,9 +87,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-    // set initial velocity
-    controller.setSetpoint(kStartingVelocity.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-    targetRPM = kStartingVelocity;
+    setDefaultCommand(idle());
   }
 
   /** sets voltage of all motors given Voltage enum */
@@ -162,11 +128,6 @@ public class ShooterSubsystem extends SubsystemBase {
     rightShooterMotor.setVoltage(volts.magnitude());
   }
 
-  /** sets rpm to resting speed, 2000 */
-  public void stop() {
-    set(RPM.of(kStartingVelocity.magnitude()));
-  }
-
   /** checks if each shooter has their velocity is within tolerance */
   public boolean isVelocityWithinTolerance() {
     return targetRPM.isNear(RPM.of(leftEncoder.getVelocity()), kVelocityTolerance);
@@ -174,19 +135,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
-    return runOnce(() -> set(rpm))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance)).handleInterrupt(() -> stop());
+    return runOnce(() -> set(rpm));
   }
 
   /** sets voltage to shoot in front of Hub */
   public Command runTestCommand(DoubleSupplier rpm) {
-    return runOnce(() -> set(rpm))
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
-  }
-
-  public Command stopCommand() {
-    return runOnce(() -> stop())
-        .andThen(Commands.waitUntil(this::isVelocityWithinTolerance));
+    return runOnce(() -> set(rpm));
   }
 
   public Command runVoltageCommand(DoubleSupplier voltage) {
@@ -194,10 +148,12 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
-    // pid
-    // updateCurrentSpeed();
+  public Command idle() {
+    return runOnce(() -> set(RPM.of(kStartingVelocity.magnitude())));
+  }
 
+  @Override
+  public void periodic() {
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
 
