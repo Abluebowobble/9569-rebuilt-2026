@@ -23,7 +23,7 @@ import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import frc.robot.Utilities.LandMarks;
+import frc.robot.LandMarks;
 import frc.robot.Robot;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -129,7 +129,6 @@ public class Vision extends SubsystemBase {
       // Use absolute value so we only care about how fast the robot is spinning,
       // not which direction it is spinning
       double omegaDegrees = Math.abs(Units.radiansToDegrees(speeds.omegaRadiansPerSecond));
-      double deltaMeters = Math.sqrt(Math.pow(speeds.vxMetersPerSecond, 2) + Math.pow(speeds.vyMetersPerSecond, 2));
 
       // Only use this vision measurement if the robot is spinning faster than 50
       // deg/sec
@@ -140,7 +139,7 @@ public class Vision extends SubsystemBase {
       field.setRobotPose(pose2d);
 
       // Recompute/update confidence values for this pose measurement
-      updateEstimationStdDevs(latestEstimatedPose, result.getTargets(), omegaDegrees, deltaMeters);
+      updateEstimationStdDevs(latestEstimatedPose, result.getTargets(), omegaDegrees);
 
       // Store the 2D estimated pose again for readability
       Pose2d estimatedPose = latestEstimatedPose.get().estimatedPose.toPose2d();
@@ -172,71 +171,10 @@ public class Vision extends SubsystemBase {
     return distanceToTarget;
   }
 
-  // /** Gets latest april tags stored in pipeline */
-  // private void useBestPoseFieldRelative(EstimateConsumer estimateConsumer,
-  // ChassisSpeeds speeds) {
-  // List<PhotonTrackedTarget> targets = new ArrayList<>();
-
-  // PhotonPipelineResult result = camera.getLatestResult();
-
-  // if (result.hasTargets()) {
-  // targets = result.getTargets();
-  // latestEstimatedPose = photonPoseEstimator.update(result);
-
-  // updateEstimationStdDevs(latestEstimatedPose, targets);
-  // PhotonTrackedTarget bestTarget = result.getBestTarget();
-
-  // // Calculate robot's field relative pose
-  // if (kAprilTagField.getTagPose(bestTarget.getFiducialId()).isPresent()) {
-  // Pose3d robotPose =
-  // PhotonUtils.estimateFieldToRobotAprilTag(bestTarget.getBestCameraToTarget(),
-  // kAprilTagField.getTagPose(bestTarget.getFiducialId()).get(), kCamToRobot);
-
-  // Pose2d robotPose2d = robotPose.toPose2d();
-  // field.setRobotPose(robotPose2d);
-  // }
-
-  // if (latestEstimatedPose.isPresent())
-  // estimateConsumer.accept(latestEstimatedPose.get().estimatedPose.toPose2d(),
-  // latestEstimatedPose.get().timestampSeconds,
-  // curStdDevs);
-  // }
-  // }
-
-  // /** Makes the given consumer use camera results for telemetry */
-  // private void useBestCameraResults(EstimateConsumer estimateConsumer,
-  // RobotState robotState) {
-  // Optional<EstimatedRobotPose> visionEstimate = Optional.empty();
-
-  // for (var result : camera.getAllUnreadResults()) {
-
-  // // process estimated pose using multitags, use lowest ambiguity pose as fall
-  // // back
-  // visionEstimate = photonPoseEstimator.estimateCoprocMultiTagPose(result);
-  // if (visionEstimate.isEmpty()) {
-  // visionEstimate = photonPoseEstimator.estimateLowestAmbiguityPose(result);
-  // }
-
-  // if (visionEstimate.isPresent()) {
-  // // update confidence
-  // updateEstimationStdDevs(visionEstimate, result.getTargets());
-
-  // Pose2d estimatedPose = visionEstimate.get().estimatedPose.toPose2d();
-  // if (curStdDevs.get(0, 0) != Double.MAX_VALUE && isPoseInField(estimatedPose))
-  // {
-  // consumer.accept(estimatedPose, visionEstimate.get().timestampSeconds,
-  // curStdDevs);
-
-  // field.setRobotPose(estimatedPose);
-  // }
-  // }
-  // }
-  // }
-
   private boolean isPoseInField(Pose2d pose) {
     double x = pose.getX();
     double y = pose.getY();
-    return x >= 0 && x <= LandMarks.fieldLength && y >= 0 && y <= LandMarks.fieldWidth;
+    return x >= 0 && x <= LandMarks.kFieldLength && y >= 0 && y <= LandMarks.kFieldWidth;
   }
 
   /**
@@ -244,7 +182,7 @@ public class Vision extends SubsystemBase {
    * is.
    */
   private void updateEstimationStdDevs(
-      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets, double omegaDegrees, double deltaMeters) {
+      Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets, double omegaDegrees) {
 
     // If we failed to produce any pose estimate at all,
     // fall back to the default single-tag trust values.
@@ -258,8 +196,6 @@ public class Vision extends SubsystemBase {
     double avgAmbiguity = 0;
     boolean seesPriorityTag = false;
     int numTags = 0;
-
-    SmartDashboard.putNumber("delta", deltaMeters);
 
     // Go through each detected target and only use it if it exists
     // in the field layout.
@@ -328,7 +264,7 @@ public class Vision extends SubsystemBase {
     
     // Reject vision entirely if the robot is spinning or moving too fast,
     // since rotating or moving quickly often causes poor AprilTag measurements.
-    if (omegaDegrees > 240 || deltaMeters > 1.5) {
+    if (omegaDegrees > 240) {
       curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
     }

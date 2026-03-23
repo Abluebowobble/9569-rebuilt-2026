@@ -53,8 +53,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants;
+import frc.robot.LandMarks;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.Utilities.LandMarks;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
@@ -97,7 +97,7 @@ public class SwerveSubsystem extends SubsystemBase {
     // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
-      swerveDrive = new SwerveParser(directory).createSwerveDrive(SwerveConstants.MAX_SPEED, startingPose);
+      swerveDrive = new SwerveParser(directory).createSwerveDrive(SwerveConstants.MAX_SPEED.magnitude(), startingPose);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -215,7 +215,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getTargetHeadingInFieldFrame() {
     // final Translation2d hubPosition = LandMarks.hubPosition();
-    final Translation2d hubPosition = Vision.kAprilTagField.getTagPose(26).get().toPose2d().getTranslation();
+    final Translation2d hubPosition = LandMarks.K_APRIL_TAG_FIELD_LAYOUT.getTagPose(26).get().toPose2d().getTranslation();
     final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
 
     return hubPosition.minus(robotPosition).getAngle();
@@ -341,10 +341,10 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     double poseEdgeMargin = kPoseEdgeMargin.magnitude();
-    double sectionLength = LandMarks.allianceFieldLength;
+    double sectionLength = LandMarks.kAllianceFieldLength;
 
     boolean inYBounds = y >= -poseEdgeMargin
-        && y <= LandMarks.fieldWidth + poseEdgeMargin;
+        && y <= LandMarks.kFieldWidth + poseEdgeMargin;
 
     if (!inYBounds) {
       return false;
@@ -354,8 +354,8 @@ public class SwerveSubsystem extends SubsystemBase {
       return x >= -poseEdgeMargin
           && x <= sectionLength + poseEdgeMargin;
     } else {
-      return x >= LandMarks.fieldLength - sectionLength - poseEdgeMargin
-          && x <= LandMarks.fieldLength + poseEdgeMargin;
+      return x >= LandMarks.kFieldLength - sectionLength - poseEdgeMargin
+          && x <= LandMarks.kFieldLength + poseEdgeMargin;
     }
   }
 

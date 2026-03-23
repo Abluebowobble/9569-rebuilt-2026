@@ -1,4 +1,4 @@
-package frc.robot.Utilities;
+package frc.robot;
 
 import java.util.Optional;
 
@@ -11,16 +11,16 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class LandMarks {
-    public static final AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+    public static final AprilTagFieldLayout K_APRIL_TAG_FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
-    public static final double fieldLength = layout.getFieldLength();
-    public static final double fieldWidth = layout.getFieldWidth();
+    public static final double kFieldLength = K_APRIL_TAG_FIELD_LAYOUT.getFieldLength();
+    public static final double kFieldWidth = K_APRIL_TAG_FIELD_LAYOUT.getFieldWidth();
 
-    public static final double allianceFieldLength = 182.105;
-    public static final Optional<Alliance> alliance = DriverStation.getAlliance();
+    public static final double kAllianceFieldLength = 182.105;
+    public static final Optional<Alliance> kAlliance = DriverStation.getAlliance();
 
     public static Translation2d hubPosition() {
-        if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
+        if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
             return new Translation2d(Inches.of(182.105), Inches.of(158.845));
         }
 
