@@ -4,6 +4,8 @@ package frc.robot.Subsystems;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -45,32 +47,26 @@ public class FeederSubsystem extends SubsystemBase {
   // }
 
   public enum Speed {
-    STOP(RPM.of(0)),
-    RUN(RPM.of(150)),
-    REVERSE(RPM.of(500));
+    STOP(0),
+    RUN(0.7),
+    REVERSE(0.9);
 
-    private final AngularVelocity rpm;
+    private final double percentageOutput;
 
-    private Speed(AngularVelocity rpm) {
-      this.rpm = rpm;
+    private Speed(double percentageOutput) {
+      this.percentageOutput = percentageOutput;
     }
 
-    public AngularVelocity rpm() {
-      return rpm;
+    public Voltage voltage() {
+      return Volts.of(percentageOutput * 12.0);
     }
-  }
-
-  /** Creates a new FeederSubsystem. */
-  public FeederSubsystem() {
-    SparkBaseConfig config = new SparkMaxConfig();
-    config.closedLoop.pid(0.0002, 0, 0).feedForward.kV(1.0 / 6000.0);
-    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
-    targetRPM = speed.rpm();
-    controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
+    // targetRPM = speed.rpm();
+    // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
+    motor.setVoltage(speed.voltage());
   }
 
   /** sets speed given Voltage volts */
@@ -79,8 +75,9 @@ public class FeederSubsystem extends SubsystemBase {
   }
 
   /** given parameter 0-1, sets percentage output of motor */
-  public void setPercentageOutput(double percentage) {
-    motor.setVoltage(percentage * motor.getBusVoltage());
+  public void setPercentageOutput(double percentageOutput) {
+    SmartDashboard.putNumber("feeder output percentage", percentageOutput);
+    motor.setVoltage(percentageOutput * 12.0);
   }
 
   /** set to forward speed enum on start, stop on end */

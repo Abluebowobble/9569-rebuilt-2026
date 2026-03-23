@@ -33,7 +33,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.4), // to tune
+    RUN(0.3), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;
@@ -46,7 +46,7 @@ public class ConveyorSubsystem extends SubsystemBase {
       return Volts.of(percentOutput * 12);
     }
   }
-  
+
   /** sets speed based on speed enum in percentage output */
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
@@ -54,7 +54,8 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   /** set speed given a percentage output */
   public void setPercentageOutput(double percentage) {
-    motor.setVoltage(percentage * motor.getBusVoltage());
+    SmartDashboard.putNumber("conveyor output percentage", percentage);
+    motor.setVoltage(percentage * 12.0);
   }
 
   /** runs the conveyor, stops on end */

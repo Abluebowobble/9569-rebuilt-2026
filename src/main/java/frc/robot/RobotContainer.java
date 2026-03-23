@@ -116,7 +116,7 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
@@ -141,8 +141,8 @@ public class RobotContainer {
     // shooterSubsystem.set(Volts.of(0))));
 
     // // ps5
-    ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(RPM.of(2900)));
-    ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
+    // ps5Controller.L2().whileTrue(shooterSubsystem.runCommand(RPM.of(2900)));
+    // ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
 
     // // xbox
     // ps5Controller.square().onTrue(intakeSubsystem.returnPositionCommand());
@@ -156,8 +156,14 @@ public class RobotContainer {
 
     // //test
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
-    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
-    // -xboxController.getRightY()));
+    // feederSubsystem.setDefaultCommand(Commands.run(() -> {
+    //   feederSubsystem.setPercentageOutput(-ps5Controller.getLeftY());
+    // }, feederSubsystem));
+
+    ps5Controller.circle().whileTrue(feederSubsystem.runCommand())
+    conveyorSubsystem.setDefaultCommand(
+        Commands.run(() -> conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
+            conveyorSubsystem));
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.cross().whileTrue(ledSubsystem.flashbangCommand());
@@ -170,6 +176,8 @@ public class RobotContainer {
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(), ledSubsystem));
+    ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, Math.PI)),
+        swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, 0))));
   }
 
   public void johnnyBindings() {
@@ -216,18 +224,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    // return autoChooser.getSelected();
-    return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, Math.PI)),
-        swerveSubsystem).withTimeout(2);
+    return autoChooser.getSelected();
+    // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
+    // Math.PI)),
+    // swerveSubsystem).withTimeout(2);
   }
-  // bind a button to chassis speeds used for auton
-  // bind a button to '.drive()' used in auto aim
-  // try auton: Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
-  // Math.PI)),
-  // swerveSubsystem).withTimeout(2);
-  // then bind the above to a button and try
-  // revert back to precomp conditions and try auton? if that works then compare
-
 
   public Command shootAuton() {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());

@@ -369,6 +369,9 @@ public class SwerveSubsystem extends SubsystemBase {
         .getDegrees());
     SmartDashboard.putNumber("gyro", getHeading().getDegrees());
 
+    // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "", swerveDrive.getMaximumChassisVelocity());
+    // angular 6.283185307179586 rad/s
+    // linear velocity : 5.05968 m/s
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
     kField.setRobotPose(currentPose);
