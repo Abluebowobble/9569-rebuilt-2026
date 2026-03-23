@@ -6,8 +6,6 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Second;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
@@ -20,18 +18,9 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -76,7 +65,8 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(Degrees.of(8)),
     INTAKE(Degrees.of(80)), // 83.7
-    AGITATE(Degrees.of(60));
+    AGITATEUP(Degrees.of(60)),
+    AGITATEDOWN(Degrees.of(70));
 
     private final Angle degrees;
 
@@ -95,6 +85,7 @@ public class IntakeSubsystem extends SubsystemBase {
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     pivotEncoder.setPosition(0);
+    setDefaultCommand(idle());
   }
 
   public Command zeroCommand() {
@@ -114,14 +105,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** set pivot motor to go to intake position */
   public Command intakePositionCommand() {
-    return runOnce(
-        () -> set(Position.INTAKE)).handleInterrupt(() -> set(Position.STOWED));
+    return runOnce(() -> set(Position.INTAKE));
   }
 
   /** Return to home position */
   public Command returnPositionCommand() {
-    return runOnce(
-        () -> set(Position.STOWED));
+    return runOnce(() -> set(Position.STOWED));
   }
 
   /**
@@ -131,27 +120,36 @@ public class IntakeSubsystem extends SubsystemBase {
     return runOnce(() -> set(Speed.INTAKE))
         .andThen(
             Commands.sequence(
-                runOnce(() -> set(Position.AGITATE)),
+                runOnce(() -> set(Position.AGITATEUP)),
                 Commands.waitUntil(this::isPositionWithinTolerance),
-                runOnce(() -> set(Position.INTAKE)),
+                runOnce(() -> set(Position.AGITATEDOWN)),
                 Commands.waitUntil(this::isPositionWithinTolerance))
                 .repeatedly())
         .handleInterrupt(() -> {
           set(Position.INTAKE);
           set(Speed.STOP);
-        });
+        }).onlyIf(() -> !isStowed());
+  }
+
+  public boolean isStowed() {
+    return setPointAngle.isNear(Position.STOWED.degrees(), kPositionTolerance);
   }
 
   public Command runRollerCommand() {
-    return startEnd(() -> set(Speed.INTAKE), () -> set(Speed.STOP));
+    return run(() -> set(Speed.INTAKE));
   }
 
   public Command stopRollerCommand() {
-    return run(() -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.STOP));
   }
 
   public Command reverseRollerCommand() {
-    return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
+    return run(() -> set(Speed.REVERSE));
+  }
+
+  @Override
+  public Command idle() {
+    return runOnce(() -> set(Speed.STOP));
   }
 
   /** checks if angle of pivot is within kPositionTolerance */

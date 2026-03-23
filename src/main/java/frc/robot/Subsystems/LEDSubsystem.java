@@ -13,8 +13,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
-import javax.print.attribute.standard.Sides;
-
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.AddressableLED;
@@ -24,7 +22,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.HardwareMap;
 
@@ -32,7 +29,7 @@ public class LEDSubsystem extends SubsystemBase {
   // initialize led
   private final AddressableLED m_led = new AddressableLED(HardwareMap.LED);
   private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(71);
-     
+
   // create separate sections
   private final AddressableLEDBufferView sideView = buffer.createView(0, 70);
   // private final AddressableLEDBufferView middleView = buffer.createView(26,
@@ -83,6 +80,17 @@ public class LEDSubsystem extends SubsystemBase {
     }
   }
 
+  public void setContinousGradientScrolling(Color color1, Color color2, double time, Section sec, boolean isReversed) {
+    LEDPattern pattern = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, color1, color2).scrollAtAbsoluteSpeed(
+        MetersPerSecond.of(time), Meters.of(1 / 120.0));
+
+    if (isReversed) {
+      pattern.reversed();
+    }
+    
+    set(pattern, sec);
+  }
+
   public Command flashbangCommand() {
     return run(() -> set(LEDPattern.solid(Color.kWhite).blink(Seconds.of(0.05)), Section.ALL));
   }
@@ -118,15 +126,17 @@ public class LEDSubsystem extends SubsystemBase {
   public void setProgressMask(DoubleSupplier progress, Section sec) {
     LEDPattern base = LEDPattern.solid(Color.kWhite);
     // if (alliance.isPresent()) {
-    //   if (alliance.get() == DriverStation.Alliance.Blue) {
-    //     base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kAliceBlue, Color.kAzure);
-    //   } else {
-    //     base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, Color.kDarkRed);
-    //   }
+    // if (alliance.get() == DriverStation.Alliance.Blue) {
+    // base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous,
+    // Color.kAliceBlue, Color.kAzure);
     // } else {
-    //   base = LEDPattern.solid(Color.kWhite);
+    // base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed,
+    // Color.kDarkRed);
     // }
- 
+    // } else {
+    // base = LEDPattern.solid(Color.kWhite);
+    // }
+
     LEDPattern pattern = LEDPattern.progressMaskLayer(progress);
     pattern = base.mask(pattern);
     pattern.atBrightness(Percent.of(50));

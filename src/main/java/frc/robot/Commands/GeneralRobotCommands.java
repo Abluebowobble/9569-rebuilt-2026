@@ -1,5 +1,7 @@
 package frc.robot.Commands;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.util.function.DoubleSupplier;
@@ -7,10 +9,15 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix.CANifier.LEDChannel;
 import com.ctre.phoenix6.signals.Led1OffColorValue;
+import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.AccelerationUnit;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.BehaviourConstants;
 import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
@@ -53,61 +60,53 @@ public class GeneralRobotCommands {
         this.leftXSupplier = leftXSupplier;
     }
 
-    // public Command AimAndShootCommand() {
-    // AimCommand aimCommand = new AimCommand(swerveSubsystem, leftYSupplier,
-    // leftXSupplier,
-    // operatorSwerveDefaulCommand);
-    // PrepareShooterCommand prepareShooterCommand = new
-    // PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-    // () -> swerveSubsystem.getPose());
-
-    // return Commands.deadline(
-    // Commands.waitUntil(() -> swerveSubsystem.isAimed()
-    // && prepareShooterCommand.isReadyToShoot())
-    // .andThen(feed()),
-    // aimCommand,
-    // Commands.waitSeconds(0.25).andThen(prepareShooterCommand));
-    // }
-
-    // public Command autoShooterNoAimCommand() {
-    // PrepareShooterCommand prepareShooterCommand = new
-    // PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-    // () -> swerveSubsystem.getPose());
-
-    // Command feedWhenReady =
-    // Commands.waitUntil(prepareShooterCommand::isReadyToShoot)
-    // .andThen(feed());
-
-    // return Commands.parallel(prepareShooterCommand, feedWhenReady);
-    // }
-
     public Command aimSwerveCommand() {
-        return Commands.race(new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
+        return Commands.deadline(
+                new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
                 autoAimLightsCommand());
     }
 
     public Command prepareShooterCommand() {
-        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);
+        return Commands.deadline(
+                new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem),
+                shooterLightsCommand());
     }
 
     public Command feedCommand() {
         return Commands.parallel(
                 feederSubsystem.runCommand(),
-                Commands.waitSeconds(0.125)
+                Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
                         .andThen(conveyorSubsystem.runCommand()
                                 .alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 
-    public Command runShooterCommand() {
+    public Command aimAndShootCommand() {
+        return Commands.deadline(
+                aimSwerveCommand(),
+                Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
+                        .andThen(feedCommand()),
+                spinUpShooterCommand());
+    }
+
+    public Command spinUpShooterCommand() {
         return Commands.parallel(
-                shooterSubsystem.runCommand(RPM.of(5400)),
+                shooterSubsystem.runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY),
                 shooterLightsCommand());
     }
 
-    /**
-     * my skimpy ass cheaped out cuz i'm lazy so this is just how its going to work
-     * (its close enough idgaf im done)
-     */
+    public Command intakeCommand() {
+        return intakeSubsystem.intakePositionCommand().andThen(
+                Commands.parallel(
+                        runIntakeRollerCommand(),
+                        conveyorSubsystem.runCommand().onlyWhile(() -> {
+                            ChassisSpeeds velocity = swerveSubsystem.getRobotVelocity();
+                            LinearVelocity minSpeed = MetersPerSecond.of(0.05);
+                            return Math.abs(velocity.vxMetersPerSecond) > minSpeed.magnitude()
+                                    || Math.abs(velocity.vyMetersPerSecond) > minSpeed.magnitude();
+                        })));
+    }
+
+    // good enough
     public Command shooterLightsCommand() {
         return Commands
                 .run(() -> {
@@ -135,13 +134,17 @@ public class GeneralRobotCommands {
     }
 
     public Command runIntakeRollerCommand() {
-        return Commands.sequence(rollerLightsCommand(), intakeSubsystem.runRollerCommand());
+        return Commands.sequence(
+                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
+                intakeSubsystem.runRollerCommand());
     }
 
-    public Command rollerLightsCommand() {
-        return Commands.none();
+    public Command reverseIntakeRollerCommand() {
+        return Commands.sequence(
+                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)),
+                intakeSubsystem.reverseRollerCommand());
     }
- 
+
     public Command autoAimLightsCommand() {
         return Commands.run(() -> {
             if (swerveSubsystem.isAimed()) {
@@ -150,6 +153,15 @@ public class GeneralRobotCommands {
                 ledSubsystem.setSolidColor(Color.kDarkOrange, LEDSubsystem.Section.SIDE);
             }
         });
+    }
+
+    public Command swerveLockCommand() {
+        return Commands.sequence(
+                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kRed, Section.SIDE)),
+                swerveSubsystem.swerveLockCommand(
+                        // motion vector
+                        () -> Math.sqrt(
+                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     }
 
     public Command reverseFeedCommand() {
