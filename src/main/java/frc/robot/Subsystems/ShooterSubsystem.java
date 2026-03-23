@@ -66,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(5000);
+  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
 
   // speed for roller motor
   public enum Speed {
