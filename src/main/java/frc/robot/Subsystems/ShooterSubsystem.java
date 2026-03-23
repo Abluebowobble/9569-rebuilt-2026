@@ -66,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
+  private static final AngularVelocity kStartingVelocity = RPM.of(5000);
 
   // speed for roller motor
   public enum Speed {
@@ -94,9 +94,9 @@ public class ShooterSubsystem extends SubsystemBase {
         .closedLoopRampRate(1)
         .inverted(false);
     leaderConfig.closedLoop
-        .pid(0.0004, 0, 0, ClosedLoopSlot.kSlot0).feedForward // test
+        .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
-    leaderConfig.smartCurrentLimit(110, 50);
+    leaderConfig.smartCurrentLimit(110, 80);
 
     leftShooterMotor.configure(
         leaderConfig,
@@ -105,7 +105,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig middleFollower = new SparkMaxConfig();
     middleFollower.follow(leftShooterMotor, true); // invert follow if needed
-    middleFollower.smartCurrentLimit(110, 50);
+    middleFollower.smartCurrentLimit(110, 80);
     middleShooterMotor.configure(
         middleFollower,
         ResetMode.kResetSafeParameters,
@@ -113,7 +113,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig rightFollower = new SparkMaxConfig();
     rightFollower.follow(leftShooterMotor, true); // invert follow if needed
-    middleFollower.smartCurrentLimit(110, 50);
+    rightFollower.smartCurrentLimit(110, 80);
     rightShooterMotor.configure(
         rightFollower,
         ResetMode.kResetSafeParameters,
