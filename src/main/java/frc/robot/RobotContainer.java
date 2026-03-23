@@ -25,6 +25,7 @@ import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
+import frc.robot.Utilities.DriverFeedback;
 import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
@@ -44,6 +45,8 @@ public class RobotContainer {
 
   private DoubleSupplier leftYSupplier = () -> ps5Controller.getLeftY() * -1;
   private DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
+
+  private final DriverFeedback driverFeedback = new DriverFeedback(ps5Controller, xboxController);
 
   // subsystems
   private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
@@ -246,4 +249,7 @@ public class RobotContainer {
     return swerveSubsystem.driveToPose(new Pose2d(Meter.of(0), Meter.of(0), new Rotation2d(Degree.of(90))));
   }
 
+  public DriverFeedback getDriverFeedback() {
+    return driverFeedback;
+  }
 }
