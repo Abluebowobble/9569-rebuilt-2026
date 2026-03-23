@@ -341,10 +341,10 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     double poseEdgeMargin = kPoseEdgeMargin.magnitude();
-    double sectionLength = LandMarks.kAllianceFieldLength;
+    double sectionLength = LandMarks.kAllianceFieldLength.magnitude();
 
     boolean inYBounds = y >= -poseEdgeMargin
-        && y <= LandMarks.kFieldWidth + poseEdgeMargin;
+        && y <= LandMarks.kFieldWidth.magnitude() + poseEdgeMargin;
 
     if (!inYBounds) {
       return false;
@@ -354,8 +354,8 @@ public class SwerveSubsystem extends SubsystemBase {
       return x >= -poseEdgeMargin
           && x <= sectionLength + poseEdgeMargin;
     } else {
-      return x >= LandMarks.kFieldLength - sectionLength - poseEdgeMargin
-          && x <= LandMarks.kFieldLength + poseEdgeMargin;
+      return x >= LandMarks.kFieldLength.magnitude() - sectionLength - poseEdgeMargin
+          && x <= LandMarks.kFieldLength.magnitude() + poseEdgeMargin;
     }
   }
 
