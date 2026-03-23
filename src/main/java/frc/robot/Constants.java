@@ -8,8 +8,12 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.FeetPerSecond;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +21,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -36,15 +41,20 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int DRIVER_1_CONTROLLER_PORT = 0;
     public static final int DRIVER_2_CONTROLLER_PORT = 1;
-    public static final double DEADBAND = 0.05;
     public static final double OVERRIDE_DEADBAND = 0.3;
     public static final double TURN_FACTOR = 0.5;
+    public static final Time HOLD_DELAY = Seconds.of(0.3); 
   }
 
   public static class SwerveConstants {
-    public static final double MAX_SPEED = Units.feetToMeters(16.6);
+    public static final LinearVelocity MAX_SPEED = MetersPerSecond.of(Units.feetToMeters(16.6));
     public static final AngularVelocity MAX_SWERVE_ANGULAR_VELOCITY = Degrees.of(10).per(Second);
     public static final Angle AIM_TOLERANCE = Degrees.of(5);
+  }
+
+  public static class BehaviourConstants {
+    public static final Time DELAY_BEFORE_AGITATE = Seconds.of(2);
+    public static final AngularVelocity TEMP_SHOOTER_VELOCITY = RPM.of(5300);
   }
 
   public static class HardwareMap {

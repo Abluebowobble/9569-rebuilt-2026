@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.Utilities;
+package frc.SilverKnightsLib;
 
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -45,16 +45,16 @@ public class DriverFeedback implements Sendable {
         return 0;
     }
 
-    // public void rumbleController() {
-    // double t = timeRemainingBeforeNextShift();
-    // if (t > 0 && t < 2) {
-    // ps5Controller.setRumble(RumbleType.kBothRumble, 1.0);
-    // xboxController.setRumble(RumbleType.kBothRumble, 1.0);
-    // } else {
-    // ps5Controller.setRumble(RumbleType.kBothRumble, 0.0);
-    // xboxController.setRumble(RumbleType.kBothRumble, 0.0);
-    // }
-    // }
+    public void rumbleController() {
+        double t = timeRemainingBeforeNextShift();
+        if (t > 0 && t < 2) {
+            ps5Controller.setRumble(RumbleType.kBothRumble, 1.0);
+            xboxController.setRumble(RumbleType.kBothRumble, 1.0);
+        } else {
+            ps5Controller.setRumble(RumbleType.kBothRumble, 0.0);
+            xboxController.setRumble(RumbleType.kBothRumble, 0.0);
+        }
+    }
 
     @Override
     public void initSendable(SendableBuilder builder) {

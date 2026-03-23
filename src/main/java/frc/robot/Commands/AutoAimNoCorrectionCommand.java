@@ -1,25 +1,13 @@
 package frc.robot.Commands;
 
-import java.lang.constant.Constable;
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.Constants.SwerveConstants;
 import frc.robot.Subsystems.SwerveSubsystem;
-import frc.robot.Subsystems.Vision;
-import frc.robot.Utilities.LandMarks;
-import swervelib.SwerveInputStream;
 
 public class AutoAimNoCorrectionCommand extends Command {
   private SwerveSubsystem swerveSubsystem;
@@ -46,35 +34,13 @@ public class AutoAimNoCorrectionCommand extends Command {
     addRequirements(swerveSubsystem);
   }
 
-  // @Override
-  // public void initialize() {
-  // Pose2d pose = Vision.kAprilTagField.getTagPose(26).get().toPose2d();
-  // SwerveInputStream driveTestInputStream =
-  // SwerveInputStream.of(swerveSubsystem.getSwerveDrive(),
-  // leftYSupplier,
-  // leftXSupplier)
-  // // .aim(Vision.kAprilTagField.getTagPose(26).get().toPose2d())
-  // .aim(pose).aimFeedforward(0.05, 0.1, 0)
-  // .deadband(OperatorConstants.DEADBAND)
-  // .allianceRelativeControl(true);
-  // Command driveTestCommand =
-  // swerveSubsystem.driveFieldOriented(driveTestInputStream);
-  // swerveSubsystem.setDefaultCommand(driveTestCommand);
-  // }
-
   @Override
   public void execute() {
-    double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(),
-        OperatorConstants.DEADBAND)
+    double forward = leftYSupplier.getAsDouble()
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity() * kMaxTranslationScale;
-    double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(),
-        OperatorConstants.DEADBAND)
+    double strafe = leftXSupplier.getAsDouble()
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity() * kMaxTranslationScale;
     double turn = 0.0;
-
-    double error = swerveSubsystem.getTargetHeadingInFieldFrame()
-        .minus(swerveSubsystem.getHeading())
-        .getDegrees();
 
     double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
     turn = MathUtil.clamp(
@@ -84,26 +50,6 @@ public class AutoAimNoCorrectionCommand extends Command {
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe),
         turn, true, false);
-  }
-
-  @Override
-  public void end(boolean interrupted) {
-
-    // SwerveInputStream driveAngularVelocity =
-    // SwerveInputStream.of(swerveSubsystem.getSwerveDrive(),
-    // leftYSupplier,
-    // leftXSupplier)
-    // .withControllerRotationAxis(turnSupplier)
-    // .deadband(OperatorConstants.DEADBAND)
-    // .cubeTranslationControllerAxis(true)
-    // .cubeRotationControllerAxis(true)
-    // .scaleTranslation(0.8)
-    // .allianceRelativeControl(true);
-
-    // Command driveFieldOrientedAnglularVelocity =
-    // swerveSubsystem.driveFieldOriented(driveAngularVelocity);
-
-    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
   }
 
   @Override
