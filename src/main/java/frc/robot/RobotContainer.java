@@ -160,7 +160,7 @@ public class RobotContainer {
     //   feederSubsystem.setPercentageOutput(-ps5Controller.getLeftY());
     // }, feederSubsystem));
 
-    ps5Controller.circle().whileTrue(feederSubsystem.runCommand())
+    ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     conveyorSubsystem.setDefaultCommand(
         Commands.run(() -> conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
             conveyorSubsystem));

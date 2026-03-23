@@ -93,7 +93,7 @@ public class ShooterSubsystem extends SubsystemBase {
         .openLoopRampRate(1)
         .closedLoopRampRate(1);
     leaderConfig.closedLoop
-        .pid(0.0001, 0, 0, ClosedLoopSlot.kSlot0).feedForward // test
+        .pid(0.0004, 0, 0, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leaderConfig.smartCurrentLimit(110, 50);
 
