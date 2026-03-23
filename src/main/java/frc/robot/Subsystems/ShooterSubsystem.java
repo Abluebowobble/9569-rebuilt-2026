@@ -93,8 +93,9 @@ public class ShooterSubsystem extends SubsystemBase {
         .openLoopRampRate(1)
         .closedLoopRampRate(1);
     leaderConfig.closedLoop
-        .pid(0, 0, 0, ClosedLoopSlot.kSlot0).feedForward //test p = 0.00002
+        .pid(0.0001, 0, 0, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
+    leaderConfig.smartCurrentLimit(110, 50);
 
     leftShooterMotor.configure(
         leaderConfig,
@@ -227,6 +228,7 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
     builder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
     builder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);
+    // addd current property later
     builder.addBooleanProperty("is Velocity within tolerance", this::isVelocityWithinTolerance, null);
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM.magnitude(), null);
