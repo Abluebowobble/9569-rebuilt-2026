@@ -174,7 +174,7 @@ public class Vision extends SubsystemBase {
   private boolean isPoseInField(Pose2d pose) {
     double x = pose.getX();
     double y = pose.getY();
-    return x >= 0 && x <= LandMarks.kFieldLength && y >= 0 && y <= LandMarks.kFieldWidth;
+    return x >= 0 && x <= LandMarks.kFieldLength.magnitude() && y >= 0 && y <= LandMarks.kFieldWidth.magnitude();
   }
 
   /**

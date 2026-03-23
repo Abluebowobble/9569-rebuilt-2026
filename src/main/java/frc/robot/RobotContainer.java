@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -194,9 +195,8 @@ public class RobotContainer {
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // misc swerve commands
-    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i just bind this with shooting? ask johnny
+    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask johnny
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-
     // passing
     ps5Controller.povUp().toggleOnTrue(
         hoodSubsystem.feedFromNeutralCommand().onlyWhile(() -> swerveSubsystem.currentPoseIsValidForScoring())); //

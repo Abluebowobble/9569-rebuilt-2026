@@ -45,16 +45,16 @@ public class DriverFeedback implements Sendable {
         return 0;
     }
 
-    // public void rumbleController() {
-    // double t = timeRemainingBeforeNextShift();
-    // if (t > 0 && t < 2) {
-    // ps5Controller.setRumble(RumbleType.kBothRumble, 1.0);
-    // xboxController.setRumble(RumbleType.kBothRumble, 1.0);
-    // } else {
-    // ps5Controller.setRumble(RumbleType.kBothRumble, 0.0);
-    // xboxController.setRumble(RumbleType.kBothRumble, 0.0);
-    // }
-    // }
+    public void rumbleController() {
+        double t = timeRemainingBeforeNextShift();
+        if (t > 0 && t < 2) {
+            ps5Controller.setRumble(RumbleType.kBothRumble, 1.0);
+            xboxController.setRumble(RumbleType.kBothRumble, 1.0);
+        } else {
+            ps5Controller.setRumble(RumbleType.kBothRumble, 0.0);
+            xboxController.setRumble(RumbleType.kBothRumble, 0.0);
+        }
+    }
 
     @Override
     public void initSendable(SendableBuilder builder) {
