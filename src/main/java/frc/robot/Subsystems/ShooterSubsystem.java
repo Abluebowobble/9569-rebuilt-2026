@@ -50,7 +50,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
+  private static final AngularVelocity kStartingVelocity = RPM.of(0);
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {

@@ -73,7 +73,7 @@ public class RobotContainer {
       swerveSubsystem.getSwerveDrive(),
       inputShaper::getShapedYInput,
       inputShaper::getShapedXInput)
-      .withControllerRotationAxis(inputShaper::getShapedTurnInput)
+      .withControllerRotationAxis(turnSupplier)
       .allianceRelativeControl(true);
 
   private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
@@ -117,8 +117,14 @@ public class RobotContainer {
     // compBindings();
   }
 
+  public void test() {
+    SmartDashboard.putNumber("left x supplier", ps5Controller.getLeftX());
+    SmartDashboard.putNumber("left Y supplier", ps5Controller.getLeftY());
+    SmartDashboard.putNumber("left turn supplier", ps5Controller.getRightX());
+  }
+
   public void testBindings() {
-    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
@@ -151,21 +157,21 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
-    // -xboxController.getLeftY()));
+    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getLeftY()));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
     // -xboxController.getLeftY()));
 
     // //test
-    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
+    // shooterSubsystsem.setDefaultCommand(shooterSubsystem.runCommand(5300));
     // feederSubsystem.setDefaultCommand(Commands.run(() -> {
     // feederSubsystem.setPercentageOutput(-ps5Controller.getLeftY());
     // }, feederSubsystem));
 
-    ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
-    conveyorSubsystem.setDefaultCommand(
-        Commands.run(() -> conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
-            conveyorSubsystem));
+    // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
+    // conveyorSubsystem.setDefaultCommand(
+    // Commands.run(() ->
+    // conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
+    // conveyorSubsystem));
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.cross().whileTrue(ledSubsystem.flashbangCommand());
@@ -176,10 +182,13 @@ public class RobotContainer {
     // ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
-    ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-    ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(), ledSubsystem));
-    ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, Math.PI)),
-        swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, 0))));
+    // ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
+    // ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(),
+    // ledSubsystem));
+    // ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, Math.PI)),
+    // swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, 0))));
   }
 
   public void johnnyBindings() {
@@ -195,7 +204,8 @@ public class RobotContainer {
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // misc swerve commands
-    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask johnny
+    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask
+                                                                               // johnny
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // passing
     ps5Controller.povUp().toggleOnTrue(
@@ -208,8 +218,7 @@ public class RobotContainer {
     ps5Controller.square().onTrue(Commands.either(
         intakeSubsystem.returnPositionCommand(),
         intakeSubsystem.intakePositionCommand(),
-        intakeSubsystem::isStowed)
-    );
+        intakeSubsystem::isStowed));
 
     // gooner
     ps5Controller.povRight().whileTrue(ledSubsystem.flashbangCommand());
