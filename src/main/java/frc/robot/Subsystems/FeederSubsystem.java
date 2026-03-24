@@ -15,17 +15,21 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Commands.SubsystemsController.FeederState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FeederSubsystem extends SubsystemBase {
 
   private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
+
+  private FeederState state = FeederState.STOP;
 
   public enum Speed {
     STOP(0),
@@ -41,6 +45,10 @@ public class FeederSubsystem extends SubsystemBase {
     public Voltage voltage() {
       return Volts.of(percentageOutput * 12.0);
     }
+  }
+
+  public FeederSubsystem() {
+    setDefaultCommand(run(() -> stateManager()));
   }
 
   /** sets speed based on percentage output given Speed enum */
@@ -74,6 +82,28 @@ public class FeederSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putData(this);
+
+    switch (state) {
+      case REVERSE -> set(Speed.REVERSE);
+      case RUNNING -> set(Speed.RUN);
+      case STOP -> set(Speed.STOP);
+    }
+  }
+
+  public void stateManager() {
+    switch (state) {
+      case REVERSE:
+        runOnce(() -> set(Speed.REVERSE));
+      case RUNNING:
+        runOnce(() -> set(Speed.REVERSE));
+      case STOP:
+      default:
+        runOnce(() -> set(Speed.REVERSE));
+    }
+  }
+
+  public void setState(FeederState feederState) {
+    state = feederState;
   }
 
   @Override

@@ -67,7 +67,7 @@ public class SubsystemsController {
     }
 
     public static enum HoodState {
-        AIMING, IDLE, FEEDING;
+        AIMING, IDLE, PASSING;
     }
 
     public static enum ConveyorState {
@@ -135,7 +135,7 @@ public class SubsystemsController {
                                 .alongWith(intakeSubsystem.agitatePivotCommand())));
     }
 
-    public Command aimAndShootCommand() {
+    public Command scoringCommand() {
         return Commands.deadline(
                 aimSwerveCommand(),
                 Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())

@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Commands.SubsystemsController.HoodState;;
 
 public class HoodSubsystem extends SubsystemBase {
     // position variables, between 0-1
@@ -39,6 +40,9 @@ public class HoodSubsystem extends SubsystemBase {
     private final Servo leftServo;
     private final Servo rightServo;
 
+    // state
+    private HoodState state = HoodState.IDLE;
+
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
         rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
@@ -51,23 +55,24 @@ public class HoodSubsystem extends SubsystemBase {
         // SmartDashboard.putNumber("Set Target Position", 0.5);
 
         // prep hood at maximal position
-        setPosition(kStartingPosition);
+        set(kStartingPosition);
+        setDefaultCommand(run(() -> stateManager()));
     }
 
     /**
      * Expects a position between 0.0 and 1.0, sets position to given percentage
      * position
      */
-    public void setPosition(DoubleSupplier position) {
-        setPosition(position.getAsDouble());
+    public void set(DoubleSupplier position) {
+        set(position.getAsDouble());
     }
 
-    public void setPosition(double position) {
+    public void set(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
 
         leftServo.set(clampedPosition);
         rightServo.set(clampedPosition);
-   
+
         targetPosition = clampedPosition;
     }
 
@@ -76,7 +81,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance, for testing
      */
     public Command setCommand(DoubleSupplier position) {
-        return runOnce(() -> setPosition(position))
+        return runOnce(() -> set(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
@@ -85,7 +90,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance
      */
     public Command setCommand(double position) {
-        return runOnce(() -> setPosition(position))
+        return runOnce(() -> set(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
@@ -113,7 +118,7 @@ public class HoodSubsystem extends SubsystemBase {
             return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
         }
     }
- 
+
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
         return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);
@@ -125,6 +130,20 @@ public class HoodSubsystem extends SubsystemBase {
         // updateSpeedWithSmartDashboard();
 
         SmartDashboard.putData(this);
+    }
+
+    public Command defaultCommand(Command aimCommand) {
+        Commands.run(() -> {
+            switch (state) {
+                case AIMING:
+                    break;
+                case PASSING:
+                    return runOnce(() -> set(kMaxPosition));
+                case IDLE:
+                default:
+                    return runOnce(() -> set(kStartingPosition));
+            }
+        });
     }
 
     @Override

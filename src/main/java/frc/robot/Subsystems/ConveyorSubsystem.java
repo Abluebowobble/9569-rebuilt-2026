@@ -15,6 +15,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
+import frc.robot.Commands.SubsystemsController.ConveyorState;
+import frc.robot.Commands.SubsystemsController.FeederState;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -26,10 +28,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ConveyorSubsystem extends SubsystemBase {
 
   private final SparkMax motor = new SparkMax(HardwareMap.CONVEYOR, MotorType.kBrushless);
-  private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
-  private Voltage curVoltage = Volts.of(0);
 
-  private final static Voltage kVoltageSlew = Volts.of(0.1);
+  private ConveyorState state = ConveyorState.STOP;
 
   public enum Speed {
     STOP(0),
@@ -45,6 +45,10 @@ public class ConveyorSubsystem extends SubsystemBase {
     public Voltage voltage() {
       return Volts.of(percentOutput * 12);
     }
+  }
+
+  public ConveyorSubsystem() {
+    setDefaultCommand(run(() -> stateManager()));
   }
 
   /** sets speed based on speed enum in percentage output */
@@ -72,5 +76,26 @@ public class ConveyorSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("current output", () -> motor.getOutputCurrent(), null);
 
+  }
+
+  @Override
+  public void periodic() {
+    SmartDashboard.putData(this);
+  }
+
+  public void stateManager() {
+    switch (state) {
+      case REVERSE:
+        runOnce(() -> set(Speed.REVERSE));
+      case RUNNING:
+        runOnce(() -> set(Speed.REVERSE));
+      case STOP:
+      default:
+        runOnce(() -> set(Speed.REVERSE));
+    }
+  }
+
+  public void setState(ConveyorState conveyorState) {
+    state = conveyorState;
   }
 }
