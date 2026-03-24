@@ -84,11 +84,6 @@ public class PrepareShooterCommand extends Command {
     return Meters.of(swerve.getVision().distanceToBlueHub(swerve.getSwerveDrive().getPose()));
   }
 
-  @Override
-  public void initialize() {
-    hoodSubsystem.setState(HoodState.AIMING);
-  }
-
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
@@ -97,6 +92,7 @@ public class PrepareShooterCommand extends Command {
       hoodSubsystem.setState(HoodState.IDLE);
       return;
     }
+    hoodSubsystem.setState(HoodState.AIMING);
 
     // find distance
     final Distance distanceToHub = getDistanceToHub();

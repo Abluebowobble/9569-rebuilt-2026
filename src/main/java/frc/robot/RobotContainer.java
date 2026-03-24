@@ -200,9 +200,9 @@ public class RobotContainer {
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
     // scoring
-    // ps5Controller.L2().onTrue(generalRobotCommands.spinUpShooterCommand());
-    // ps5Controller.L2().whileTrue(Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude()).andThen(generalRobotCommands.spinUpShooterCommand()));
-    ps5Controller.L2().whileTrue(generalRobotCommands.spinUpShooterCommand());
+    ps5Controller.L2().toggleOnTrue(generalRobotCommands.spinUpShooterCommand());
+    ps5Controller.L2().whileTrue(Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude()).andThen(generalRobotCommands.scoringCommand()));
+    
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 

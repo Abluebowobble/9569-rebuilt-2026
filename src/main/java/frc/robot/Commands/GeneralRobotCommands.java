@@ -68,7 +68,7 @@ public class GeneralRobotCommands {
     }
 
     public static enum SwerveState {
-        OPERATED, LOCKED, AIMED;
+        OPERATED, LOCKED, AIMED, MOVING_WHILE_AIMING, LOCKED_AND_AIMED;
     }
 
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
@@ -110,24 +110,22 @@ public class GeneralRobotCommands {
 
     public Command scoringCommand() {
         // return Commands.deadline(
-        //         aimSwerveCommand(),
-        //         Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
-        //                 .andThen(feedCommand()),
-        //         spinUpShooterCommand());
+        // aimSwerveCommand(),
+        // Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
+        // .andThen(feedCommand()),
+        // spinUpShooterCommand());
         return Commands.runOnce(() -> {
             feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
             conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
         }).andThen(
-            Commands.waitSeconds(0.1)
-        ).andThen(
-            Commands.deadline(
-                aimSwerveCommand(),
-                Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
-                        .andThen(feedCommand()),
-                spinUpShooterCommand())
-        ).finallyDo((interrupted) -> {
-            spinUpShooterCommand();
-        });
+                Commands.waitSeconds(0.1)).andThen(
+                        Commands.deadline(
+                                aimSwerveCommand(),
+                                feedCommand().onlyWhile(() -> swerveSubsystem.isAimed() && isReadyToShoot()
+                                        && (swerveSubsystem.getState() != SwerveState.MOVING_WHILE_AIMING
+                                                || swerveSubsystem.getState() != SwerveState.OPERATED))),
+                        Commands.either(spinUpShooterCommand(), Commands.idle(),
+                                () -> shooterSubsystem.getState() == ShooterState.IDLE));
     }
 
     public Command spinUpShooterCommand() {

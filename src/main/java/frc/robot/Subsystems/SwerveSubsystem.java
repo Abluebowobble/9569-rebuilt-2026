@@ -76,7 +76,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
-  public static final Angle kAimTolerance = Degrees.of(5);
+  public static final Angle kAimTolerance = Degrees.of(1);
 
   private SwerveState swerveState = SwerveState.OPERATED;
 
