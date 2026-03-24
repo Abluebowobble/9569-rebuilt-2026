@@ -81,9 +81,11 @@ public class FeederSubsystem extends SubsystemBase {
   public void set(Speed speed) {
     // targetRPM = speed.rpm();
     // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
-    if (shouldFeed.getAsBoolean())
-      motor.setVoltage(speed.voltage());
-    motor.setVoltage(Speed.UNJAM.voltage());
+    if (speed.equals(Speed.RUN) && !shouldFeed.getAsBoolean()) {
+      motor.setVoltage(Speed.UNJAM.voltage());
+    }
+
+    motor.setVoltage(speed.voltage());
   }
 
   /** sets speed given Voltage volts */
