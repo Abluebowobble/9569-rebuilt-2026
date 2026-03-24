@@ -165,9 +165,8 @@ public class Vision extends SubsystemBase {
     return camera;
   }
 
-  public double distanceToBlueHub(Pose2d robotPose) {
-    double distanceToTarget = PhotonUtils.getDistanceToPose(field.getRobotPose(),
-        kAprilTagField.getTagPose(26).get().toPose2d());
+  public double distanceToPoint(Pose2d robotPose, Pose2d point) {
+    double distanceToTarget = PhotonUtils.getDistanceToPose(field.getRobotPose(), point);
     return distanceToTarget;
   }
 
@@ -189,7 +188,7 @@ public class Vision extends SubsystemBase {
     if (estimatedPose.isEmpty()) {
       curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
-    } 
+    }
 
     // Variables used to score how trustworthy this frame is.
     double avgDist = 0;
@@ -261,7 +260,7 @@ public class Vision extends SubsystemBase {
     // Increase XY uncertainty as average distance increases.
     // The quadratic term makes far-away tags get penalized much more strongly.
     xyStdDev *= (1 + (Math.pow(avgDist, 2) / 30.0));
-    
+
     // Reject vision entirely if the robot is spinning or moving too fast,
     // since rotating or moving quickly often causes poor AprilTag measurements.
     if (omegaDegrees > 240) {
