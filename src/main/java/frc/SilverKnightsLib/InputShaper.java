@@ -11,13 +11,6 @@ import frc.robot.Constants.OperatorConstants;
 
 public class InputShaper {
 
-    private static final double A = 10.0; // curve aggressiveness
-    private static final double D = 0.05; // deadband
-    private static final double N = 0.15; // minimum output once outside deadband
-
-    // Precomputed normalization constant i(1):
-    private static final double I1 = Math.pow(A, -D) * (1.0 - D);
-
     private final DoubleSupplier leftXSupplier;
     private final DoubleSupplier leftYSupplier;
     private final DoubleSupplier turnSupplier;
@@ -29,19 +22,19 @@ public class InputShaper {
     }
 
     public double getShapedXInput() {
-        return shape(leftXSupplier.getAsDouble());
+        return shape(leftXSupplier.getAsDouble(), 4, 0.05, 0.02);
     }
 
     public double getShapedYInput() {
-        return shape(leftYSupplier.getAsDouble());
+        return shape(leftYSupplier.getAsDouble(), 4, 0.05, 0.02);
     }
 
     public double getShapedTurnInput() {
-        return shape(turnSupplier.getAsDouble());
+        return shape(turnSupplier.getAsDouble(), 4, 0.05, 0.02);
 
     }
 
-    private double shape(double x) {
+    private double shape(double x, double A, double D, double N) {
         double absX = Math.abs(x);
 
         // deadband
@@ -56,6 +49,8 @@ public class InputShaper {
 
         // i(x) = a^(g(x)-1) * g(x) * sign(x)
         double iX = Math.pow(A, g - 1.0) * g * sign;
+
+        double I1 = Math.pow(A, -D) * (1.0 - D);
 
         // k(x) = (1 - n) * (i(x) / i(1)) + n * sign(x)
         double k = (1.0 - N) * (iX / I1) + N * sign;
