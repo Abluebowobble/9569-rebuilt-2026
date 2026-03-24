@@ -19,6 +19,7 @@ import frc.SilverKnightsLib.TapHoldBinder;
 import frc.robot.Commands.SubsystemsController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -61,6 +62,10 @@ public class RobotContainer {
 
   private final SendableChooser<Command> autoChooser;
 
+  private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
+      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, inputShaper::getShapedYInput,
+      inputShaper::getShapedXInput, turnSupplier);
+
   public RobotContainer() {
     // config bindings
     configureBindings();
@@ -91,6 +96,12 @@ public class RobotContainer {
   private void configureBindings() {
     testBindings();
     // compBindings();
+  }
+
+  public void test() {
+    SmartDashboard.putNumber("left x supplier", ps5Controller.getLeftX());
+    SmartDashboard.putNumber("left Y supplier", ps5Controller.getLeftY());
+    SmartDashboard.putNumber("left turn supplier", ps5Controller.getRightX());
   }
 
   public void testBindings() {
@@ -125,17 +136,21 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
-    // -xboxController.getLeftY()));
+    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getLeftY()));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
     // -xboxController.getLeftY()));
 
     // //test
-    // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5300));
+    // shooterSubsystsem.setDefaultCommand(shooterSubsystem.runCommand(5300));
     // feederSubsystem.setDefaultCommand(Commands.run(() -> {
     // feederSubsystem.setPercentageOutput(-ps5Controller.getLeftY());
     // }, feederSubsystem));
 
+    // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
+    // conveyorSubsystem.setDefaultCommand(
+    // Commands.run(() ->
+    // conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
+    // conveyorSubsystem));
     // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
     // conveyorSubsystem.setDefaultCommand(
     // Commands.run(() ->
@@ -151,6 +166,13 @@ public class RobotContainer {
     // ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
+    // ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
+    // ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(),
+    // ledSubsystem));
+    // ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, Math.PI)),
+    // swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, 0))));
     // ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(),
     // ledSubsystem));
@@ -191,6 +213,8 @@ public class RobotContainer {
     // misc swerve commands
     ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask
                                                                                // johnny
+    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask
+                                                                               // johnny
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // passing
     ps5Controller.povUp().toggleOnTrue(
@@ -203,6 +227,7 @@ public class RobotContainer {
     ps5Controller.square().onTrue(Commands.either(
         intakeSubsystem.returnPositionCommand(),
         intakeSubsystem.intakePositionCommand(),
+        intakeSubsystem::isStowed));
         intakeSubsystem::isStowed));
 
     // gooner
@@ -236,6 +261,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
+    // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.PI)));
     return autoChooser.getSelected();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
