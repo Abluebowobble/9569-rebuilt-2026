@@ -19,6 +19,8 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Commands.GeneralRobotCommands.ShooterState;
+import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -51,6 +53,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private Voltage voltage = Volts.of(0);
 
   private static final AngularVelocity kStartingVelocity = RPM.of(0);
+
+  private ShooterState shooterState = ShooterState.IDLE;
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -135,7 +139,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
-    return runOnce(() -> set(rpm));
+    return runOnce(() -> set(rpm)).alongWith(Commands.runOnce(() -> setState(ShooterState.SHOOTING)));
   }
 
   /** sets voltage to shoot in front of Hub */
@@ -149,7 +153,16 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return runOnce(() -> set(RPM.of(kStartingVelocity.magnitude())));
+    return runOnce(() -> set(RPM.of(kStartingVelocity.magnitude())))
+        .alongWith(Commands.runOnce(() -> setState(ShooterState.IDLE)));
+  }
+
+  public void setState(ShooterState shooterState) {
+    this.shooterState = shooterState;
+  }
+
+  public ShooterState getState() {
+    return shooterState;
   }
 
   @Override

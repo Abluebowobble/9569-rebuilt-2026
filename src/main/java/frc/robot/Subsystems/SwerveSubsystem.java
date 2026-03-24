@@ -52,8 +52,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.LandMarks;
+import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import frc.robot.Constants.SwerveConstants;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
@@ -75,6 +77,8 @@ public class SwerveSubsystem extends SubsystemBase {
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
   public static final Angle kAimTolerance = Degrees.of(5);
+
+  private SwerveState swerveState = SwerveState.OPERATED;
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
@@ -115,6 +119,15 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
     vision = new Vision();
+
+  }
+
+  public void setState(SwerveState swerveState) {
+    this.swerveState = swerveState;
+  }
+
+  public SwerveState getState() {
+    return swerveState;
   }
 
   public void setupPathPlanner() {
@@ -215,7 +228,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getTargetHeadingInFieldFrame() {
     // final Translation2d hubPosition = LandMarks.hubPosition();
-    final Translation2d hubPosition = LandMarks.K_APRIL_TAG_FIELD_LAYOUT.getTagPose(26).get().toPose2d().getTranslation();
+    final Translation2d hubPosition = LandMarks.K_APRIL_TAG_FIELD_LAYOUT.getTagPose(26).get().toPose2d()
+        .getTranslation();
     final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
 
     return hubPosition.minus(robotPosition).getAngle();
@@ -295,9 +309,11 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.lockPose();
   }
 
-  public Command swerveLockCommand(DoubleSupplier leftSupplier) {
-    return runOnce(() -> swerveDrive.lockPose()).repeatedly()
-        .until(() -> leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND);
+  public Command swerveLockCommand(DoubleSupplier leftSupplier, SwerveState previousState) {
+    return runOnce(() -> setState(SwerveState.LOCKED))
+        .andThen(() -> swerveDrive.lockPose()).repeatedly()
+        .until(() -> leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND)
+        .finallyDo((interrupted) -> setState(previousState));
   }
 
   public Command zeroGyroCommand() {
@@ -369,7 +385,8 @@ public class SwerveSubsystem extends SubsystemBase {
         .getDegrees());
     SmartDashboard.putNumber("gyro", getHeading().getDegrees());
 
-    // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "", swerveDrive.getMaximumChassisVelocity());
+    // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "",
+    // swerveDrive.getMaximumChassisVelocity());
     // angular 6.283185307179586 rad/s
     // linear velocity : 5.05968 m/s
     // field2d

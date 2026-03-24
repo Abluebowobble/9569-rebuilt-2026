@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import frc.robot.Subsystems.SwerveSubsystem;
 
 public class AutoAimNoCorrectionCommand extends Command {
@@ -20,6 +21,8 @@ public class AutoAimNoCorrectionCommand extends Command {
 
   private final PIDController controller = new PIDController(0.014, 0, 0);
 
+  private SwerveState prevState;
+
   public AutoAimNoCorrectionCommand(
       SwerveSubsystem swerveSubsystem,
       DoubleSupplier leftYSupplier,
@@ -32,6 +35,12 @@ public class AutoAimNoCorrectionCommand extends Command {
     controller.enableContinuousInput(-180, 180);
 
     addRequirements(swerveSubsystem);
+  }
+
+  @Override
+  public void initialize() {
+    prevState = swerveSubsystem.getState();
+    swerveSubsystem.setState(SwerveState.AIMED);
   }
 
   @Override
@@ -50,6 +59,11 @@ public class AutoAimNoCorrectionCommand extends Command {
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe),
         turn, true, false);
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    swerveSubsystem.setState(prevState);
   }
 
   @Override

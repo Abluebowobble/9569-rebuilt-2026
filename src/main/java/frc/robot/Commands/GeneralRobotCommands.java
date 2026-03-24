@@ -43,6 +43,34 @@ public class GeneralRobotCommands {
     private final DoubleSupplier leftXSupplier;
     private final DoubleSupplier turnSupplier;
 
+    public static enum ShooterState {
+        SHOOTING, IDLE;
+    }
+
+    public static enum IntakeState {
+        INTAKE, STOWED, AGITATING;
+    }
+
+    public static enum RollerState {
+        RUNNING, REVERSE, STOP;
+    }
+
+    public static enum HoodState {
+        AIMING, IDLE, PASSING;
+    }
+
+    public static enum ConveyorState {
+        RUNNING, REVERSE, STOP;
+    }
+
+    public static enum FeederState {
+        RUNNING, REVERSE, STOP;
+    }
+
+    public static enum SwerveState {
+        OPERATED, LOCKED, AIMED;
+    }
+
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
             IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
             ConveyorSubsystem conveyorSubsystem, LEDSubsystem ledSubsystem, DoubleSupplier leftYSupplier,
@@ -77,15 +105,29 @@ public class GeneralRobotCommands {
                 feederSubsystem.runCommand(),
                 Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
                         .andThen(conveyorSubsystem.runCommand()
-                                .alongWith(intakeSubsystem.agitatePivotCommand())));
+                                .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))));
     }
 
-    public Command aimAndShootCommand() {
-        return Commands.deadline(
+    public Command scoringCommand() {
+        // return Commands.deadline(
+        //         aimSwerveCommand(),
+        //         Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
+        //                 .andThen(feedCommand()),
+        //         spinUpShooterCommand());
+        return Commands.runOnce(() -> {
+            feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
+            conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
+        }).andThen(
+            Commands.waitSeconds(0.1)
+        ).andThen(
+            Commands.deadline(
                 aimSwerveCommand(),
                 Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
                         .andThen(feedCommand()),
-                spinUpShooterCommand());
+                spinUpShooterCommand())
+        ).finallyDo((interrupted) -> {
+            spinUpShooterCommand();
+        });
     }
 
     public Command spinUpShooterCommand() {
@@ -161,7 +203,8 @@ public class GeneralRobotCommands {
                 swerveSubsystem.swerveLockCommand(
                         // motion vector
                         () -> Math.sqrt(
-                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
+                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2)),
+                        swerveSubsystem.getState()));
     }
 
     public Command reverseFeedCommand() {

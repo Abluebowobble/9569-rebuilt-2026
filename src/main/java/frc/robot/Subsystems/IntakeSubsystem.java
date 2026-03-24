@@ -5,9 +5,13 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
+
+import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
+
 import static edu.wpi.first.units.Units.Degrees;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -17,6 +21,9 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Commands.GeneralRobotCommands.IntakeState;
+import frc.robot.Commands.GeneralRobotCommands.RollerState;
+import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
@@ -43,6 +50,9 @@ public class IntakeSubsystem extends SubsystemBase {
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
   private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
+
+  private IntakeState intakeState = IntakeState.STOWED;
+  private RollerState rollerState = RollerState.STOP;
 
   // speed for roller motor
   public enum Speed {
@@ -105,19 +115,20 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** set pivot motor to go to intake position */
   public Command intakePositionCommand() {
-    return runOnce(() -> set(Position.INTAKE));
+    return runOnce(() -> set(Position.INTAKE)).alongWith(Commands.run(() -> setState(IntakeState.INTAKE)));
   }
 
   /** Return to home position */
   public Command returnPositionCommand() {
-    return runOnce(() -> set(Position.STOWED));
+    return runOnce(() -> set(Position.STOWED)).alongWith(Commands.run(() -> setState(IntakeState.STOWED)));
   }
 
   /**
    * humps balls in basket, goes back to intake position and stops on interrupt
    */
-  public Command agitatePivotCommand() {
+  public Command agitatePivotCommand(IntakeState previousState) {
     return runOnce(() -> set(Speed.INTAKE))
+        .andThen(Commands.run(() -> setState(IntakeState.AGITATING)))
         .andThen(
             Commands.sequence(
                 runOnce(() -> set(Position.AGITATEUP)),
@@ -126,7 +137,8 @@ public class IntakeSubsystem extends SubsystemBase {
                 Commands.waitUntil(this::isPositionWithinTolerance))
                 .repeatedly())
         .handleInterrupt(() -> {
-          set(Position.INTAKE);
+          if (previousState == IntakeState.STOWED) set(Position.STOWED);
+          else set(Position.INTAKE);
           set(Speed.STOP);
         }).onlyIf(() -> !isStowed());
   }
@@ -136,20 +148,36 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command runRollerCommand() {
-    return run(() -> set(Speed.INTAKE));
+    return run(() -> set(Speed.INTAKE)).alongWith(Commands.run(() -> setState(RollerState.RUNNING)));
   }
 
   public Command stopRollerCommand() {
-    return runOnce(() -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.run(() -> setState(RollerState.STOP)));
   }
 
   public Command reverseRollerCommand() {
-    return run(() -> set(Speed.REVERSE));
+    return run(() -> set(Speed.REVERSE)).alongWith(Commands.run(() -> setState(RollerState.REVERSE)));
   }
 
   @Override
   public Command idle() {
-    return runOnce(() -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.run(() -> setState(RollerState.STOP)));
+  }
+
+  public void setState(IntakeState intakeState) {
+    this.intakeState = intakeState;
+  }
+
+  public IntakeState getIntakeState() {
+    return intakeState;
+  }
+
+  public void setState(RollerState rollerState) {
+    this.rollerState = rollerState;
+  }
+
+  public RollerState getRollerState() {
+    return rollerState;
   }
 
   /** checks if angle of pivot is within kPositionTolerance */

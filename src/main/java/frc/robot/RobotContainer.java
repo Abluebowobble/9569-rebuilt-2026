@@ -17,6 +17,7 @@ import frc.SilverKnightsLib.DriverFeedback;
 import frc.SilverKnightsLib.InputShaper;
 import frc.SilverKnightsLib.TapHoldBinder;
 import frc.robot.Commands.GeneralRobotCommands;
+import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -77,7 +78,8 @@ public class RobotContainer {
       .withControllerRotationAxis(turnSupplier)
       .allianceRelativeControl(true);
 
-  private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
+  private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity)
+      .alongWith(Commands.runOnce(() -> swerveSubsystem.setState(SwerveState.OPERATED)));
 
   private final SendableChooser<Command> autoChooser;
 
@@ -157,7 +159,8 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getLeftY()));
+    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
+    // -ps5Controller.getLeftY()));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
     // -xboxController.getLeftY()));
 
@@ -224,34 +227,36 @@ public class RobotContainer {
     ps5Controller.povRight().whileTrue(ledSubsystem.flashbangCommand());
   }
 
-  public void compBindings() {
-    // default commands
-    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
-    hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
+  // public void compBindings() {
+  //   // default commands
+  //   swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+  //   hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
-    // ps5
-    ps5Controller.L2().whileTrue(generalRobotCommands.spinUpShooterCommand());
-    ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
-    ps5Controller.L3().toggleOnTrue(swerveSubsystem.swerveLockCommand(
-        () -> Math.sqrt(Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
-    ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-    ps5Controller.touchpad().whileTrue(generalRobotCommands.aimSwerveCommand());
-    ps5Controller.povUp().toggleOnTrue(hoodSubsystem.feedFromNeutralCommand());
-    ps5Controller.povRight().toggleOnTrue(ledSubsystem.flashbangCommand());
+  //   // ps5
+  //   ps5Controller.L2().whileTrue(generalRobotCommands.spinUpShooterCommand());
+  //   ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
+  //   ps5Controller.L3().toggleOnTrue(swerveSubsystem.swerveLockCommand(
+  //       () -> Math.sqrt(Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2)),
+  //       swerveSubsystem.getState()));
+  //   ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
+  //   ps5Controller.touchpad().whileTrue(generalRobotCommands.aimSwerveCommand());
+  //   ps5Controller.povUp().toggleOnTrue(hoodSubsystem.feedFromNeutralCommand());
+  //   ps5Controller.povRight().toggleOnTrue(ledSubsystem.flashbangCommand());
 
-    // xbox
-    xboxController.a().onTrue(
-        Commands.either(
-            intakeSubsystem.returnPositionCommand(),
-            intakeSubsystem.intakePositionCommand(),
-            intakeSubsystem::isStowed));
+  //   // xbox
+  //   xboxController.a().onTrue(
+  //       Commands.either(
+  //           intakeSubsystem.returnPositionCommand(),
+  //           intakeSubsystem.intakePositionCommand(),
+  //           intakeSubsystem::isStowed));
 
-    ps5Controller.L1().toggleOnTrue(intakeSubsystem.runRollerCommand());
-    xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
-  }
+  //   ps5Controller.L1().toggleOnTrue(intakeSubsystem.runRollerCommand());
+  //   xboxController.leftBumper().whileTrue(intakeSubsystem.reverseRollerCommand());
+  // }
 
   public Command getAutonomousCommand() {
-    // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.PI)));
+    // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
+    // Rotation2d(Math.PI)));
     return autoChooser.getSelected();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),

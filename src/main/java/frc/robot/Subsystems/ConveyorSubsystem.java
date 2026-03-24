@@ -15,12 +15,15 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
+import frc.robot.Commands.GeneralRobotCommands.ConveyorState;
+import frc.robot.Commands.GeneralRobotCommands.FeederState;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ConveyorSubsystem extends SubsystemBase {
@@ -30,6 +33,8 @@ public class ConveyorSubsystem extends SubsystemBase {
   private Voltage curVoltage = Volts.of(0);
 
   private final static Voltage kVoltageSlew = Volts.of(0.1);
+
+  private ConveyorState conveyorState = ConveyorState.STOP;
 
   public enum Speed {
     STOP(0),
@@ -47,6 +52,10 @@ public class ConveyorSubsystem extends SubsystemBase {
     }
   }
 
+  public ConveyorSubsystem() {
+    setDefaultCommand(idle());
+  }
+
   /** sets speed based on speed enum in percentage output */
   public void set(Speed speed) {
     motor.setVoltage(speed.voltage());
@@ -60,12 +69,25 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   /** runs the conveyor, stops on end */
   public Command runCommand() {
-    return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.RUN)).alongWith(Commands.runOnce(() -> setState(ConveyorState.RUNNING)));
+  }
+
+  @Override
+  public Command idle() {
+    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(ConveyorState.STOP)));
+  }
+
+  public void setState(ConveyorState conveyorState) {
+    this.conveyorState = conveyorState;
+  }
+
+  public ConveyorState getState() {
+    return conveyorState;
   }
 
   /** reverse the conveyor, stops on end */
   public Command reverseCommand() {
-    return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(ConveyorState.REVERSE)));
   }
 
   @Override

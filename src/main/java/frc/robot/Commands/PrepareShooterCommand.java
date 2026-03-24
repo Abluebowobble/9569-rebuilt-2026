@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LandMarks;
+import frc.robot.Commands.GeneralRobotCommands.HoodState;
 import frc.robot.Commands.PrepareShooterCommand.Shot;
 import frc.robot.Subsystems.HoodSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
@@ -83,11 +84,17 @@ public class PrepareShooterCommand extends Command {
     return Meters.of(swerve.getVision().distanceToBlueHub(swerve.getSwerveDrive().getPose()));
   }
 
+  @Override
+  public void initialize() {
+    hoodSubsystem.setState(HoodState.AIMING);
+  }
+
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     if (!swerve.currentPoseIsValidForScoring()) {
       hoodSubsystem.setPosition(HoodSubsystem.kStartingPosition);
+      hoodSubsystem.setState(HoodState.IDLE);
       return;
     }
 
@@ -103,13 +110,6 @@ public class PrepareShooterCommand extends Command {
 
     // telemetry
     SmartDashboard.putNumber("Distance to Hub (meters)", distanceToHub.in(Meters));
-  }
- 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    // shooterSubsystem.stop();
-    hoodSubsystem.setPosition(HoodSubsystem.kStartingPosition);
   }
 
   // Returns true when the command should end.

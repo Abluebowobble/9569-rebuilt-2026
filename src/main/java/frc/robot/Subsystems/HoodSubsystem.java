@@ -9,6 +9,8 @@ import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.signals.Led1OffColorValue;
 
+import frc.robot.Commands.GeneralRobotCommands.HoodState;
+import frc.robot.Commands.GeneralRobotCommands.RollerState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -39,6 +41,8 @@ public class HoodSubsystem extends SubsystemBase {
     private final Servo leftServo;
     private final Servo rightServo;
 
+    private HoodState hoodState = HoodState.IDLE;
+
     public HoodSubsystem() {
         leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
         rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
@@ -62,12 +66,20 @@ public class HoodSubsystem extends SubsystemBase {
         setPosition(position.getAsDouble());
     }
 
+    public void setState(HoodState hoodState) {
+        this.hoodState = hoodState;
+    }
+
+    public HoodState getState() {
+        return hoodState;
+    }
+
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
 
         leftServo.set(clampedPosition);
         rightServo.set(clampedPosition);
-   
+
         targetPosition = clampedPosition;
     }
 
@@ -90,7 +102,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command feedFromNeutralCommand() {
-        return setCommand(kMaxPosition);
+        return setCommand(kMaxPosition).alongWith(Commands.runOnce(() -> setState(HoodState.PASSING)));
     }
 
     public double progress() {
@@ -113,7 +125,7 @@ public class HoodSubsystem extends SubsystemBase {
             return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
         }
     }
- 
+
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
         return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);
