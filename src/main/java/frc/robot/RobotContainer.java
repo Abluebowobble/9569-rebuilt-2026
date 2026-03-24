@@ -220,12 +220,11 @@ public class RobotContainer {
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // misc swerve commands
-    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask
-                                                                               // johnny
+    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // passing
     ps5Controller.povUp().toggleOnTrue(
-        hoodSubsystem.feedFromNeutralCommand().onlyWhile(() -> swerveSubsystem.currentPoseIsValidForScoring())); //
+        hoodSubsystem.feedFromNeutralCommand().onlyWhile(() -> !swerveSubsystem.currentPoseIsValidForScoring())); //
 
     // intake
     ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
@@ -233,8 +232,8 @@ public class RobotContainer {
 
     ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     ps5Controller.square().onTrue(Commands.either(
-        intakeSubsystem.returnPositionCommand(),
         intakeSubsystem.intakePositionCommand(),
+        intakeSubsystem.returnPositionCommand(),
         intakeSubsystem::isStowed));
 
     // gooner
