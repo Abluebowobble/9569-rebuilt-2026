@@ -4,7 +4,9 @@ package frc.robot.Subsystems;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -51,10 +53,13 @@ public class FeederSubsystem extends SubsystemBase {
   // }
   // }
 
+  public BooleanSupplier shouldFeed;
+
   public enum Speed {
     STOP(0),
     RUN(0.7),
-    REVERSE(0.9);
+    REVERSE(-0.9),
+    UNJAM(-0.3);
 
     private final double percentageOutput;
 
@@ -67,7 +72,8 @@ public class FeederSubsystem extends SubsystemBase {
     }
   }
 
-  public FeederSubsystem() {
+  public FeederSubsystem(BooleanSupplier shouldFeed) {
+    this.shouldFeed = shouldFeed;
     setDefaultCommand(idle());
   }
 
@@ -75,7 +81,9 @@ public class FeederSubsystem extends SubsystemBase {
   public void set(Speed speed) {
     // targetRPM = speed.rpm();
     // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
-    motor.setVoltage(speed.voltage());
+    if (shouldFeed.getAsBoolean())
+      motor.setVoltage(speed.voltage());
+    motor.setVoltage(Speed.UNJAM.voltage());
   }
 
   /** sets speed given Voltage volts */

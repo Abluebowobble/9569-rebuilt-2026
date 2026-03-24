@@ -57,6 +57,7 @@ public class SwerveController {
         Rotation2d targetRotation;
         double rawX = 0;
         double rawY = 0;
+        
         if (YTranslationInput != null || XTranslationInput != null) {
             rawY = YTranslationInput.getAsDouble() * -1;
             rawX = XTranslationInput.getAsDouble() * -1;
@@ -119,7 +120,7 @@ public class SwerveController {
         } else {
             translationLimiter.reset(0);
         }
-        
+
         final double finalVx = vx;
         final double finalVy = vy;
         final double finalVr = clampRotation ? MathUtil.clamp(vr,-2*Math.PI,2*Math.PI) : vr;

@@ -81,6 +81,6 @@ public class AutoAimNoCorrectionCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return !swerveSubsystem.currentPoseIsValidForScoring();
+    return !swerveSubsystem.currentPoseIsValidForScoring() || swerveSubsystem.getState() != SwerveState.OPERATED;
   }
 }

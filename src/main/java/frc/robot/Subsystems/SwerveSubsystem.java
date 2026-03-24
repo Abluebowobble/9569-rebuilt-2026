@@ -375,10 +375,14 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  public double distanceToHub() {
+    return vision.distanceToPoint(swerveDrive.getPose(), new Pose2d(LandMarks.hubPosition(), new Rotation2d(0)));
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Distance FRom Blue HUb", vision.distanceToBlueHub(swerveDrive.getPose()));
+    SmartDashboard.putNumber("Distance FRom Blue HUb", vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
     SmartDashboard.putBoolean("is aimed?", isAimed());
     SmartDashboard.putNumber("YAW FOR AUTO CORRECTION", getTargetHeadingInFieldFrame()
         .minus(getHeading())
