@@ -76,14 +76,6 @@ public class PrepareShooterCommand extends Command {
     addRequirements(hoodSubsystem);
   }
 
-  private Distance getDistanceToHub() {
-    // final Translation2d robotPosition = robotPoseSupplier.get().getTranslation();
-    // final Translation2d hubPosition = LandMarks.hubPosition();
-
-    // return Meters.of(robotPosition.getDistance(hubPosition));
-    return Meters.of(swerve.getVision().distanceToBlueHub(swerve.getSwerveDrive().getPose()));
-  }
-
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
@@ -95,7 +87,7 @@ public class PrepareShooterCommand extends Command {
     hoodSubsystem.setState(HoodState.AIMING);
 
     // find distance
-    final Distance distanceToHub = getDistanceToHub();
+    final Distance distanceToHub = Meters.of(swerve.distanceToHub());
 
     // get appropriate rpm and hood position pair
     final Shot shot = distanceToShotMap.get(distanceToHub);

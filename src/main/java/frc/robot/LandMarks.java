@@ -1,3 +1,4 @@
+
 package frc.robot;
 
 import java.util.Optional;
@@ -35,11 +36,11 @@ public class LandMarks {
         return new Translation2d(kFieldLength.minus(kAllianceFieldLength), Inches.of(158.845));
     }
 
-    public static Translation2d towerPosition() {
-        if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
-            return new Translation2d(Inches.of(20.223), Inches.of(158.845).minus(kTowerOffset));
-        }
+    public static Translation2d blueTowerPosition() {
+        return new Translation2d(Inches.of(20.223), Inches.of(158.845).minus(kTowerOffset));
+    }
 
+    public static Translation2d redTowerPosition() {
         return new Translation2d(kFieldLength.minus(Inches.of(20.223)), Inches.of(158.845).plus(kTowerOffset));
     }
 }

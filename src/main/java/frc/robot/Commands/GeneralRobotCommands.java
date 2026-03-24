@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -71,6 +72,14 @@ public class GeneralRobotCommands {
         OPERATED, LOCKED, AIMED, MOVING_WHILE_AIMING, LOCKED_AND_AIMED;
     }
 
+    public boolean isFeeding = false;
+
+    public static enum ScoreFeedState {
+        FEEDING, REVERSING, NOT_SCORING;
+    }
+
+    public ScoreFeedState scoreFeedState;
+
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
             IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
             ConveyorSubsystem conveyorSubsystem, LEDSubsystem ledSubsystem, DoubleSupplier leftYSupplier,
@@ -86,6 +95,8 @@ public class GeneralRobotCommands {
         this.turnSupplier = turnSupplier;
         this.leftYSupplier = leftYSupplier;
         this.leftXSupplier = leftXSupplier;
+
+        scoreFeedState = ScoreFeedState.NOT_SCORING;
     }
 
     public Command aimSwerveCommand() {
@@ -108,7 +119,7 @@ public class GeneralRobotCommands {
                                 .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))));
     }
 
-    public Command scoringCommand() {
+    public Command scoringCommand(BooleanSupplier reverseHeld) {
         // return Commands.deadline(
         // aimSwerveCommand(),
         // Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
@@ -121,11 +132,37 @@ public class GeneralRobotCommands {
                 Commands.waitSeconds(0.1)).andThen(
                         Commands.deadline(
                                 aimSwerveCommand(),
-                                feedCommand().onlyWhile(() -> swerveSubsystem.isAimed() && isReadyToShoot()
-                                        && (swerveSubsystem.getState() != SwerveState.MOVING_WHILE_AIMING
-                                                || swerveSubsystem.getState() != SwerveState.OPERATED))),
-                        Commands.either(spinUpShooterCommand(), Commands.idle(),
-                                () -> shooterSubsystem.getState() == ShooterState.IDLE));
+                                Commands.waitUntil(() -> swerveSubsystem.isAimed()
+                                        && isReadyToShoot())
+                                        .andThen(managedFeedCommand(reverseHeld)).andThen(Commands.waitSeconds(1))
+                                        .andThen(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState())),
+                                Commands.either(spinUpShooterCommand(), Commands.idle(),
+                                        () -> shooterSubsystem.getState() == ShooterState.IDLE)));
+    }
+
+    public Command managedFeedCommand(BooleanSupplier reverseHeld) {
+        return Commands.run(() -> {
+            if (reverseHeld.getAsBoolean()) {
+                feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
+                conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
+            } else if (canFeed()) {
+                feederSubsystem.set(FeederSubsystem.Speed.RUN);
+                conveyorSubsystem.set(ConveyorSubsystem.Speed.RUN);
+            } else {
+                feederSubsystem.set(FeederSubsystem.Speed.STOP);
+                conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
+            }
+        }, feederSubsystem, conveyorSubsystem)
+                .finallyDo(() -> {
+                    feederSubsystem.set(FeederSubsystem.Speed.STOP);
+                    conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
+                });
+    }
+
+    private boolean canFeed() {
+        SwerveState state = swerveSubsystem.getState();
+        return state == SwerveState.MOVING_WHILE_AIMING
+                || state == SwerveState.OPERATED;
     }
 
     public Command spinUpShooterCommand() {

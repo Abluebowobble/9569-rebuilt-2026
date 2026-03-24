@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
@@ -56,6 +57,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private ShooterState shooterState = ShooterState.IDLE;
 
+  private static final AngularVelocity kVelocityToleranceForShooting = RPM.of(1500);
+
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
     // initialize motors
@@ -71,7 +74,7 @@ public class ShooterSubsystem extends SubsystemBase {
     leaderConfig.smartCurrentLimit(110, 80);
 
     // double check this
-    // leaderConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+    leaderConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
 
     leftShooterMotor.configure(
         leaderConfig,
@@ -81,6 +84,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SparkMaxConfig middleFollower = new SparkMaxConfig();
     middleFollower.follow(leftShooterMotor, true); // invert follow if needed
     middleFollower.smartCurrentLimit(110, 80);
+    middleFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
     middleShooterMotor.configure(
         middleFollower,
         ResetMode.kResetSafeParameters,
@@ -89,6 +93,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SparkMaxConfig rightFollower = new SparkMaxConfig();
     rightFollower.follow(leftShooterMotor, true); // invert follow if needed
     rightFollower.smartCurrentLimit(110, 80);
+    rightFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
     rightShooterMotor.configure(
         rightFollower,
         ResetMode.kResetSafeParameters,
@@ -129,6 +134,11 @@ public class ShooterSubsystem extends SubsystemBase {
     targetRPM = rpm;
   }
 
+  public boolean shouldFeed() {
+    double currentRpm = Math.min(leftEncoder.getVelocity(), Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity()));
+    return MathUtil.isNear(targetRPM.magnitude(), currentRpm, kVelocityToleranceForShooting.magnitude());
+  }
+
   public void set(Voltage volts) {
     leftShooterMotor.setVoltage(volts.magnitude());
     middleShooterMotor.setVoltage(volts.magnitude());
@@ -139,6 +149,7 @@ public class ShooterSubsystem extends SubsystemBase {
   public boolean isVelocityWithinTolerance() {
     return targetRPM.isNear(RPM.of(leftEncoder.getVelocity()), kVelocityTolerance);
   }
+
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
