@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.FeetPerSecond;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -43,7 +44,15 @@ public final class Constants {
     public static final int DRIVER_2_CONTROLLER_PORT = 1;
     public static final double OVERRIDE_DEADBAND = 0.3;
     public static final double TURN_FACTOR = 0.5;
-    public static final Time HOLD_DELAY = Seconds.of(0.3); 
+    public static final Time HOLD_DELAY = Seconds.of(0.3);
+
+    public static final double driveSlewRateLimit = 25;
+    public static final double driveJerkRateLimit = 55;
+    public static final double autonSlewRateLimit = 15;
+    public static final double autonJerkRateLimit = 30;
+
+    public static final PIDController translationController = new PIDController(4, 0, 0, 0.15);
+    public static final PIDController rotationController = new PIDController(8, 0, 0.15);
   }
 
   public static class SwerveConstants {
@@ -73,4 +82,4 @@ public final class Constants {
     public static final int ACTUATOR_RIGHT = 1;
     public static final int LED = 9;
   }
-} 
+}

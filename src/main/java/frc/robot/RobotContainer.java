@@ -83,8 +83,7 @@ public class RobotContainer {
 
   private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
       intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, inputShaper::getShapedYInput,
-      inputShaper::getShapedXInput,
-      turnSupplier);
+      inputShaper::getShapedXInput, turnSupplier);
 
   public RobotContainer() {
     // config bindings
@@ -252,8 +251,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.PI)));
-    // return autoChooser.getSelected();
+    // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.PI)));
+    return autoChooser.getSelected();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
     // swerveSubsystem).withTimeout(2);
