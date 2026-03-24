@@ -15,12 +15,15 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Commands.GeneralRobotCommands.FeederState;
+import frc.robot.Commands.GeneralRobotCommands.HoodState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class FeederSubsystem extends SubsystemBase {
@@ -29,6 +32,8 @@ public class FeederSubsystem extends SubsystemBase {
 
   private AngularVelocity targetRPM = RPM.of(0);
   private final SparkClosedLoopController controller = motor.getClosedLoopController();
+
+  private FeederState feederState = FeederState.STOP;
 
   // public enum Speed {
   // STOP(0),
@@ -62,6 +67,10 @@ public class FeederSubsystem extends SubsystemBase {
     }
   }
 
+  public FeederSubsystem() {
+    setDefaultCommand(idle());
+  }
+
   /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
     // targetRPM = speed.rpm();
@@ -74,6 +83,14 @@ public class FeederSubsystem extends SubsystemBase {
     motor.setVoltage(volts);
   }
 
+  public void setState(FeederState feederState) {
+    this.feederState = feederState;
+  }
+
+  public FeederState getState() {
+    return feederState;
+  }
+
   /** given parameter 0-1, sets percentage output of motor */
   public void setPercentageOutput(double percentageOutput) {
     SmartDashboard.putNumber("feeder output percentage", percentageOutput);
@@ -82,12 +99,17 @@ public class FeederSubsystem extends SubsystemBase {
 
   /** set to forward speed enum on start, stop on end */
   public Command runCommand() {
-    return startEnd(() -> set(Speed.RUN), () -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.RUN)).alongWith(Commands.runOnce(() -> setState(FeederState.RUNNING)));
+  }
+
+  @Override
+  public Command idle() {
+    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(FeederState.STOP)));
   }
 
   /** set to reverse speed enum on start, stop on end */
   public Command reverseCommand() {
-    return startEnd(() -> set(Speed.REVERSE), () -> set(Speed.STOP));
+    return runOnce(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(FeederState.REVERSE)));
   }
 
   @Override
