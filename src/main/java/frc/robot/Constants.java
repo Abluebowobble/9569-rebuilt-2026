@@ -58,7 +58,6 @@ public final class Constants {
   public static class SwerveConstants {
     public static final LinearVelocity MAX_SPEED = MetersPerSecond.of(Units.feetToMeters(16.6));
     public static final AngularVelocity MAX_SWERVE_ANGULAR_VELOCITY = Degrees.of(10).per(Second);
-    public static final Angle AIM_TOLERANCE = Degrees.of(5);
   }
 
   public static class BehaviourConstants {

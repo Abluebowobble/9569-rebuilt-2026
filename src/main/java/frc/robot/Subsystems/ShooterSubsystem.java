@@ -70,6 +70,9 @@ public class ShooterSubsystem extends SubsystemBase {
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leaderConfig.smartCurrentLimit(110, 80);
 
+    // double check this
+    // leaderConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+
     leftShooterMotor.configure(
         leaderConfig,
         ResetMode.kResetSafeParameters,
