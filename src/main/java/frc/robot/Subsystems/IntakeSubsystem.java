@@ -64,7 +64,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(80)), // 83.7
+    INTAKE(Degrees.of(83.7)),
     AGITATEUP(Degrees.of(60)),
     AGITATEDOWN(Degrees.of(70));
 
@@ -82,6 +82,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
     SparkBaseConfig pivotConfig = new SparkMaxConfig();
     pivotConfig.closedLoop.p(0.7);
+    pivotConfig.smartCurrentLimit(80);
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     pivotEncoder.setPosition(0);
@@ -169,6 +170,7 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
+    builder.addDoubleProperty("output (current)", () -> pivotMotor.getOutputCurrent(), null);
   }
 
   // /** updates pivot position with pid, to add: slew */

@@ -47,6 +47,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static final AngularVelocity kVelocityTolerance = RPM.of(50); // if current RPM is within desired RPM +-
                                                                         // velocity tolerance,
+  private AngularVelocity velocityShootingTolerance = RPM.of(1000);
+  private static final AngularVelocity kDeltaVelocity = RPM.of(1000); // decrease in velocity per meter
+
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
@@ -61,8 +64,9 @@ public class ShooterSubsystem extends SubsystemBase {
         .openLoopRampRate(1)
         .closedLoopRampRate(1)
         .inverted(false);
+
     leaderConfig.closedLoop
-        .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
+        .pid(0.0001, 0, 0.002, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leaderConfig.smartCurrentLimit(110, 80);
 
@@ -152,6 +156,16 @@ public class ShooterSubsystem extends SubsystemBase {
     return runOnce(() -> set(RPM.of(kStartingVelocity.magnitude())));
   }
 
+  public boolean isValidForShooting() {
+    AngularVelocity currentMinRPM = RPM
+        .of(Math.min(leftEncoder.getVelocity(), Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity())));
+    return currentMinRPM.isNear(targetRPM, velocityShootingTolerance);
+  }
+
+  public void updateVelocityShootingTolerance() {
+      velocityShootingTolerance = RPM.of(0);
+  }
+
   @Override
   public void periodic() {
     // uncomment below to tune
@@ -187,6 +201,10 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty("middle RPM", () -> middleEncoder.getVelocity(), null);
     builder.addDoubleProperty("right RPM", () -> rightEncoder.getVelocity(), null);
     // addd current property later
+
+    builder.addDoubleProperty("left RPM current", () -> leftShooterMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("middle RPM current", () -> middleShooterMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("right RPM current", () -> rightShooterMotor.getOutputCurrent(), null);
     builder.addBooleanProperty("is Velocity within tolerance", this::isVelocityWithinTolerance, null);
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM.magnitude(), null);

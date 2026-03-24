@@ -16,7 +16,7 @@ public class AutoAimNoCorrectionCommand extends Command {
   private DoubleSupplier turnSupplier;
 
   private static final double kMaxTurnScale = 1;
-  private static final double kMaxTranslationScale = 0.5;
+  private static final double kMaxTranslationScale = 1;
 
   private final PIDController controller = new PIDController(0.014, 0, 0);
 

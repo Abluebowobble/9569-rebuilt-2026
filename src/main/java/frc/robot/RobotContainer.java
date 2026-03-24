@@ -16,7 +16,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.SilverKnightsLib.DriverFeedback;
 import frc.SilverKnightsLib.InputShaper;
 import frc.SilverKnightsLib.TapHoldBinder;
-import frc.robot.Commands.GeneralRobotCommands;
+import frc.robot.Commands.SubsystemsController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -55,35 +55,11 @@ public class RobotContainer {
   private final DoubleSupplier leftXSupplier = () -> ps5Controller.getLeftX() * -1;
   private final DoubleSupplier turnSupplier = () -> ps5Controller.getRightX() * -1;
 
-  // subsystems
-  private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  private final FeederSubsystem feederSubsystem = new FeederSubsystem();
-  private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
-  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
-  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
+  private InputShaper inputShaper = new InputShaper(leftXSupplier, leftYSupplier, turnSupplier);
 
-  /**
-   * Converts driver input into a field-relative ChassisSpeeds that is controlled
-   * by angular velocity.
-   */
-  InputShaper inputShaper = new InputShaper(leftXSupplier, leftYSupplier, turnSupplier);
-  private final SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
-      swerveSubsystem.getSwerveDrive(),
-      inputShaper::getShapedYInput,
-      inputShaper::getShapedXInput)
-      .withControllerRotationAxis(inputShaper::getShapedTurnInput)
-      .allianceRelativeControl(true);
-
-  private final Command driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
+  SubsystemsController subsystemsController = new SubsystemsController(inputShaper::getShapedYInput, inputShaper::getShapedXInput, inputShaper::getShapedTurnInput)
 
   private final SendableChooser<Command> autoChooser;
-
-  private final GeneralRobotCommands generalRobotCommands = new GeneralRobotCommands(swerveSubsystem, shooterSubsystem,
-      intakeSubsystem, hoodSubsystem, feederSubsystem, conveyorSubsystem, ledSubsystem, inputShaper::getShapedYInput,
-      inputShaper::getShapedXInput,
-      turnSupplier);
 
   public RobotContainer() {
     // config bindings
@@ -118,8 +94,6 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
-
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
     // intakeSubsystem.set(Volts.of(0))));
@@ -162,10 +136,11 @@ public class RobotContainer {
     // feederSubsystem.setPercentageOutput(-ps5Controller.getLeftY());
     // }, feederSubsystem));
 
-    ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
-    conveyorSubsystem.setDefaultCommand(
-        Commands.run(() -> conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
-            conveyorSubsystem));
+    // ps5Controller.circle().whileTrue(feederSubsystem.runCommand());
+    // conveyorSubsystem.setDefaultCommand(
+    // Commands.run(() ->
+    // conveyorSubsystem.setPercentageOutput(-ps5Controller.getRightY()),
+    // conveyorSubsystem));
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.runCommand(5500));
     // ps5Controller.cross().whileTrue(ledSubsystem.flashbangCommand());
@@ -176,26 +151,46 @@ public class RobotContainer {
     // ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
-    ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-    ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(), ledSubsystem));
-    ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, Math.PI)),
-        swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0, 0))));
+    // ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
+    // ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(),
+    // ledSubsystem));
+    // ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, Math.PI)),
+    // swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new
+    // ChassisSpeeds(0, 0, 0))));
   }
 
   public void johnnyBindings() {
     // default commands
-    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
     // scoring
-    // ps5Controller.L2().onTrue(generalRobotCommands.spinUpShooterCommand());
-    // ps5Controller.L2().whileTrue(Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude()).andThen(generalRobotCommands.spinUpShooterCommand()));
+    ps5Controller.L2().toggleOnTrue(generalRobotCommands.spinUpShooterCommand());
+    // ps5Controller.L2().whileTrue(Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude()).andThen(generalRobotCommands.aimAndShootCommand()));
+    ps5Controller.L2().whileTrue(Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
+        .andThen(Commands.print("I\"M RUNINIGNGIGIGNNGIGNIN")));
+
+    // on true spin up shooter
+    // while true auto aim, turn on shooter if not on. do not turn off shooter on
+    // release
+    // on true again turn off shooter
+    // for auto aim, if within a certain tolerance start swerve lock
+    // if linear velocity input is no longer 0 within a tolerance, accept
+    // information
+    // when its back to 0, set it backt o swerve lock
+    // if press the reverse feeder button, reverse feeder while button is pressed,
+    // no agitate
+    // rotation overide too
+    // if move, dont run agitate command, reverse feeder and conveyor
+    // make intake go back to previous position (stowed or intake) after agitate
+
     ps5Controller.L2().whileTrue(generalRobotCommands.spinUpShooterCommand());
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // misc swerve commands
-    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask johnny
+    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand()); // should i bind this with shooting? ask
+                                                                               // johnny
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // passing
     ps5Controller.povUp().toggleOnTrue(
@@ -208,8 +203,7 @@ public class RobotContainer {
     ps5Controller.square().onTrue(Commands.either(
         intakeSubsystem.returnPositionCommand(),
         intakeSubsystem.intakePositionCommand(),
-        intakeSubsystem::isStowed)
-    );
+        intakeSubsystem::isStowed));
 
     // gooner
     ps5Controller.povRight().whileTrue(ledSubsystem.flashbangCommand());

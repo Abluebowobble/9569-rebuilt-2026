@@ -27,25 +27,6 @@ public class FeederSubsystem extends SubsystemBase {
 
   private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
 
-  private AngularVelocity targetRPM = RPM.of(0);
-  private final SparkClosedLoopController controller = motor.getClosedLoopController();
-
-  // public enum Speed {
-  // STOP(0),
-  // RUN(0.5),
-  // REVERSE(-0.9);
-
-  // private final double percentOutput;
-
-  // private Speed(double percentOutput) {
-  // this.percentOutput = percentOutput;
-  // }
-
-  // public Voltage voltage() {
-  // return Volts.of(percentOutput * 12.0);
-  // }
-  // }
-
   public enum Speed {
     STOP(0),
     RUN(0.7),

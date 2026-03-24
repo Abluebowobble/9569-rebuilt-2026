@@ -17,6 +17,7 @@ import edu.wpi.first.units.AccelerationUnit;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.SilverKnightsLib.InputShaper;
 import frc.robot.Constants.BehaviourConstants;
 import frc.robot.Subsystems.ConveyorSubsystem;
 import frc.robot.Subsystems.FeederSubsystem;
@@ -26,38 +27,92 @@ import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
 import frc.robot.Subsystems.Vision;
+import swervelib.SwerveInputStream;
 import frc.robot.Subsystems.LEDSubsystem.Section;
 import edu.wpi.first.wpilibj.util.Color;
 
-public class GeneralRobotCommands {
+public class SubsystemsController {
 
-    private final SwerveSubsystem swerveSubsystem;
-    private final ShooterSubsystem shooterSubsystem;
-    private final IntakeSubsystem intakeSubsystem;
-    private final HoodSubsystem hoodSubsystem;
-    private final FeederSubsystem feederSubsystem;
-    private final ConveyorSubsystem conveyorSubsystem;
-    private final LEDSubsystem ledSubsystem;
+    private final SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
+    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    private final FeederSubsystem feederSubsystem = new FeederSubsystem();
+    private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
+    private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+    private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
+    private final LEDSubsystem ledSubsystem = new LEDSubsystem();
+
+    /**
+     * Converts driver input into a field-relative ChassisSpeeds that is controlled
+     * by angular velocity.
+     */
+    private final Command driveFieldOrientedAnglularVelocity;
+
+    private SwerveState swerveState = SwerveState.OPERATED;
+    private IntakeState intakeState = IntakeState.STOWED;
+    private FeederState feederState = FeederState.STOP;
+    private ConveyorState conveyorState = ConveyorState.STOP;
+    private ShooterState shooterState = ShooterState.IDLE;
+    private HoodState hoodState = HoodState.IDLE;
 
     private final DoubleSupplier leftYSupplier;
     private final DoubleSupplier leftXSupplier;
     private final DoubleSupplier turnSupplier;
 
-    public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
-            IntakeSubsystem intakeSubsystem, HoodSubsystem hoodSubsystem, FeederSubsystem feederSubsystem,
-            ConveyorSubsystem conveyorSubsystem, LEDSubsystem ledSubsystem, DoubleSupplier leftYSupplier,
-            DoubleSupplier leftXSupplier, DoubleSupplier turnSupplier) {
-        this.swerveSubsystem = swerveSubsystem;
-        this.shooterSubsystem = shooterSubsystem;
-        this.intakeSubsystem = intakeSubsystem;
-        this.hoodSubsystem = hoodSubsystem;
-        this.feederSubsystem = feederSubsystem;
-        this.conveyorSubsystem = conveyorSubsystem;
-        this.ledSubsystem = ledSubsystem;
+    public static enum ShooterState {
+        SPINNING, IDLE;
+    }
 
-        this.turnSupplier = turnSupplier;
+    public static enum IntakeState {
+        INTAKE, STOWED, AGITATING;
+    }
+
+    public static enum HoodState {
+        AIMING, IDLE, FEEDING;
+    }
+
+    public static enum ConveyorState {
+        RUNNING, REVERSE, STOP;
+    }
+
+    public static enum FeederState {
+        RUNNING, REVERSE, STOP;
+    }
+
+    public static enum SwerveState {
+        OPERATED, LOCKED, AIMED;
+    }
+
+    public SubsystemsController(DoubleSupplier leftYSupplier,
+            DoubleSupplier leftXSupplier, DoubleSupplier turnSupplier) {
         this.leftYSupplier = leftYSupplier;
         this.leftXSupplier = leftXSupplier;
+        this.turnSupplier = turnSupplier;
+
+        SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
+                swerveSubsystem.getSwerveDrive(),
+                leftYSupplier,
+                leftXSupplier)
+                .withControllerRotationAxis(turnSupplier)
+                .allianceRelativeControl(true);
+
+        driveFieldOrientedAnglularVelocity = swerveSubsystem.driveFieldOriented(driveAngularVelocity);
+    }
+
+    public void setDefaultCommands() {
+        swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    }
+
+    public Command swerveDefault() {
+        switch (swerveState) {
+            case OPERATED:
+                return driveFieldOrientedAnglularVelocity;
+            case LOCKED:
+                return swerveLockCommand();
+            case AIMED:
+                return aimSwerveCommand();
+            default:
+                return driveFieldOrientedAnglularVelocity;
+        }
     }
 
     public Command aimSwerveCommand() {
@@ -85,7 +140,7 @@ public class GeneralRobotCommands {
                 aimSwerveCommand(),
                 Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
                         .andThen(feedCommand()),
-                spinUpShooterCommand());
+                spinUpShooterCommand()).andThen(spinUpShooterCommand());
     }
 
     public Command spinUpShooterCommand() {
