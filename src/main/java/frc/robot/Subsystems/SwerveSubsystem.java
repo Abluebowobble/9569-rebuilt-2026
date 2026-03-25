@@ -366,13 +366,17 @@ public class SwerveSubsystem extends SubsystemBase {
       return false;
     }
 
-    if (kIsBlueAlliance) {
+    if (isBlueAlliance()) {
       return x >= -poseEdgeMargin
           && x <= sectionLength + poseEdgeMargin;
     } else {
       return x >= LandMarks.kFieldLength.magnitude() - sectionLength - poseEdgeMargin
           && x <= LandMarks.kFieldLength.magnitude() + poseEdgeMargin;
     }
+  }
+
+  public boolean isBlueAlliance() {
+    return DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
   }
 
   public double distanceToHub() {

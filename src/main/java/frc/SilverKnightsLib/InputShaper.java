@@ -15,6 +15,11 @@ public class InputShaper {
     private final DoubleSupplier leftYSupplier;
     private final DoubleSupplier turnSupplier;
 
+    private final static double A = 4.0;
+    private final static double D = OperatorConstants.DEADBAND;
+    private final static double N = 0.02;
+    private final static double I1 = Math.pow(A, -D) * (1.0 - D);
+
     public InputShaper(DoubleSupplier leftXSupplier, DoubleSupplier leftYSupplier, DoubleSupplier turnSupplier) {
         this.leftXSupplier = leftXSupplier;
         this.leftYSupplier = leftYSupplier;
@@ -22,19 +27,19 @@ public class InputShaper {
     }
 
     public double getShapedXInput() {
-        return shape(leftXSupplier.getAsDouble(), 4, 0.05, 0.02);
+        return shape(leftXSupplier.getAsDouble());
     }
 
     public double getShapedYInput() {
-        return shape(leftYSupplier.getAsDouble(), 4, 0.05, 0.02);
+        return shape(leftYSupplier.getAsDouble());
     }
 
     public double getShapedTurnInput() {
-        return shape(turnSupplier.getAsDouble(), 4, 0.05, 0.02);
+        return shape(turnSupplier.getAsDouble());
 
     }
 
-    private double shape(double x, double A, double D, double N) {
+    private double shape(double x) {
         double absX = Math.abs(x);
 
         // deadband
@@ -49,8 +54,6 @@ public class InputShaper {
 
         // i(x) = a^(g(x)-1) * g(x) * sign(x)
         double iX = Math.pow(A, g - 1.0) * g * sign;
-
-        double I1 = Math.pow(A, -D) * (1.0 - D);
 
         // k(x) = (1 - n) * (i(x) / i(1)) + n * sign(x)
         double k = (1.0 - N) * (iX / I1) + N * sign;

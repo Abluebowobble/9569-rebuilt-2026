@@ -42,7 +42,8 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int DRIVER_1_CONTROLLER_PORT = 0;
     public static final int DRIVER_2_CONTROLLER_PORT = 1;
-    public static final double OVERRIDE_DEADBAND = 0.3;
+    public static final double OVERRIDE_DEADBAND = 0.1;
+    public static final double DEADBAND = 0.05;
     public static final double TURN_FACTOR = 0.5;
     public static final Time HOLD_DELAY = Seconds.of(0.3);
 
@@ -61,7 +62,7 @@ public final class Constants {
   }
 
   public static class BehaviourConstants {
-    public static final Time DELAY_BEFORE_AGITATE = Seconds.of(2);
+    public static final Time DELAY_BEFORE_AGITATE = Seconds.of(0.5);
     public static final AngularVelocity TEMP_SHOOTER_VELOCITY = RPM.of(5300);
   }
 

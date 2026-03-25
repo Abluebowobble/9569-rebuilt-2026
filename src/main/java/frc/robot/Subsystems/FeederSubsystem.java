@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class FeederSubsystem extends SubsystemBase {
 
@@ -75,16 +76,15 @@ public class FeederSubsystem extends SubsystemBase {
   public FeederSubsystem(BooleanSupplier shouldFeed) {
     this.shouldFeed = shouldFeed;
     setDefaultCommand(idle());
+    Trigger feedTrigger = new Trigger(() -> !shouldFeed.getAsBoolean() && feederState == FeederState.RUNNING);
+    feedTrigger
+        .onTrue(reverseCommand().andThen(Commands.waitSeconds(0.1).andThen(runCommand())));
   }
 
   /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
     // targetRPM = speed.rpm();
     // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
-    if (speed.equals(Speed.RUN) && !shouldFeed.getAsBoolean()) {
-      motor.setVoltage(Speed.UNJAM.voltage());
-    }
-
     motor.setVoltage(speed.voltage());
   }
 
@@ -109,17 +109,17 @@ public class FeederSubsystem extends SubsystemBase {
 
   /** set to forward speed enum on start, stop on end */
   public Command runCommand() {
-    return runOnce(() -> set(Speed.RUN)).alongWith(Commands.runOnce(() -> setState(FeederState.RUNNING)));
+    return run(() -> set(Speed.RUN)).alongWith(Commands.runOnce(() -> setState(FeederState.RUNNING)));
   }
 
   @Override
   public Command idle() {
-    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(FeederState.STOP)));
+    return run(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(FeederState.STOP)));
   }
 
   /** set to reverse speed enum on start, stop on end */
   public Command reverseCommand() {
-    return runOnce(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(FeederState.REVERSE)));
+    return run(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(FeederState.REVERSE)));
   }
 
   @Override
@@ -129,6 +129,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {
+    sendableBuilder.addBooleanProperty("should feed", shouldFeed, null);
     sendableBuilder.addStringProperty("Command",
         () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);

@@ -87,7 +87,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   /** reverse the conveyor, stops on end */
   public Command reverseCommand() {
-    return runOnce(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(ConveyorState.REVERSE)));
+    return run(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(ConveyorState.REVERSE)));
   }
 
   @Override
