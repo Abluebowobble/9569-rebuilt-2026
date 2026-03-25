@@ -49,15 +49,17 @@ public class ShooterSubsystem extends SubsystemBase {
   private AngularVelocity targetRPM = RPM.of(0); // desired RPM we want the wheels to turn at
 
   private static final AngularVelocity kVelocityTolerance = RPM.of(50); // if current RPM is within desired RPM +-
+
                                                                         // velocity tolerance,
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(0);
+  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
 
   private ShooterState shooterState = ShooterState.IDLE;
 
   private static final AngularVelocity kVelocityToleranceForShooting = RPM.of(1500);
+
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -135,8 +137,8 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public boolean shouldFeed() {
-    double currentRpm = Math.min(leftEncoder.getVelocity(), Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity()));
-    return MathUtil.isNear(targetRPM.magnitude(), currentRpm, kVelocityToleranceForShooting.magnitude());
+    double currentMinRpm = Math.min(leftEncoder.getVelocity(), Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity()));
+    return MathUtil.isNear(targetRPM.magnitude(), currentMinRpm, kVelocityToleranceForShooting.magnitude());
   }
 
   public void set(Voltage volts) {

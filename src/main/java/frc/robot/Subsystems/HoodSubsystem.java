@@ -97,7 +97,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance
      */
     public Command setCommand(double position) {
-        return runOnce(() -> setPosition(position))
+        return run(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 

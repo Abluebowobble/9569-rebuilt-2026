@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -116,7 +117,8 @@ public class GeneralRobotCommands {
                 feederSubsystem.runCommand(),
                 Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
                         .andThen(conveyorSubsystem.runCommand()
-                                .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))));
+                                .alongWith(intakeSubsystem.agitatePivotCommand())))
+                .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
     public Command scoringCommand(BooleanSupplier reverseHeld) {
@@ -132,38 +134,32 @@ public class GeneralRobotCommands {
                 Commands.waitSeconds(0.1)).andThen(
                         Commands.deadline(
                                 aimSwerveCommand(),
-                                Commands.waitUntil(() -> swerveSubsystem.isAimed()
-                                        && isReadyToShoot())
-                                        .andThen(managedFeedCommand(reverseHeld)).andThen(Commands.waitSeconds(1))
-                                        .andThen(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState())),
-                                Commands.either(spinUpShooterCommand(), Commands.idle(),
+                                // Commands.waitUntil(() -> swerveSubsystem.isAimed()
+                                // && isReadyToShoot())
+                                // .andThen(feedCommand()),
+                                Commands.either(Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
+                                        Commands.idle(),
                                         () -> shooterSubsystem.getState() == ShooterState.IDLE)));
     }
 
-    public Command managedFeedCommand(BooleanSupplier reverseHeld) {
-        return Commands.run(() -> {
-            if (reverseHeld.getAsBoolean()) {
-                feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
-                conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
-            } else if (canFeed()) {
-                feederSubsystem.set(FeederSubsystem.Speed.RUN);
-                conveyorSubsystem.set(ConveyorSubsystem.Speed.RUN);
-            } else {
-                feederSubsystem.set(FeederSubsystem.Speed.STOP);
-                conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
-            }
-        }, feederSubsystem, conveyorSubsystem)
-                .finallyDo(() -> {
-                    feederSubsystem.set(FeederSubsystem.Speed.STOP);
-                    conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
-                });
-    }
-
-    private boolean canFeed() {
-        SwerveState state = swerveSubsystem.getState();
-        return state == SwerveState.MOVING_WHILE_AIMING
-                || state == SwerveState.OPERATED;
-    }
+    // public Command managedFeedCommand(BooleanSupplier reverseHeld) {
+    // return Commands.run(() -> {
+    // if (reverseHeld.getAsBoolean()) {
+    // feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
+    // conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
+    // } else if (canFeed()) {
+    // feederSubsystem.set(FeederSubsystem.Speed.RUN);
+    // conveyorSubsystem.set(ConveyorSubsystem.Speed.RUN);
+    // } else {
+    // feederSubsystem.set(FeederSubsystem.Speed.STOP);
+    // conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
+    // }
+    // }, feederSubsystem, conveyorSubsystem)
+    // .finallyDo(() -> {
+    // feederSubsystem.set(FeederSubsystem.Speed.STOP);
+    // conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP);
+    // });
+    // }
 
     public Command spinUpShooterCommand() {
         return Commands.parallel(
@@ -172,15 +168,18 @@ public class GeneralRobotCommands {
     }
 
     public Command intakeCommand() {
-        return intakeSubsystem.intakePositionCommand().andThen(
-                Commands.parallel(
-                        runIntakeRollerCommand(),
-                        conveyorSubsystem.runCommand().onlyWhile(() -> {
-                            ChassisSpeeds velocity = swerveSubsystem.getRobotVelocity();
-                            LinearVelocity minSpeed = MetersPerSecond.of(0.05);
-                            return Math.abs(velocity.vxMetersPerSecond) > minSpeed.magnitude()
-                                    || Math.abs(velocity.vyMetersPerSecond) > minSpeed.magnitude();
-                        })));
+        return intakeSubsystem.intakeCommand().andThen(
+                Commands.defer(() -> {
+                    // DOESNT WORK :(
+                    ChassisSpeeds velocity = swerveSubsystem.getRobotVelocity();
+                    LinearVelocity minSpeed = MetersPerSecond.of(0.01);
+                    if (Math.abs(velocity.vxMetersPerSecond) > minSpeed.magnitude()
+                            || Math.abs(velocity.vyMetersPerSecond) > minSpeed.magnitude()) {
+                        return Commands.runOnce(() -> conveyorSubsystem.set(ConveyorSubsystem.Speed.RUN));
+                    } else {
+                        return Commands.runOnce(() -> conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP));
+                    }
+                }, Set.of(conveyorSubsystem)));
     }
 
     // good enough

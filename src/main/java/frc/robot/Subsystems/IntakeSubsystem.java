@@ -17,6 +17,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -24,8 +25,10 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import frc.robot.Commands.GeneralRobotCommands.IntakeState;
 import frc.robot.Commands.GeneralRobotCommands.RollerState;
 import frc.robot.Commands.GeneralRobotCommands.ShooterState;
+import frc.SilverKnightsLib.OPRSlewRateLimiter;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -44,14 +47,14 @@ public class IntakeSubsystem extends SubsystemBase {
   private Angle setPointAngle = Degrees.of(0);
 
   // range of allowed positions
-  private static final Angle kPositionTolerance = Degrees.of(5); // to tune
+  private static final Angle kPositionTolerance = Degrees.of(1); // to tune
 
   // gear reduction
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
   private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
 
-  private IntakeState intakeState = IntakeState.STOWED;
+  private IntakeState intakeState;
   private RollerState rollerState = RollerState.STOP;
 
   // speed for roller motor
@@ -74,9 +77,9 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(80)), // 83.7
+    INTAKE(Degrees.of(83.7)), // 83.7
     AGITATEUP(Degrees.of(60)),
-    AGITATEDOWN(Degrees.of(70));
+    AGITATEDOWN(Degrees.of(50));
 
     private final Angle degrees;
 
@@ -89,11 +92,14 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
+  OPRSlewRateLimiter slewRateLimit = new OPRSlewRateLimiter(50, 100);
+
   public IntakeSubsystem() {
     SparkBaseConfig pivotConfig = new SparkMaxConfig();
-    pivotConfig.closedLoop.p(0.7);
+    pivotConfig.closedLoop.p(0.7, ClosedLoopSlot.kSlot0); // 0.7
+    pivotConfig.smartCurrentLimit(60);
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+    intakeState = IntakeState.STOWED;
     pivotEncoder.setPosition(0);
     setDefaultCommand(idle());
   }
@@ -110,7 +116,9 @@ public class IntakeSubsystem extends SubsystemBase {
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
     setPointAngle = position.degrees();
-    controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(), ControlType.kPosition);
+    controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(),
+        ControlType.kPosition,
+        ClosedLoopSlot.kSlot0);
   }
 
   /** set pivot motor to go to intake position */
@@ -123,28 +131,50 @@ public class IntakeSubsystem extends SubsystemBase {
     return runOnce(() -> set(Position.STOWED)).alongWith(Commands.run(() -> setState(IntakeState.STOWED)));
   }
 
+  public Command sinusoidalPivotCommand() {
+    final double amplitude = 10;
+    final double center = 50.0;
+    final double frequency = 1.25;
+    final double omega = 2 * Math.PI * frequency; 
+
+    edu.wpi.first.wpilibj.Timer timer = new edu.wpi.first.wpilibj.Timer();
+
+    return runOnce(() -> set(Position.AGITATEDOWN))
+        .andThen(Commands.waitUntil(this::isPositionWithinTolerance)
+            .andThen(run(() -> {
+              double time = timer.get();
+
+              double angleDeg = center + amplitude * Math.sin(omega * time);
+
+              Angle targetAngle = Degrees.of(angleDeg);
+
+              setPointAngle = targetAngle;
+              controller.setSetpoint(
+                  targetAngle.div(kDegreesPerRotation).magnitude(),
+                  ControlType.kPosition,
+                  ClosedLoopSlot.kSlot0);
+            })).beforeStarting(timer::restart));
+  }
+
   /**
    * humps balls in basket, goes back to intake position and stops on interrupt
    */
-  public Command agitatePivotCommand(IntakeState previousState) {
+  public Command agitatePivotCommand() {
     return runOnce(() -> set(Speed.INTAKE))
-        .andThen(Commands.run(() -> setState(IntakeState.AGITATING)))
+        .andThen(Commands.runOnce(() -> setState(IntakeState.AGITATING)))
         .andThen(
-            Commands.sequence(
-                runOnce(() -> set(Position.AGITATEUP)),
-                Commands.waitUntil(this::isPositionWithinTolerance),
-                runOnce(() -> set(Position.AGITATEDOWN)),
-                Commands.waitUntil(this::isPositionWithinTolerance))
-                .repeatedly())
+            sinusoidalPivotCommand())
         .handleInterrupt(() -> {
-          if (previousState == IntakeState.STOWED) set(Position.STOWED);
-          else set(Position.INTAKE);
+          set(Position.INTAKE);
           set(Speed.STOP);
-        }).onlyIf(() -> !isStowed());
+          setState(IntakeState.INTAKE);
+        })
+        .onlyIf(() -> !isStowed());
   }
 
   public boolean isStowed() {
-    return setPointAngle.isNear(Position.STOWED.degrees(), kPositionTolerance);
+    return setPointAngle.isNear(Position.STOWED.degrees(), kPositionTolerance)
+        || setPointAngle.magnitude() < Position.STOWED.degrees().magnitude();
   }
 
   public Command runRollerCommand() {
@@ -152,7 +182,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command stopRollerCommand() {
-    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.run(() -> setState(RollerState.STOP)));
+    return run(() -> set(Speed.STOP)).alongWith(Commands.run(() -> setState(RollerState.STOP)));
   }
 
   public Command reverseRollerCommand() {
@@ -161,11 +191,35 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.run(() -> setState(RollerState.STOP)));
+    return runOnce(() -> {
+      set(Speed.STOP);
+    }).alongWith(Commands.run(() -> setState(RollerState.STOP)));
   }
 
   public void setState(IntakeState intakeState) {
     this.intakeState = intakeState;
+  }
+
+  public Command intakeCommand() {
+    return run(() -> {
+      setState(IntakeState.INTAKE);
+      set(Position.INTAKE);
+      set(Speed.INTAKE);
+    });
+  }
+
+  public Command togglePositionCommand() {
+    return defer(() -> {
+      if (intakeState == IntakeState.STOWED) {
+        intakeState = IntakeState.INTAKE;
+        return runOnce(() -> set(Position.INTAKE));
+      } else if (intakeState == IntakeState.INTAKE) {
+        intakeState = IntakeState.STOWED;
+        return runOnce(() -> set(Position.STOWED));
+      }
+
+      return idle();
+    });
   }
 
   public IntakeState getIntakeState() {
@@ -183,9 +237,8 @@ public class IntakeSubsystem extends SubsystemBase {
   /** checks if angle of pivot is within kPositionTolerance */
   public boolean isPositionWithinTolerance() {
     final Angle cur = Degrees.of(pivotEncoder.getPosition() * kDegreesPerRotation.magnitude());
-    final Angle target = setPointAngle;
 
-    return cur.isNear(target, kPositionTolerance);
+    return cur.isNear(setPointAngle, kPositionTolerance);
   }
 
   @Override
