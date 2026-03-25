@@ -121,25 +121,32 @@ public class GeneralRobotCommands {
                 .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
-    public Command scoringCommand(BooleanSupplier reverseHeld) {
+    public Command feedWithOverrideCommand(BooleanSupplier reverseButton) {
+        return Commands.parallel(
+                feederSubsystem.runWithOverrideCommand(reverseButton),
+                Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
+                        .andThen(conveyorSubsystem.runWithOverrideCommand(reverseButton)
+                                .alongWith(intakeSubsystem.agitateWithOverrideCommand(reverseButton))))
+                .onlyIf(() -> !intakeSubsystem.isStowed());
+    }
+
+    public Command scoringCommand(BooleanSupplier reverseButton) {
         // return Commands.deadline(
         // aimSwerveCommand(),
         // Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
         // .andThen(feedCommand()),
         // spinUpShooterCommand());
-        return Commands.runOnce(() -> {
+        return Commands.run(() -> {
             feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
             conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
-        }).andThen(
-                Commands.waitSeconds(0.1)).andThen(
-                        Commands.deadline(
-                                aimSwerveCommand(),
-                                // Commands.waitUntil(() -> swerveSubsystem.isAimed()
-                                // && isReadyToShoot())
-                                // .andThen(feedCommand()),
-                                Commands.either(Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
-                                        Commands.idle(),
-                                        () -> shooterSubsystem.getState() == ShooterState.IDLE)));
+        }).withTimeout(0.1).andThen(
+                Commands.deadline(
+                        aimSwerveCommand(),
+                        feedWithOverrideCommand(reverseButton),
+                        Commands.either(Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
+                                Commands.idle(),
+                                () -> shooterSubsystem.getState() == ShooterState.IDLE)))
+                .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
     // public Command managedFeedCommand(BooleanSupplier reverseHeld) {

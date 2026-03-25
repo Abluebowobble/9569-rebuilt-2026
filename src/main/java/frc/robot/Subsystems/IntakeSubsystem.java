@@ -6,6 +6,8 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.BooleanSupplier;
+
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 
 import static edu.wpi.first.units.Units.Degrees;
@@ -35,6 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.Timer;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -78,8 +81,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(Degrees.of(8)),
     INTAKE(Degrees.of(83.7)), // 83.7
-    AGITATEUP(Degrees.of(60)),
-    AGITATEDOWN(Degrees.of(50));
+    AGITATE(Degrees.of(60));
 
     private final Angle degrees;
 
@@ -131,28 +133,32 @@ public class IntakeSubsystem extends SubsystemBase {
     return runOnce(() -> set(Position.STOWED)).alongWith(Commands.run(() -> setState(IntakeState.STOWED)));
   }
 
-  public Command sinusoidalPivotCommand() {
+  public void sinusoidalPivot(Timer timer) {
     final double amplitude = 10;
     final double center = 50.0;
     final double frequency = 1.25;
-    final double omega = 2 * Math.PI * frequency; 
+    final double omega = 2 * Math.PI * frequency;
 
-    edu.wpi.first.wpilibj.Timer timer = new edu.wpi.first.wpilibj.Timer();
+    double time = timer.get();
 
-    return runOnce(() -> set(Position.AGITATEDOWN))
+    double angleDeg = center + amplitude * Math.sin(omega * time);
+
+    Angle targetAngle = Degrees.of(angleDeg);
+
+    setPointAngle = targetAngle;
+    controller.setSetpoint(
+        targetAngle.div(kDegreesPerRotation).magnitude(),
+        ControlType.kPosition,
+        ClosedLoopSlot.kSlot0);
+  }
+
+  public Command sinusoidalPivotCommand() {
+    Timer timer = new Timer();
+
+    return runOnce(() -> set(Position.AGITATE))
         .andThen(Commands.waitUntil(this::isPositionWithinTolerance)
             .andThen(run(() -> {
-              double time = timer.get();
-
-              double angleDeg = center + amplitude * Math.sin(omega * time);
-
-              Angle targetAngle = Degrees.of(angleDeg);
-
-              setPointAngle = targetAngle;
-              controller.setSetpoint(
-                  targetAngle.div(kDegreesPerRotation).magnitude(),
-                  ControlType.kPosition,
-                  ClosedLoopSlot.kSlot0);
+              sinusoidalPivot(timer);
             })).beforeStarting(timer::restart));
   }
 
@@ -170,6 +176,31 @@ public class IntakeSubsystem extends SubsystemBase {
           setState(IntakeState.INTAKE);
         })
         .onlyIf(() -> !isStowed());
+  }
+
+  public Command agitateWithOverrideCommand(BooleanSupplier reverseButton) {
+    Timer timer = new Timer();
+
+    return run(() -> {
+      if (reverseButton.getAsBoolean()) {
+        set(Position.AGITATE);
+        set(Speed.REVERSE);
+      } else {
+        timer.restart();
+        sinusoidalPivot(timer);
+        set(Speed.INTAKE);
+      }
+      setState(IntakeState.AGITATING);
+    }).beforeStarting(() -> {
+      timer.restart();
+      set(Position.AGITATE);
+      set(Speed.INTAKE);
+      setState(IntakeState.AGITATING);
+    }).handleInterrupt(() -> {
+      set(Position.INTAKE);
+      set(Speed.STOP);
+      setState(IntakeState.INTAKE);
+    });
   }
 
   public boolean isStowed() {

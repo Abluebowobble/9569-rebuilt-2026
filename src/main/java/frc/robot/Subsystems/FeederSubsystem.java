@@ -27,7 +27,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj.Timer;
 
 public class FeederSubsystem extends SubsystemBase {
 
@@ -53,6 +55,8 @@ public class FeederSubsystem extends SubsystemBase {
   // return Volts.of(percentOutput * 12.0);
   // }
   // }
+  private final Timer reverseTimer = new Timer();
+  private boolean reversingPulse = false;
 
   public BooleanSupplier shouldFeed;
 
@@ -76,9 +80,6 @@ public class FeederSubsystem extends SubsystemBase {
   public FeederSubsystem(BooleanSupplier shouldFeed) {
     this.shouldFeed = shouldFeed;
     setDefaultCommand(idle());
-    Trigger feedTrigger = new Trigger(() -> !shouldFeed.getAsBoolean() && feederState == FeederState.RUNNING);
-    feedTrigger
-        .onTrue(reverseCommand().andThen(Commands.waitSeconds(0.1).andThen(runCommand())));
   }
 
   /** sets speed based on percentage output given Speed enum */
@@ -101,15 +102,55 @@ public class FeederSubsystem extends SubsystemBase {
     return feederState;
   }
 
+  public Command unJamCommand() {
+    return run(() -> set(Speed.REVERSE)).withTimeout(0.25).andThen(runOnce(() -> set(Speed.RUN)));
+  }
+
   /** given parameter 0-1, sets percentage output of motor */
   public void setPercentageOutput(double percentageOutput) {
     SmartDashboard.putNumber("feeder output percentage", percentageOutput);
     motor.setVoltage(percentageOutput * 12.0);
   }
 
+  public Command runWithOverrideCommand(BooleanSupplier reverseButton) {
+    return run (() -> {
+      if (reverseButton.getAsBoolean()) {
+        set(Speed.REVERSE);
+      }
+      set(Speed.RUN);
+    });
+  }
+
   /** set to forward speed enum on start, stop on end */
   public Command runCommand() {
-    return run(() -> set(Speed.RUN)).alongWith(Commands.runOnce(() -> setState(FeederState.RUNNING)));
+    return run(() -> {
+      setState(FeederState.RUNNING);
+
+      if (reversingPulse) {
+        set(Speed.REVERSE);
+
+        if (reverseTimer.hasElapsed(0.25)) {
+          reversingPulse = false;
+          reverseTimer.stop();
+          reverseTimer.reset();
+        }
+
+        return;
+      }
+
+      if (!shouldFeed.getAsBoolean()) {
+        reversingPulse = true;
+        reverseTimer.restart();
+        set(Speed.REVERSE);
+        return;
+      }
+
+      set(Speed.RUN);
+    }).finallyDo(() -> {
+      reversingPulse = false;
+      reverseTimer.stop();
+      reverseTimer.reset();
+    });
   }
 
   @Override
@@ -119,7 +160,8 @@ public class FeederSubsystem extends SubsystemBase {
 
   /** set to reverse speed enum on start, stop on end */
   public Command reverseCommand() {
-    return run(() -> set(Speed.REVERSE)).alongWith(Commands.runOnce(() -> setState(FeederState.REVERSE)));
+    return run(() -> set(Speed.REVERSE))
+        .alongWith(Commands.runOnce(() -> setState(FeederState.REVERSE)));
   }
 
   @Override
