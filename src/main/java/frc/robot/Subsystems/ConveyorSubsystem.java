@@ -5,6 +5,9 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Volts;
+
+import java.util.function.BooleanSupplier;
+
 import static edu.wpi.first.units.Units.Seconds;
 
 import com.revrobotics.PersistMode;
@@ -29,10 +32,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ConveyorSubsystem extends SubsystemBase {
 
   private final SparkMax motor = new SparkMax(HardwareMap.CONVEYOR, MotorType.kBrushless);
-  private Time lastUpdateTime = Seconds.of(Timer.getFPGATimestamp());
-  private Voltage curVoltage = Volts.of(0);
-
-  private final static Voltage kVoltageSlew = Volts.of(0.1);
 
   private ConveyorState conveyorState = ConveyorState.STOP;
 
@@ -83,6 +82,15 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public ConveyorState getState() {
     return conveyorState;
+  }
+
+  public Command runWithOverrideCommand(BooleanSupplier reverseButton) {
+    return run(() -> {
+      if (reverseButton.getAsBoolean()) {
+        set(Speed.REVERSE);
+      }
+      set(Speed.RUN);
+    });
   }
 
   /** reverse the conveyor, stops on end */

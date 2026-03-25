@@ -19,6 +19,7 @@ import frc.SilverKnightsLib.DriverFeedback;
 import frc.SilverKnightsLib.InputShaper;
 import frc.SilverKnightsLib.TapHoldBinder;
 import frc.robot.Commands.GeneralRobotCommands;
+import frc.robot.Commands.GeneralRobotCommands.IntakeState;
 import frc.robot.Commands.GeneralRobotCommands.ScoreFeedState;
 import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -204,7 +205,7 @@ public class RobotContainer {
     // ChassisSpeeds(0, 0, Math.PI)),
     // swerveSubsystem).handleInterrupt(() -> swerveSubsystem.drive(new
     // // ChassisSpeeds(0, 0, 0))));
-    //     ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
+    // ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
     // ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
     // ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     // ps5Controller.povLeft().toggleOnTrue(generalRobotCommands.reverseIntakeRollerCommand());
@@ -219,10 +220,10 @@ public class RobotContainer {
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
     // // scoring
-    // ps5Controller.L2().toggleOnTrue(generalRobotCommands.spinUpShooterCommand());
-    // ps5Controller.L2().whileTrue(
-    //     Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
-    //         .andThen(generalRobotCommands.scoringCommand(() -> ps5Controller.L2().getAsBoolean())));
+    ps5Controller.L2().toggleOnTrue(generalRobotCommands.spinUpShooterCommand());
+    ps5Controller.L2().whileTrue(
+        Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
+            .andThen(generalRobotCommands.scoringCommand(() -> ps5Controller.R1().getAsBoolean())));
 
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
     ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
@@ -239,7 +240,12 @@ public class RobotContainer {
     // intake
     ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
     ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
-    ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
+    ps5Controller.R1().whileTrue(
+        Commands.defer(
+            () -> intakeSubsystem.getIntakeState() == IntakeState.AGITATING
+                ? Commands.none()
+                : generalRobotCommands.reverseFeedCommand(),
+            Set.of(conveyorSubsystem, feederSubsystem)));
     ps5Controller.povLeft().toggleOnTrue(generalRobotCommands.reverseIntakeRollerCommand());
 
     // gooner

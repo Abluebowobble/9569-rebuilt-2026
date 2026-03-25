@@ -131,23 +131,23 @@ public class AutoAimNoCorrectionCommand extends Command {
 
   @Override
   public void execute() {
+    if (swerveSubsystem.isAimed()
+        && Math.abs(leftXSupplier.getAsDouble()) < OperatorConstants.OVERRIDE_DEADBAND
+        && Math.abs(leftYSupplier.getAsDouble()) < OperatorConstants.OVERRIDE_DEADBAND) {
+      swerveSubsystem.lockPose();
+    }
+
     double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(), 0.05)
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), 0.05)
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double turn = 0.0;
 
-    double error = swerveSubsystem.getTargetHeadingInFieldFrame()
-        .minus(swerveSubsystem.getHeading())
-        .getDegrees();
-
-    if (!swerveSubsystem.isAimed()) {
-      double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
-      turn = MathUtil.clamp(
-          -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
-              swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
-          -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
-    }
+    double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
+    turn = MathUtil.clamp(
+        -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
+            swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
+        -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
   }
