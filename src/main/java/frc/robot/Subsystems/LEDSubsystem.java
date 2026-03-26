@@ -28,15 +28,15 @@ import frc.robot.Constants.HardwareMap;
 public class LEDSubsystem extends SubsystemBase {
   // initialize led
   private final AddressableLED m_led = new AddressableLED(HardwareMap.LED);
-  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(71);
+  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(51);
 
   // create separate sections
-  private final AddressableLEDBufferView sideView = buffer.createView(0, 70);
+  // private final AddressableLEDBufferView sideView = buffer.createView(0, 70);
   // private final AddressableLEDBufferView middleView = buffer.createView(26,
   // 75);
 
   // patterns
-  private LEDPattern shooterPattern;
+  // private LEDPattern shooterPattern;
   private LEDPattern sidePattern;
 
   // alliance
@@ -62,7 +62,7 @@ public class LEDSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // shooterPattern.applyTo(rightView);
-    sidePattern.applyTo(sideView);
+    sidePattern.applyTo(buffer);
     // sidePattern.applyTo(rightView);
 
     m_led.setData(buffer);
@@ -107,7 +107,7 @@ public class LEDSubsystem extends SubsystemBase {
     LEDPattern m_scrollingRainbow = m_rainbow.scrollAtAbsoluteSpeed(MetersPerSecond.of(0.25),
         ledLength.div(50));
 
-    shooterPattern = m_scrollingRainbow;
+    // shooterPattern = m_scrollingRainbow;
     sidePattern = m_scrollingRainbow;
   }
 
@@ -145,25 +145,26 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   private void set(LEDPattern pattern, Section sec) {
-    switch (sec) {
-      case SHOOTER:
-        shooterPattern = pattern;
-        break;
-      case SIDE:
-        sidePattern = pattern;
-        break;
-      case ALL:
-        shooterPattern = pattern;
-        sidePattern = pattern;
-        break;
-      default:
-        setOff();
-    }
+    sidePattern = pattern;
+    // switch (sec) {
+    //   case SHOOTER:
+    //     shooterPattern = pattern;
+    //     break;
+    //   case SIDE:
+    //     sidePattern = pattern;
+    //     break;
+    //   case ALL:
+    //     shooterPattern = pattern;
+    //     sidePattern = pattern;
+    //     break;
+    //   default:
+    //     setOff();
+    // }
   }
 
   public void setOff() {
     sidePattern = LEDPattern.solid(Color.kBlack);
-    shooterPattern = LEDPattern.solid(Color.kBlack);
+    // shooterPattern = LEDPattern.solid(Color.kBlack);
   }
 
 }

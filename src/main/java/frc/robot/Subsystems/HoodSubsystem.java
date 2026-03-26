@@ -140,12 +140,18 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     @Override
+    public String toString() {
+        return isPositionWithinTolerance() ? "READY" : "NOT READY";
+    }
+
+    @Override
     public void initSendable(SendableBuilder builder) {
         builder.setSmartDashboardType("Hood");
 
         builder.addDoubleProperty("Hood Current Position Left", () -> leftServo.getPosition(), null);
         builder.addDoubleProperty("Hood Current Position Right", () -> rightServo.getPosition(), null);
         builder.addDoubleProperty("Hood Target Position", () -> targetPosition, null);
+        builder.addStringProperty("Current Hood State", this::toString, null);
     }
 
     public void updateSpeedWithSmartDashboard() {

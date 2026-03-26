@@ -289,9 +289,19 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   @Override
+  public String toString() {
+    switch (intakeState) {
+      case INTAKE: return "INTAKING";
+      case AGITATING: return "AGITATING";
+      case STOWED: default: return "STOWED";
+    }
+  }
+
+  @Override
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
     builder.addDoubleProperty("Roller Velocity (RPM)", () -> rollerMotor.getEncoder().getVelocity(), null);
+    builder.addStringProperty("Current Intake State", this::toString, null);
   }
 
   // /** updates pivot position with pid, to add: slew */
