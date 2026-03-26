@@ -57,7 +57,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
 
-  private IntakeState intakeState;
+  private IntakeState intakeState = IntakeState.STOWED;
   private RollerState rollerState = RollerState.STOP;
 
   // speed for roller motor
@@ -80,7 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(83.7)), // 83.7
+    INTAKE(Degrees.of(80)), // 83.7
     AGITATE(Degrees.of(60));
 
     private final Angle degrees;
@@ -99,9 +99,13 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
     SparkBaseConfig pivotConfig = new SparkMaxConfig();
     pivotConfig.closedLoop.p(0.7, ClosedLoopSlot.kSlot0); // 0.7
-    pivotConfig.smartCurrentLimit(60);
+    pivotConfig.smartCurrentLimit(40, 20);
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    intakeState = IntakeState.STOWED;
+
+    SparkBaseConfig rollerConfig = new SparkMaxConfig();
+    rollerConfig.smartCurrentLimit(120, 60);
+    rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
     pivotEncoder.setPosition(0);
     setDefaultCommand(idle());
   }
@@ -178,21 +182,27 @@ public class IntakeSubsystem extends SubsystemBase {
         .onlyIf(() -> !isStowed());
   }
 
+  private boolean agitate = false;
+
   public Command agitateWithOverrideCommand(BooleanSupplier reverseButton) {
     Timer timer = new Timer();
-
     return run(() -> {
       if (reverseButton.getAsBoolean()) {
         set(Position.AGITATE);
-        set(Speed.REVERSE);
-      } else {
+        agitate = false;
+        return;
+      } else if (!agitate) {
         timer.restart();
+        agitate = true;
+      }
+
+      if (agitate) {
         sinusoidalPivot(timer);
         set(Speed.INTAKE);
       }
       setState(IntakeState.AGITATING);
     }).beforeStarting(() -> {
-      timer.restart();
+      timer.restart(); 
       set(Position.AGITATE);
       set(Speed.INTAKE);
       setState(IntakeState.AGITATING);
@@ -281,6 +291,7 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
+    builder.addDoubleProperty("Roller Velocity (RPM)", () -> rollerMotor.getEncoder().getVelocity(), null);
   }
 
   // /** updates pivot position with pid, to add: slew */

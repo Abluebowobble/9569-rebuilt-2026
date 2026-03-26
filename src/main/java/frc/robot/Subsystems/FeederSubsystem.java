@@ -62,9 +62,8 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.7),
     REVERSE(-0.9),
-    UNJAM(-0.3);
+    UNJAM(-0.5);
 
     private final double percentageOutput;
 
@@ -77,8 +76,14 @@ public class FeederSubsystem extends SubsystemBase {
     }
   }
 
-  public FeederSubsystem(BooleanSupplier shouldFeed) {
+  private DoubleSupplier distanceToHubSupplier;
+
+  public FeederSubsystem(BooleanSupplier shouldFeed, DoubleSupplier distanceToHubSupplier) {
+    SparkBaseConfig config = new SparkMaxConfig();
+    config.smartCurrentLimit(70, 60);
+    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     this.shouldFeed = shouldFeed;
+    this.distanceToHubSupplier = distanceToHubSupplier;
     setDefaultCommand(idle());
   }
 
@@ -86,7 +91,12 @@ public class FeederSubsystem extends SubsystemBase {
   public void set(Speed speed) {
     // targetRPM = speed.rpm();
     // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
+
     motor.setVoltage(speed.voltage());
+  }
+
+  public double getFeederSpeed() {
+    return -0.05 * distanceToHubSupplier.getAsDouble() + 0.4;
   }
 
   /** sets speed given Voltage volts */
@@ -102,22 +112,18 @@ public class FeederSubsystem extends SubsystemBase {
     return feederState;
   }
 
-  public Command unJamCommand() {
-    return run(() -> set(Speed.REVERSE)).withTimeout(0.25).andThen(runOnce(() -> set(Speed.RUN)));
-  }
-
   /** given parameter 0-1, sets percentage output of motor */
-  public void setPercentageOutput(double percentageOutput) {
-    SmartDashboard.putNumber("feeder output percentage", percentageOutput);
+  public void set(double percentageOutput) {
     motor.setVoltage(percentageOutput * 12.0);
   }
 
   public Command runWithOverrideCommand(BooleanSupplier reverseButton) {
-    return run (() -> {
+    return run(() -> {
       if (reverseButton.getAsBoolean()) {
         set(Speed.REVERSE);
+      } else {
+        set(getFeederSpeed());
       }
-      set(Speed.RUN);
     });
   }
 
@@ -125,27 +131,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command runCommand() {
     return run(() -> {
       setState(FeederState.RUNNING);
-
-      if (reversingPulse) {
-        set(Speed.REVERSE);
-
-        if (reverseTimer.hasElapsed(0.25)) {
-          reversingPulse = false;
-          reverseTimer.stop();
-          reverseTimer.reset();
-        }
-
-        return;
-      }
-
-      if (!shouldFeed.getAsBoolean()) {
-        reversingPulse = true;
-        reverseTimer.restart();
-        set(Speed.REVERSE);
-        return;
-      }
-
-      set(Speed.RUN);
+      set(getFeederSpeed());
     }).finallyDo(() -> {
       reversingPulse = false;
       reverseTimer.stop();
@@ -177,5 +163,6 @@ public class FeederSubsystem extends SubsystemBase {
         null);
     sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
     sendableBuilder.addDoubleProperty("RPM", () -> motor.getEncoder().getVelocity(), null);
+    sendableBuilder.addDoubleProperty("time", () -> Timer.getFPGATimestamp(), null);
   }
 }

@@ -76,7 +76,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public final boolean kIsBlueAlliance;
   private static final Distance kPoseEdgeMargin = Meters.of(0.3);
 
-  public static final Angle kAimTolerance = Degrees.of(1);
+  public static final Angle kAimTolerance = Degrees.of(2);
 
   private SwerveState swerveState = SwerveState.OPERATED;
 
@@ -161,9 +161,9 @@ public class SwerveSubsystem extends SubsystemBase {
           new PPHolonomicDriveController(
               // PPHolonomicController is the built in path following controller for holonomic
               // drive trains
-              new PIDConstants(5.0, 0.0, 0.0),
+              new PIDConstants(4.79645, 0.0, 0.0),
               // Translation PID constants
-              new PIDConstants(5.0, 0.0, 0.0)
+              new PIDConstants(5.0, 0.3, 0.0)
           // Rotation PID constants
           ),
           config,

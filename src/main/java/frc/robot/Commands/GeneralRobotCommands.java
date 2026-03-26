@@ -13,6 +13,7 @@ import com.ctre.phoenix.CANifier.LEDChannel;
 import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.AccelerationUnit;
@@ -142,10 +143,11 @@ public class GeneralRobotCommands {
         }).withTimeout(0.1).andThen(
                 Commands.deadline(
                         aimSwerveCommand(),
-                        feedWithOverrideCommand(reverseButton),
-                        Commands.either(Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
+                        // feedWithOverrideCommand(reverseButton),
+                        Commands.either(
+                                Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
                                 Commands.idle(),
-                                () -> shooterSubsystem.getState() == ShooterState.IDLE)))
+                                () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(), ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
                 .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 

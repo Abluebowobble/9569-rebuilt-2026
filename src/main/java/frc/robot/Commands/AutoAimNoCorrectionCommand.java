@@ -137,15 +137,15 @@ public class AutoAimNoCorrectionCommand extends Command {
       swerveSubsystem.lockPose();
     }
 
-    double forward = MathUtil.applyDeadband(leftYSupplier.getAsDouble(), 0.05)
+    double forward = leftYSupplier.getAsDouble()
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
-    double strafe = MathUtil.applyDeadband(leftXSupplier.getAsDouble(), 0.05)
+    double strafe = leftXSupplier.getAsDouble()
         * swerveSubsystem.getSwerveDrive().getMaximumChassisVelocity();
     double turn = 0.0;
 
     double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
     turn = MathUtil.clamp(
-        -controller.calculate(swerveSubsystem.getHeading().getDegrees(),
+        controller.calculate(swerveSubsystem.getHeading().getDegrees(),
             swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
         -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
 
