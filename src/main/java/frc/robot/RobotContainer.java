@@ -66,7 +66,7 @@ public class RobotContainer {
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed);
+  private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed, swerveSubsystem::distanceToHub);
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
   private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
@@ -79,6 +79,8 @@ public class RobotContainer {
       swerveSubsystem.getSwerveDrive(),
       inputShaper::getShapedYInput,
       inputShaper::getShapedXInput)
+      // () -> ps5Controller.getLeftY() * -1,
+      // () -> ps5Controller.getLeftX() * -1)
       .withControllerRotationAxis(turnSupplier)
       .allianceRelativeControl(true);
 
@@ -210,8 +212,10 @@ public class RobotContainer {
     // ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     // ps5Controller.povLeft().toggleOnTrue(generalRobotCommands.reverseIntakeRollerCommand());
     // ps5Controller.L1().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(2900)))
-    ps5Controller.cross().whileTrue(feederSubsystem.runCommand());
-    ps5Controller.circle().whileTrue(feederSubsystem.reverseCommand());
+    // ps5Controller.circle().whileTrue(generalRobotCommands.feedWithOverrideCommand(() -> ps5Controller.L1().getAsBoolean()));
+    // ps5Controller.L2().whileTrue(generalRobotCommands.scoringCommand(() -> ps5Controller.R1().getAsBoolean()));
+    // ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
+    // ps5Controller.R2().whileTrue(feederSubsystem.runCommand());
   }
 
   public void johnnyBindings() {

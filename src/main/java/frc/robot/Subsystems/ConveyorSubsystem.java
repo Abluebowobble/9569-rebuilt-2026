@@ -52,6 +52,9 @@ public class ConveyorSubsystem extends SubsystemBase {
   }
 
   public ConveyorSubsystem() {
+    SparkBaseConfig config = new SparkMaxConfig();
+    config.smartCurrentLimit(90, 60);
+    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     setDefaultCommand(idle());
   }
 
@@ -88,8 +91,9 @@ public class ConveyorSubsystem extends SubsystemBase {
     return run(() -> {
       if (reverseButton.getAsBoolean()) {
         set(Speed.REVERSE);
+      } else {
+        set(Speed.RUN);
       }
-      set(Speed.RUN);
     });
   }
 

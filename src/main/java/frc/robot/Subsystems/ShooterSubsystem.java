@@ -50,16 +50,15 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static final AngularVelocity kVelocityTolerance = RPM.of(50); // if current RPM is within desired RPM +-
 
-                                                                        // velocity tolerance,
+  // velocity tolerance,
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  private static final AngularVelocity kStartingVelocity = RPM.of(2900);
+  public static final AngularVelocity kStartingVelocity = RPM.of(2900);
 
   private ShooterState shooterState = ShooterState.IDLE;
 
-  private static final AngularVelocity kVelocityToleranceForShooting = RPM.of(1500);
-
+  private static final AngularVelocity kVelocityToleranceForShooting = RPM.of(2000);
 
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
@@ -137,8 +136,14 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public boolean shouldFeed() {
-    double currentMinRpm = Math.min(leftEncoder.getVelocity(), Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity()));
+    double currentMinRpm = getMinimumVelocity();
     return MathUtil.isNear(targetRPM.magnitude(), currentMinRpm, kVelocityToleranceForShooting.magnitude());
+  }
+
+  public double getMinimumVelocity() {
+    double currentMinRpm = Math.min(leftEncoder.getVelocity(),
+        Math.min(middleEncoder.getVelocity(), rightEncoder.getVelocity()));
+    return currentMinRpm;
   }
 
   public void set(Voltage volts) {
@@ -151,7 +156,6 @@ public class ShooterSubsystem extends SubsystemBase {
   public boolean isVelocityWithinTolerance() {
     return targetRPM.isNear(RPM.of(leftEncoder.getVelocity()), kVelocityTolerance);
   }
-
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
