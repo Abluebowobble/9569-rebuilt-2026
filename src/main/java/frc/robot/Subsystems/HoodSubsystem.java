@@ -119,6 +119,7 @@ public class HoodSubsystem extends SubsystemBase {
         if (difference == 0) {
             difference = Math.abs(targetPosition - servoPosition);
         }
+        
         double curDiff = servoPosition - targetPosition;
         double changeInDiff = difference - curDiff;
         double percentage = (changeInDiff / difference);

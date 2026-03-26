@@ -80,7 +80,7 @@ public class GeneralRobotCommands {
     public static enum ScoreFeedState {
         FEEDING, REVERSING, NOT_SCORING;
     }
-
+ 
     public ScoreFeedState scoreFeedState;
 
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
