@@ -385,11 +385,12 @@ public class SwerveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Distance FRom Blue HUb", vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
+    SmartDashboard.putNumber("Distance FRom Blue HUb",
+        vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
     SmartDashboard.putBoolean("is aimed?", isAimed());
-    SmartDashboard.putNumber("YAW FOR AUTO CORRECTION", getTargetHeadingInFieldFrame()
-        .minus(getHeading())
-        .getDegrees());
+    // SmartDashboard.putNumber("YAW FOR AUTO CORRECTION", getTargetHeadingInFieldFrame()
+    //     .minus(getHeading())
+    //     .getDegrees());
     SmartDashboard.putNumber("gyro", getHeading().getDegrees());
 
     // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "",
@@ -400,8 +401,26 @@ public class SwerveSubsystem extends SubsystemBase {
     Pose2d currentPose = swerveDrive.getPose();
     kField.setRobotPose(currentPose);
     SmartDashboard.putData(kField);
+    SmartDashboard.putString("Current Swerve State", toString());
+    SmartDashboard.putNumber("Distance from alliance hub", distanceToHub());
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
+  }
+
+  @Override
+  public String toString() {
+    switch (swerveState) {
+      case LOCKED:
+        return "LOCKED";
+      case AIMED:
+      case LOCKED_AND_AIMED:
+        return "AIM: READY";
+      case AIMING:
+        return "AIM: NOT READY";
+      case OPERATED:
+      default:
+        return "OPERATED";
+    }
   }
 
   public void addVisionMeasurement(

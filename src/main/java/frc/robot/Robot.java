@@ -31,7 +31,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-    // m_robotContainer.getDriverFeedback().update();
+    m_robotContainer.getDriverFeedback().update();
+    SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
   }
 
   @Override

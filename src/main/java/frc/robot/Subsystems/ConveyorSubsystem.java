@@ -105,6 +105,5 @@ public class ConveyorSubsystem extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("current output", () -> motor.getOutputCurrent(), null);
-
   }
 }

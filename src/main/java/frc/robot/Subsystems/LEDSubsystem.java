@@ -15,6 +15,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
@@ -87,7 +88,7 @@ public class LEDSubsystem extends SubsystemBase {
     if (isReversed) {
       pattern.reversed();
     }
-    
+
     set(pattern, sec);
   }
 
@@ -113,18 +114,21 @@ public class LEDSubsystem extends SubsystemBase {
 
   public void setSolidColor(Color color, Section sec) {
     LEDPattern pattern = LEDPattern.solid(color);
-    pattern.atBrightness(Percent.of(50));
     set(pattern, sec);
   }
 
   public void setBreathe(Color color, double seconds, Section sec) {
     LEDPattern pattern = LEDPattern.solid(color).breathe(Second.of(seconds));
-    pattern.atBrightness(Percent.of(50));
     set(pattern, sec);
   }
 
-  public void setProgressMask(DoubleSupplier progress, Section sec) {
-    LEDPattern base = LEDPattern.solid(Color.kWhite);
+  public void setBlink(Color color, Time seconds, Section sec) {
+    LEDPattern pattern = LEDPattern.solid(color).blink(seconds);
+    set(pattern, sec);
+  }
+
+  public void setProgressMask(DoubleSupplier progress, Color color, Section sec) {
+    LEDPattern base = LEDPattern.solid(color);
     // if (alliance.isPresent()) {
     // if (alliance.get() == DriverStation.Alliance.Blue) {
     // base = LEDPattern.gradient(LEDPattern.GradientType.kContinuous,
@@ -139,7 +143,6 @@ public class LEDSubsystem extends SubsystemBase {
 
     LEDPattern pattern = LEDPattern.progressMaskLayer(progress);
     pattern = base.mask(pattern);
-    pattern.atBrightness(Percent.of(50));
 
     set(pattern, sec);
   }
@@ -147,18 +150,18 @@ public class LEDSubsystem extends SubsystemBase {
   private void set(LEDPattern pattern, Section sec) {
     sidePattern = pattern;
     // switch (sec) {
-    //   case SHOOTER:
-    //     shooterPattern = pattern;
-    //     break;
-    //   case SIDE:
-    //     sidePattern = pattern;
-    //     break;
-    //   case ALL:
-    //     shooterPattern = pattern;
-    //     sidePattern = pattern;
-    //     break;
-    //   default:
-    //     setOff();
+    // case SHOOTER:
+    // shooterPattern = pattern;
+    // break;
+    // case SIDE:
+    // sidePattern = pattern;
+    // break;
+    // case ALL:
+    // shooterPattern = pattern;
+    // sidePattern = pattern;
+    // break;
+    // default:
+    // setOff();
     // }
   }
 

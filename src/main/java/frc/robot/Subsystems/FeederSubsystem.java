@@ -155,6 +155,14 @@ public class FeederSubsystem extends SubsystemBase {
     SmartDashboard.putData(this);
   }
 
+  public String toString() {
+    switch (feederState) {
+      case RUNNING: return "FEEDING";
+      case REVERSE: return "REVERSING";
+      case STOP: default: return "STOPPED";
+    }
+  }
+
   @Override
   public void initSendable(SendableBuilder sendableBuilder) {
     sendableBuilder.addBooleanProperty("should feed", shouldFeed, null);
@@ -164,5 +172,6 @@ public class FeederSubsystem extends SubsystemBase {
     sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
     sendableBuilder.addDoubleProperty("RPM", () -> motor.getEncoder().getVelocity(), null);
     sendableBuilder.addDoubleProperty("time", () -> Timer.getFPGATimestamp(), null);
+    sendableBuilder.addStringProperty("Current Indexer State", this::toString, null);
   }
 }

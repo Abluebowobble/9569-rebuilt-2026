@@ -105,25 +105,24 @@ public class HoodSubsystem extends SubsystemBase {
         return setCommand(kMaxPosition).alongWith(Commands.runOnce(() -> setState(HoodState.PASSING)));
     }
 
+    private double difference = 0;
+
     public double progress() {
+
         if (isPositionWithinTolerance()) {
+            difference = 0;
             return 1.0;
         }
 
         double servoPosition = leftServo.getPosition();
 
-        if (servoPosition < targetPosition) {
-            if (targetPosition <= 1e-9) {
-                return 1.0;
-            }
-            return MathUtil.clamp(servoPosition / targetPosition, 0.0, 1.0);
-        } else {
-            double remainingRange = 1.0 - targetPosition;
-            if (remainingRange <= 1e-9) {
-                return 1.0;
-            }
-            return MathUtil.clamp((1.0 - servoPosition) / remainingRange, 0.0, 1.0);
+        if (difference == 0) {
+            difference = Math.abs(targetPosition - servoPosition);
         }
+        double curDiff = servoPosition - targetPosition;
+        double changeInDiff = difference - curDiff;
+        double percentage = (changeInDiff / difference);
+        return percentage;
     }
 
     /** checks if current position is within given tolerance */

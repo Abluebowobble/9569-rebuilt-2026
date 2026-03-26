@@ -3,6 +3,7 @@ package frc.robot.Commands;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -71,7 +72,7 @@ public class GeneralRobotCommands {
     }
 
     public static enum SwerveState {
-        OPERATED, LOCKED, AIMED, MOVING_WHILE_AIMING, LOCKED_AND_AIMED;
+        AIMING, OPERATED, LOCKED, AIMED, LOCKED_AND_AIMED;
     }
 
     public boolean isFeeding = false;
@@ -103,7 +104,8 @@ public class GeneralRobotCommands {
 
     public Command aimSwerveCommand() {
         return Commands.deadline(
-                new AutoAimNoCorrectionCommand(swerveSubsystem, leftYSupplier, leftXSupplier, turnSupplier),
+                new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
+                        turnSupplier),
                 autoAimLightsCommand());
     }
 
@@ -142,12 +144,13 @@ public class GeneralRobotCommands {
             conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
         }).withTimeout(0.1).andThen(
                 Commands.deadline(
-                        aimSwerveCommand(),
-                        // feedWithOverrideCommand(reverseButton),
+                        new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
+                                turnSupplier),
                         Commands.either(
-                                Commands.runOnce(() -> shooterSubsystem.set(RPM.of(5300))),
+                                shooterSubsystem.runCommand(RPM.of(5300)),
                                 Commands.idle(),
-                                () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(), ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
+                                () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(),
+                                        ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
                 .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
@@ -193,14 +196,13 @@ public class GeneralRobotCommands {
 
     // good enough
     public Command shooterLightsCommand() {
-        return Commands
-                .run(() -> {
-                    if (isReadyToShoot()) {
-                        ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SHOOTER);
-                    } else {
-                        ledSubsystem.setProgressMask(shooterSubsystem::progress, LEDSubsystem.Section.SHOOTER);
-                    }
-                });
+        return Commands.run(() -> {
+            if (isReadyToShoot()) {
+                ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
+            } else {
+                ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
+            }
+        });
     }
 
     public Command feedFromNeutralCommand() {
@@ -208,49 +210,75 @@ public class GeneralRobotCommands {
                 neutralFeedLightsCommand());
     }
 
+    private double remember = 0;
+
     public Command neutralFeedLightsCommand() {
+        remember = 0;
         return Commands.run(() -> {
-            if (hoodSubsystem.isPositionWithinTolerance()) {
-                ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SHOOTER);
+            if (!shooterSubsystem.isVelocityWithinTolerance() && shooterSubsystem.getState() == ShooterState.SHOOTING && remember == 0) {
+                ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
+                return;
             } else {
-                ledSubsystem.setProgressMask(hoodSubsystem::progress, LEDSubsystem.Section.SHOOTER);
+                remember += 1;
+            }
+
+            if (hoodSubsystem.isPositionWithinTolerance()) {
+                ledSubsystem.setSolidColor(Color.kDarkBlue, Section.SIDE);
+            } else {
+                ledSubsystem.setBlink(Color.kDarkBlue, Seconds.of(0.25), LEDSubsystem.Section.SHOOTER);
             }
         });
     }
 
     public Command runIntakeRollerCommand() {
-        return Commands.sequence(
-                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
+        return Commands.parallel(
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
                 intakeSubsystem.runRollerCommand());
     }
 
     public Command reverseIntakeRollerCommand() {
-        return Commands.sequence(
-                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)),
-                intakeSubsystem.reverseRollerCommand());
+        return Commands.parallel(
+                intakeSubsystem.reverseRollerCommand(),
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)));
     }
 
     public Command autoAimLightsCommand() {
         return Commands.run(() -> {
             if (swerveSubsystem.isAimed()) {
-                ledSubsystem.setSolidColor(Color.kGreen, LEDSubsystem.Section.SIDE);
+                ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
             } else {
-                ledSubsystem.setSolidColor(Color.kDarkOrange, LEDSubsystem.Section.SIDE);
+                ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
             }
         });
     }
 
     public Command swerveLockCommand() {
         return Commands.sequence(
+                Commands.runOnce(() -> swerveSubsystem.setState(SwerveState.LOCKED)),
                 Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE)),
                 swerveSubsystem.swerveLockCommand(
                         // motion vector
                         () -> Math.sqrt(
-                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
+                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))))
+                .handleInterrupt(() -> swerveSubsystem.setState(SwerveState.OPERATED));
     }
 
     public Command reverseFeedCommand() {
         return conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand());
+    }
+
+    public Command scoringLightsCommand() {
+        return Commands.run(() -> {
+            if (isReadyToShoot()) {
+                if (swerveSubsystem.isAimed()) {
+                    ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
+                } else {
+                    ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
+                }
+            } else {
+                ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
+            }
+        });
     }
 
     public boolean isReadyToShoot() {
