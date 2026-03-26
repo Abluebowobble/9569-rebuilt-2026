@@ -214,6 +214,18 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   @Override
+  public String toString() {
+    if (MathUtil.isNear(getMinimumVelocity(), kStartingVelocity.magnitude(), 200)) {
+      return "IDLE";
+    } else {
+      if (!isVelocityWithinTolerance())
+        return "NOT READY";
+      else
+        return "READY";
+    }
+  }
+
+  @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Shooter");
     builder.addDoubleProperty("left RPM", () -> leftEncoder.getVelocity(), null);
@@ -223,5 +235,7 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addBooleanProperty("is Velocity within tolerance", this::isVelocityWithinTolerance, null);
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM.magnitude(), null);
+
+    builder.addStringProperty("Current Shooter State", this::toString, null);
   }
 }
