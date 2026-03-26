@@ -242,12 +242,11 @@ public class GeneralRobotCommands {
 
     public Command swerveLockCommand() {
         return Commands.sequence(
-                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kRed, Section.SIDE)),
+                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE)),
                 swerveSubsystem.swerveLockCommand(
                         // motion vector
                         () -> Math.sqrt(
-                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2)),
-                        swerveSubsystem.getState()));
+                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     }
 
     public Command reverseFeedCommand() {

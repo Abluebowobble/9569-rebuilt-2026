@@ -309,11 +309,10 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.lockPose();
   }
 
-  public Command swerveLockCommand(DoubleSupplier leftSupplier, SwerveState previousState) {
+  public Command swerveLockCommand(DoubleSupplier supplier) {
     return runOnce(() -> setState(SwerveState.LOCKED))
         .andThen(() -> swerveDrive.lockPose()).repeatedly()
-        .until(() -> leftSupplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND)
-        .finallyDo((interrupted) -> setState(previousState));
+        .until(() -> supplier.getAsDouble() > Constants.OperatorConstants.OVERRIDE_DEADBAND);
   }
 
   public Command zeroGyroCommand() {
