@@ -66,7 +66,8 @@ public class RobotContainer {
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed, swerveSubsystem::distanceToHub);
+  private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed,
+      swerveSubsystem::distanceToHub);
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
   private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
@@ -77,10 +78,11 @@ public class RobotContainer {
   InputShaper inputShaper = new InputShaper(leftXSupplier, leftYSupplier, turnSupplier);
   private final SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
       swerveSubsystem.getSwerveDrive(),
-      inputShaper::getShapedYInput,
-      inputShaper::getShapedXInput)
-      // () -> ps5Controller.getLeftY() * -1,
-      // () -> ps5Controller.getLeftX() * -1)
+      // inputShaper::getShapedYInput,
+      // inputShaper::getShapedXInput)
+      leftYSupplier,
+      leftXSupplier)
+      .deadband(0.05)
       .withControllerRotationAxis(turnSupplier)
       .allianceRelativeControl(true);
 
@@ -130,8 +132,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    testBindings();
-    // johnnyBindings();
+    // testBindings();
+    johnnyBindings();
   }
 
   public void test() {
@@ -174,8 +176,9 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    // hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
-    // -ps5Controller.getLeftY()));
+    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getRightY()));
+    ps5Controller.L2().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(5300)));
+    ps5Controller.circle().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
     // -xboxController.getLeftY()));
 
@@ -212,10 +215,13 @@ public class RobotContainer {
     // ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     // ps5Controller.povLeft().toggleOnTrue(generalRobotCommands.reverseIntakeRollerCommand());
     // ps5Controller.L1().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(2900)))
-    // ps5Controller.circle().whileTrue(generalRobotCommands.feedWithOverrideCommand(() -> ps5Controller.L1().getAsBoolean()));
-    // ps5Controller.L2().whileTrue(generalRobotCommands.scoringCommand(() -> ps5Controller.R1().getAsBoolean()));
+    // ps5Controller.circle().whileTrue(generalRobotCommands.feedWithOverrideCommand(()
+    // -> ps5Controller.L1().getAsBoolean()));
+    // ps5Controller.L2().whileTrue(generalRobotCommands.scoringCommand(() ->
+    // ps5Controller.R1().getAsBoolean()));
     // ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
     // ps5Controller.R2().whileTrue(feederSubsystem.runCommand());
+
   }
 
   public void johnnyBindings() {
@@ -224,22 +230,22 @@ public class RobotContainer {
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
 
     // // scoring
-    ps5Controller.L2().toggleOnTrue(generalRobotCommands.spinUpShooterCommand());
-    ps5Controller.L2().whileTrue(
-        Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
-            .andThen(generalRobotCommands.scoringCommand(() -> ps5Controller.R1().getAsBoolean())));
+    ps5Controller.L2().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(5300)));
+    // ps5Controller.L2().whileTrue(
+    //     Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
+    //         .andThen(generalRobotCommands.scoringCommand(() -> ps5Controller.R1().getAsBoolean())));
 
     ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
-    ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
+    // ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // // misc swerve commands
     ps5Controller.circle().toggleOnTrue(intakeSubsystem.runRollerCommand());
-    ps5Controller.L3().toggleOnTrue(generalRobotCommands.swerveLockCommand());
+    ps5Controller.R3().toggleOnTrue(generalRobotCommands.swerveLockCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
 
     // passing
-    ps5Controller.povUp().toggleOnTrue(
-        hoodSubsystem.feedFromNeutralCommand().onlyWhile(() -> !swerveSubsystem.currentPoseIsValidForScoring())); //
+    // ps5Controller.povUp().toggleOnTrue(
+    //     hoodSubsystem.feedFromNeutralCommand().onlyWhile(() -> !swerveSubsystem.currentPoseIsValidForScoring())); //
 
     // intake
     ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());

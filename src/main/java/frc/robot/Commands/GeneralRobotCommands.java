@@ -147,7 +147,7 @@ public class GeneralRobotCommands {
                         new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
                                 turnSupplier),
                         Commands.either(
-                                shooterSubsystem.runCommand(RPM.of(5300)),
+                                shooterSubsystem.runCommand(RPM.of(5300)).asProxy(),
                                 Commands.idle(),
                                 () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(),
                                         ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
@@ -175,7 +175,7 @@ public class GeneralRobotCommands {
 
     public Command spinUpShooterCommand() {
         return Commands.parallel(
-                shooterSubsystem.runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY),
+                shooterSubsystem.runCommand(RPM.of(5300)),
                 shooterLightsCommand());
     }
 
@@ -231,15 +231,15 @@ public class GeneralRobotCommands {
     }
 
     public Command runIntakeRollerCommand() {
-        return Commands.parallel(
-                Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
-                intakeSubsystem.runRollerCommand());
+        return 
+                // Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
+                intakeSubsystem.runRollerCommand();
     }
 
     public Command reverseIntakeRollerCommand() {
-        return Commands.parallel(
-                intakeSubsystem.reverseRollerCommand(),
-                Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)));
+        return 
+                intakeSubsystem.reverseRollerCommand();
+                // Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)));
     }
 
     public Command autoAimLightsCommand() {

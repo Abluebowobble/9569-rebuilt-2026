@@ -132,7 +132,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void set(AngularVelocity rpm) {
     controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-    targetRPM = rpm;
   }
 
   public boolean shouldFeed() {
@@ -159,7 +158,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** sets voltage to shoot in front of Hub */
   public Command runCommand(AngularVelocity rpm) {
-    return runOnce(() -> set(rpm)).alongWith(Commands.runOnce(() -> setState(ShooterState.SHOOTING)));
+    return run(() -> targetRPM = rpm).alongWith(Commands.runOnce(() -> setState(ShooterState.SHOOTING)));
   }
 
   /** sets voltage to shoot in front of Hub */
@@ -173,7 +172,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return runOnce(() -> set(RPM.of(kStartingVelocity.magnitude())))
+    return run(() -> targetRPM = RPM.of(kStartingVelocity.magnitude()))
         .alongWith(Commands.runOnce(() -> setState(ShooterState.IDLE)));
   }
 
@@ -192,7 +191,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
-
+    set(targetRPM);
   }
 
   public double progress() {

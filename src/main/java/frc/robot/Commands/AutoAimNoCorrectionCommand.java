@@ -141,7 +141,7 @@ public class AutoAimNoCorrectionCommand extends Command {
   @Override
   public void initialize() {
     swerveSubsystem.setState(SwerveState.AIMING);
-    ledSubsystem.setSolidColor(Color.kDeepPink, Section.SIDE);
+    ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.5), Section.SIDE);
   }
 
   @Override
@@ -155,10 +155,9 @@ public class AutoAimNoCorrectionCommand extends Command {
         return;
       } else {
         swerveSubsystem.setState(SwerveState.AIMED);
-        ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.5), Section.SIDE);
       }
     } else {
-      ledSubsystem.setSolidColor(Color.kDeepPink, Section.SIDE);
+      ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.5), Section.SIDE);
     }
 
     swerveSubsystem.setState(SwerveState.AIMING);
