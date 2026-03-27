@@ -29,7 +29,7 @@ public class HoodSubsystem extends SubsystemBase {
     // position variables, between 0-1
     public static final double kMinPosition = 0;
     public static final double kMaxPosition = 0.804;
-    public static final double kStartingPosition = kMaxPosition / 2;
+    public static final double kStartingPosition = 0;
 
     // tolerance
     private static final double kPositionTolerance = 0.01;
@@ -55,7 +55,7 @@ public class HoodSubsystem extends SubsystemBase {
         // SmartDashboard.putNumber("Set Target Position", 0.5);
 
         // prep hood at maximal position
-        setPosition(kStartingPosition);
+        setPosition(kMinPosition);
     }
 
     /**

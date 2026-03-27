@@ -132,10 +132,6 @@ public class FeederSubsystem extends SubsystemBase {
     return run(() -> {
       setState(FeederState.RUNNING);
       set(getFeederSpeed());
-    }).finallyDo(() -> {
-      reversingPulse = false;
-      reverseTimer.stop();
-      reverseTimer.reset();
     });
   }
 
