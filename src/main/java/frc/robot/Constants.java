@@ -68,8 +68,8 @@ public final class Constants {
     public static final Translation2d BLUE_1_RUNUP = new Translation2d(6, 5.180);
     public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(7.8, 6.85);
     public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(7.8, 4.483); //4.14
-    public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.180);
-    public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.180);
+    public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.391);
+    public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.391);
     public static final Translation2d BLUE_1_SHOOT = new Translation2d(3.303, 3.97);
     public static final Translation2d BLUE_1_PREPARE_DEPOT_INTAKE = new Translation2d(1.52, 5.95);
     public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.706, 5.95);
