@@ -80,6 +80,7 @@ public class Autons {
         Translation2d runup = allianceRelative(WaypointConstants.BLUE_1_RUNUP, isBlue);
         Translation2d beginIntake = allianceRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue);
         Translation2d finishIntake = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue);
+        Translation2d finishIntake2 = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE2, isBlue);
         Translation2d prepareBump = allianceRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue);
         Translation2d returnFromBump = allianceRelative(WaypointConstants.BLUE_1_RETURN, isBlue);
         Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue);
@@ -117,33 +118,39 @@ public class Autons {
                         null),
 
                 // intake from neutral zone while moving through the path
-                new ParallelDeadlineGroup(
-                        new SequentialCommandGroup(
-                                generalRobotCommands.driveToWithAngle(
-                                        beginIntake,
-                                        0.5,
-                                        forwardHeading),
-                                generalRobotCommands.driveToWayPointWithAngle(
-                                        finishIntake,
-                                        1.5,
-                                        intakeHeading,
-                                        null,
-                                        isBlue ? SwerveConstants.MAX_SPEED.div(4).times(-1)
-                                                : SwerveConstants.MAX_SPEED.div(4)),
-                                generalRobotCommands.driveTo(
-                                        finishIntake,
-                                        kTightTolerance)),
-                        generalRobotCommands.intakeCommand()),
+                // new ParallelDeadlineGroup(
+                //         new SequentialCommandGroup(
+                //                 generalRobotCommands.driveToWithAngle(
+                //                         beginIntake,
+                //                         0.5,
+                //                         forwardHeading),
+                //                 generalRobotCommands.driveToWayPointWithAngle(
+                //                         finishIntake,
+                //                         1.5,
+                //                         intakeHeading,
+                //                         null,
+                //                         isBlue ? SwerveConstants.MAX_SPEED.div(4).times(-1)
+                //                                 : SwerveConstants.MAX_SPEED.div(4)),
+                //                 generalRobotCommands.driveTo(
+                //                         finishIntake2,
+                //                         kTightTolerance)),
+                //         generalRobotCommands.intakeCommand()),
 
                 // test drive only === DO NOT USE FOR COMP
-                // generalRobotCommands.driveToWithAngle(
-                // beginIntake,
-                // 0.5,
-                // forwardHeading),
-                // generalRobotCommands.driveToWithAngle(
-                // finishIntake,
-                // kTightTolerance,
-                // intakeHeading),
+                generalRobotCommands.driveToWithAngle(
+                        beginIntake,
+                        0.5,
+                        forwardHeading),
+                generalRobotCommands.driveToWayPointWithAngle(
+                        finishIntake,
+                        4.14,
+                        intakeHeading,
+                        null,
+                        isBlue ? SwerveConstants.MAX_SPEED.div(4).times(-1)
+                                : SwerveConstants.MAX_SPEED.div(4)),
+                generalRobotCommands.driveTo(
+                        finishIntake2,
+                        kTightTolerance),
                 // =========
 
                 // move back toward own side
@@ -159,20 +166,20 @@ public class Autons {
                         null),
 
                 // first shot == TEST ONLY DO NOT RUN DURING COMP
-                // generalRobotCommands.driveToWithAngle(
-                // shootPose,
-                // kTightTolerance,
-                // forwardHeading));
-                // ========== TEST ONLY TEST ONLY TEST ONLY
-                new ParallelDeadlineGroup(
-                        generalRobotCommands.driveToWithAngle(
-                                shootPose,
-                                kTightTolerance,
-                                forwardHeading),
-                        generalRobotCommands.getShooterSubsystem()
-                                .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
+                generalRobotCommands.driveToWithAngle(
+                        shootPose,
+                        kTightTolerance,
+                        forwardHeading));
+        // ========== TEST ONLY TEST ONLY TEST ONLY
+        // new ParallelDeadlineGroup(
+        // generalRobotCommands.driveToWithAngle(
+        // shootPose,
+        // kTightTolerance,
+        // forwardHeading),
+        // generalRobotCommands.getShooterSubsystem()
+        // .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
 
-                shootWhenReady(generalRobotCommands, 1000));
+        // shootWhenReady(generalRobotCommands, 1000));
 
         // // drive to depot
         // generalRobotCommands.driveToWithAngle(

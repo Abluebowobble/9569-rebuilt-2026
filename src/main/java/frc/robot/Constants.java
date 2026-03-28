@@ -66,8 +66,9 @@ public final class Constants {
     public static final Translation2d BLUE_1_START = new Translation2d(3.541, 5.180);
     public static final Translation2d BLUE_1_BACKUP = new Translation2d(3, 5.180); // do 2.5 for practice to ensure we get through everything? idk
     public static final Translation2d BLUE_1_RUNUP = new Translation2d(6, 5.180);
-    public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(7.8, 6.85);
-    public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(7.8, 0); //4.14
+    public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(8.375, 6.85);
+    public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(8.375, 0); //4.14
+    public static final Translation2d BLUE_1_FINISH_INTAKE2 = new Translation2d(8.375, 4.14); //4.14
     public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.391);
     public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.391);
     public static final Translation2d BLUE_1_SHOOT = new Translation2d(3.303, 3.97);
