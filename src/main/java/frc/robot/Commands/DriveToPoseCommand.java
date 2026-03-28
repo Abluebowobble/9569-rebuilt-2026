@@ -11,6 +11,7 @@ import java.util.ResourceBundle.Control;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.SilverKnightsLib.IsolatedSwerveController;
@@ -26,10 +27,10 @@ public class DriveToPoseCommand extends Command {
   private final SwerveSubsystem swerveSubsystem;
   private Pose2d targetPose;
   private Pose2d adjustedTargetPose;
-  private final double exitRadius;
+  private final Distance exitRadius;
 
   /** Creates a new DriveToPoseCommand. */
-  public DriveToPoseCommand(IsolatedSwerveController swerveController, SwerveSubsystem swerveSubsystem, Pose2d targetPose, double exitRadius) {
+  public DriveToPoseCommand(IsolatedSwerveController swerveController, SwerveSubsystem swerveSubsystem, Pose2d targetPose, Distance exitRadius) {
     this.swerveController = swerveController;
     this.swerveSubsystem = swerveSubsystem;
     this.targetPose = targetPose;
@@ -38,7 +39,7 @@ public class DriveToPoseCommand extends Command {
     addRequirements(swerveSubsystem);
   }
 
-  private Pose2d transformForAlliance(Pose2d pose) {
+  private Pose2d transformForRedAlliance(Pose2d pose) {
     var alliance = DriverStation.getAlliance();
 
     if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
@@ -57,7 +58,7 @@ public class DriveToPoseCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    adjustedTargetPose = transformForAlliance(targetPose);
+    adjustedTargetPose = transformForRedAlliance(targetPose);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -75,6 +76,6 @@ public class DriveToPoseCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return swerveController.getDistanceError() < exitRadius;
+    return swerveController.getDistanceError() < exitRadius.magnitude();
   }
 }
