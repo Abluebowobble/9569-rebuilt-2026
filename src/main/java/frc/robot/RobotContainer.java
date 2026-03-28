@@ -268,7 +268,7 @@ public class RobotContainer {
         },
             Set.of(intakeSubsystem)));
     ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
-    ps5Controller.povLeft().whileTrue(generalRobotCommands.reverseIntakeRollerCommand());
+    ps5Controller.povLeft().whileTrue(generalRobotCommands.reverseIntakeRollerCommand().alongWith(conveyorSubsystem.reverseCommand()));
 
     // gooner
     ps5Controller.povRight().whileTrue(ledSubsystem.flashbangCommand());

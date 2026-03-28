@@ -62,7 +62,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    REVERSE(-0.9),
+    REVERSE(-0.5),
     RUN(0.5),
     UNJAM(-0.5);
 
