@@ -7,6 +7,10 @@ package frc.robot.Subsystems;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +44,9 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -53,6 +59,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.SilverKnightsLib.SwerveController;
+import frc.SilverKnightsLib.SwerveController.Speeds;
 import frc.robot.Constants;
 import frc.robot.LandMarks;
 import frc.robot.Commands.GeneralRobotCommands.SwerveState;
@@ -67,6 +75,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
   // Swerve drive object
   private final SwerveDrive swerveDrive;
+  private final SwerveController swerveController = new SwerveController(SwerveConstants.translationController,
+      SwerveConstants.rotationController, false, false, SwerveConstants.driveSlewRateLimit,
+      SwerveConstants.driveJerkRateLimit, SwerveConstants.autonSlewRateLimit, SwerveConstants.autonJerkRateLimit);
 
   // PhotonVision class for full field localization
   private Vision vision;
@@ -95,7 +106,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(new Translation2d(
             Meter.of(0),
             Meter.of(0)),
-            new Rotation2d(Math.PI));
+            Rotation2d.fromDegrees(180));
 
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
@@ -106,11 +117,14 @@ public class SwerveSubsystem extends SubsystemBase {
       throw new RuntimeException(e);
     }
 
+    kField.setRobotPose(startingPose);
+    SmartDashboard.putData("field swerve", kField);
+
     // Correct for skew that gets worse as angular velocity increases. Start with a
     // coefficient of 0.1.
     // swerveDrive.setAngularVelocityCompensation(true,
-    //     true,
-    //     0.1);
+    // true,
+    // 0.1);
 
     // resynchronize absolute encoders and motor encoders periodically when they are
     // not moving
@@ -119,7 +133,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
     vision = new Vision();
-
+    
   }
 
   public void setState(SwerveState swerveState) {
@@ -388,9 +402,10 @@ public class SwerveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Distance FRom Blue HUb",
         vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
     SmartDashboard.putBoolean("is aimed?", isAimed());
-    // SmartDashboard.putNumber("YAW FOR AUTO CORRECTION", getTargetHeadingInFieldFrame()
-    //     .minus(getHeading())
-    //     .getDegrees());
+    // SmartDashboard.putNumber("YAW FOR AUTO CORRECTION",
+    // getTargetHeadingInFieldFrame()
+    // .minus(getHeading())
+    // .getDegrees());
     SmartDashboard.putNumber("gyro", getHeading().getDegrees());
 
     // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "",
@@ -400,11 +415,12 @@ public class SwerveSubsystem extends SubsystemBase {
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
     kField.setRobotPose(currentPose);
-    SmartDashboard.putData(kField);
+    SmartDashboard.putData("field swerve", kField);
     SmartDashboard.putString("Current Swerve State", toString());
     SmartDashboard.putNumber("Distance from alliance hub", distanceToHub());
 
-    vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement, swerveDrive.getRobotVelocity());
+    vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement,
+        swerveDrive.getRobotVelocity());
   }
 
   @Override
@@ -426,5 +442,37 @@ public class SwerveSubsystem extends SubsystemBase {
   public void addVisionMeasurement(
       Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> curStdDevs) {
     swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, curStdDevs);
+  }
+
+  public Command swerveControllerDrive(Translation2d targetTranslation, Rotation2d targetRotation) {
+    return run(() -> {
+      Rotation2d currentRotation = getPose().getRotation();
+      Speeds speeds = swerveController.calculate(swerveDrive::getPose,
+          () -> new Pose2d(targetTranslation, targetRotation == null ? currentRotation : targetRotation));
+      ChassisSpeeds finalSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds.vx(), speeds.vy(), speeds.vr(),
+          currentRotation);
+      drive(finalSpeeds);
+    });
+  }
+
+  public double getDistanceError() {
+    return swerveController.getDistanceError();
+  }
+
+  // might not work
+  public Command swerveWaypointDrive(Translation2d targetTranslation, Rotation2d targetRotation,
+      LinearVelocity xVelocity, LinearVelocity yVelocity) {
+    return run(() -> {
+      // store target position and rotation
+      Rotation2d currentRotation = getPose().getRotation();
+      Speeds speeds = swerveController.calculate(swerveDrive::getPose,
+          () -> new Pose2d(targetTranslation, currentRotation));
+      ChassisSpeeds finalSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+          xVelocity == null ? 0 : xVelocity.magnitude(),
+          yVelocity == null ? 0 : yVelocity.magnitude(),
+          speeds.vr(),
+          currentRotation);
+      swerveDrive.drive(finalSpeeds);
+    });
   }
 }

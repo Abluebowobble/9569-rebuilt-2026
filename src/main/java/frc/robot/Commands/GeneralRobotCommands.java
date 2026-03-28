@@ -16,6 +16,8 @@ import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.AccelerationUnit;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -102,12 +104,11 @@ public class GeneralRobotCommands {
         scoreFeedState = ScoreFeedState.NOT_SCORING;
     }
 
-    public Command aimSwerveCommand() {
-        return Commands.deadline(
-                new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
-                        turnSupplier),
-                autoAimLightsCommand());
-    }
+    // public Command aimSwerveCommand() {
+    // return new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem,
+    // leftYSupplier, leftXSupplier,
+    // turnSupplier);
+    // }
 
     public Command prepareShooterCommand() {
         return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);
@@ -131,26 +132,27 @@ public class GeneralRobotCommands {
                 .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
-    public Command scoringCommand(BooleanSupplier reverseButton) {
-        // return Commands.deadline(
-        // aimSwerveCommand(),
-        // Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
-        // .andThen(feedCommand()),
-        // spinUpShooterCommand());
-        return Commands.run(() -> {
-            feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
-            conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
-        }).withTimeout(0.1).andThen(
-                Commands.deadline(
-                        new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier, leftXSupplier,
-                                turnSupplier),
-                        Commands.either(
-                                shooterSubsystem.runCommand(RPM.of(5300)).asProxy(),
-                                Commands.idle(),
-                                () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(),
-                                        ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
-                .onlyIf(() -> !intakeSubsystem.isStowed());
-    }
+    // public Command scoringCommand(BooleanSupplier reverseButton) {
+    // // return Commands.deadline(
+    // // aimSwerveCommand(),
+    // // Commands.waitUntil(() -> swerveSubsystem.isAimed() && isReadyToShoot())
+    // // .andThen(feedCommand()),
+    // // spinUpShooterCommand());
+    // return Commands.run(() -> {
+    // feederSubsystem.set(FeederSubsystem.Speed.REVERSE);
+    // conveyorSubsystem.set(ConveyorSubsystem.Speed.REVERSE);
+    // }).withTimeout(0.1).andThen(
+    // Commands.deadline(
+    // new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem, leftYSupplier,
+    // leftXSupplier,
+    // turnSupplier),
+    // Commands.either(
+    // shooterSubsystem.runCommand(RPM.of(5300)).asProxy(),
+    // Commands.idle(),
+    // () -> MathUtil.isNear(shooterSubsystem.getMinimumVelocity(),
+    // ShooterSubsystem.kStartingVelocity.magnitude(), 300))))
+    // .onlyIf(() -> !intakeSubsystem.isStowed());
+    // }
 
     // public Command managedFeedCommand(BooleanSupplier reverseHeld) {
     // return Commands.run(() -> {
@@ -241,15 +243,15 @@ public class GeneralRobotCommands {
         // Section.SIDE)));
     }
 
-    public Command autoAimLightsCommand() {
-        return Commands.run(() -> {
-            if (swerveSubsystem.isAimed()) {
-                ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
-            } else {
-                ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
-            }
-        }, ledSubsystem);
-    }
+    // public Command autoAimLightsCommand() {
+    // return Commands.run(() -> {
+    // if (swerveSubsystem.isAimed()) {
+    // ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
+    // } else {
+    // ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
+    // }
+    // }, ledSubsystem);
+    // }
 
     public Command swerveLockCommand() {
         return Commands.sequence(
@@ -266,21 +268,58 @@ public class GeneralRobotCommands {
         return conveyorSubsystem.reverseCommand().alongWith(feederSubsystem.reverseCommand());
     }
 
-    public Command scoringLightsCommand() {
-        return Commands.run(() -> {
-            if (isReadyToShoot()) {
-                if (swerveSubsystem.isAimed()) {
-                    ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
-                } else {
-                    ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
-                }
-            } else {
-                ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
-            }
-        }, ledSubsystem);
-    }
+    // public Command scoringLightsCommand() {
+    //     return Commands.run(() -> {
+    //         if (isReadyToShoot()) {
+    //             ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
+    //         } else {
+    //             ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
+    //         }
+    //     }, ledSubsystem);
+    // }
 
     public boolean isReadyToShoot() {
         return shooterSubsystem.isVelocityWithinTolerance() && hoodSubsystem.isPositionWithinTolerance();
+    }
+
+    public Command driveTo(Translation2d pos, double errorMargin) {
+        return swerveSubsystem.swerveControllerDrive(pos, null)
+                .until(() -> swerveSubsystem.getDistanceError() < errorMargin);
+    }
+
+    public Command driveToWithAngle(Translation2d pos, double errorMargin, Rotation2d angle) {
+        return swerveSubsystem
+                .swerveControllerDrive(pos, angle)
+                .until(() -> swerveSubsystem.getDistanceError() < errorMargin);
+    }
+
+    // robot x and y velocity, not field
+    public Command driveToWayPoint(Translation2d pos, double errorMargin, LinearVelocity xVelocity,
+            LinearVelocity yVelocity) {
+        return swerveSubsystem
+                .swerveWaypointDrive(pos, null, xVelocity == null ? null : xVelocity,
+                        yVelocity == null ? null : yVelocity)
+                .until(() -> swerveSubsystem.getDistanceError() < errorMargin);
+    }
+
+    // robot x and y velocity not field
+    public Command driveToWayPointWithAngle(Translation2d pos, double errorMargin, Rotation2d angle,
+            LinearVelocity xVelocity, LinearVelocity yVelocity) {
+        return swerveSubsystem
+                .swerveWaypointDrive(pos, angle, xVelocity == null ? null : xVelocity,
+                        yVelocity == null ? null : yVelocity)
+                .until(() -> swerveSubsystem.getDistanceError() < errorMargin);
+    }
+
+    public SwerveSubsystem getSwerveSubsystem() {
+        return swerveSubsystem;
+    }
+
+    public ShooterSubsystem getShooterSubsystem() {
+        return shooterSubsystem;
+    }
+
+    public IntakeSubsystem getIntakeSubsystem() {
+        return intakeSubsystem;
     }
 }

@@ -56,7 +56,7 @@ public class Vision extends SubsystemBase {
 
   // field
   public static final AprilTagFieldLayout kAprilTagField = AprilTagFieldLayout
-      .loadField(AprilTagFields.k2026RebuiltAndymark);
+      .loadField(AprilTagFields.k2026RebuiltWelded);
 
   private final Field2d field = new Field2d();
 
@@ -80,12 +80,8 @@ public class Vision extends SubsystemBase {
   // confidence based on different states of vision
   public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
   private Matrix<N3, N1> curStdDevs;
-  private static final double kMaxAmbiguity = 0.7;
+  private static final double kMaxAmbiguity = 0.5;
 
-  /**
-   * This object expects a function as an initial parameter. i.e. in yagsl:
-   * swerve.addVisionMeasurement()
-   */
   public Vision() {
     camera = new PhotonCamera("alice");
     photonPoseEstimator = new PhotonPoseEstimator(kAprilTagField, kCamToRobot);
