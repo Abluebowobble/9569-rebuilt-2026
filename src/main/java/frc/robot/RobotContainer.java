@@ -11,11 +11,14 @@ import java.util.function.DoubleSupplier;
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotation;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.SilverKnightsLib.DriverFeedback;
 import frc.SilverKnightsLib.InputShaper;
 import frc.SilverKnightsLib.TapHoldBinder;
+import frc.robot.Commands.AutoAimNoCorrectionCommand;
+import frc.robot.Commands.DriveToPoseCommand;
 import frc.robot.Commands.SubsystemsController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,6 +30,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -332,4 +339,73 @@ public class RobotContainer {
     return swerveSubsystem.driveToPose(new Pose2d(Meter.of(0), Meter.of(0), new Rotation2d(Degree.of(90))));
   }
 
+  public Command testBlue1Auton() {
+    var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+      swerveSubsystem.resetOdometry(new Pose2d(3.5, 5.79, Rotation2d.fromDegrees(0)));
+    } else {
+      swerveSubsystem.resetOdometry(new Pose2d(LandMarks.kFieldLength.in(Meter) - 3.5, LandMarks.kFieldWidth.in(Meter) - 5.79, Rotation2d.fromDegrees(180)));
+    }
+
+    return new SequentialCommandGroup(
+        // drive over bump
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(5.74, 5.79, Rotation2d.fromDegrees(0))
+        ),
+
+        // intake fuel from neutral zone
+        new ParallelDeadlineGroup(
+          new SequentialCommandGroup(
+              new DriveToPoseCommand(swerveController, swerveSubsystem,
+                  new Pose2d(7.8, 5.79, Rotation2d.fromDegrees(-90))
+              ),
+              new DriveToPoseCommand(swerveController, swerveSubsystem,
+                  new Pose2d(7.8, 4.14, Rotation2d.fromDegrees(-90))
+              )
+          ),
+          intakeSubsystem.intakeCommand(),
+          intakeSubsystem.runRollerCommand()
+        ),
+
+        // drive to bump area
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(5.79, 5.80, Rotation2d.fromDegrees(-180))
+        ),
+
+        // drive over bump
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(3.00, 5.80, Rotation2d.fromDegrees(-180))
+        ),
+
+        // positions itself to shoot
+         new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(180))
+        ),
+
+        shooterSubsystem.runCommand(RPM.of(5300)),
+
+        // heads to depot to intake
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(1.52, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // intakes from depot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(0.5, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // comes back from depot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(1.52, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // positions itself to shoot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(180))
+        ),
+
+        // shoot
+        shooterSubsystem.runCommand(RPM.of(5300))
+    );
+  }
 }
