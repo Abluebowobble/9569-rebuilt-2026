@@ -58,6 +58,7 @@ public class LEDSubsystem extends SubsystemBase {
     // runDefaultColor();
     setRainbowScrolling();
     // setOff();
+    setDefaultCommand(idle());
   }
 
   @Override
@@ -125,6 +126,11 @@ public class LEDSubsystem extends SubsystemBase {
   public void setBlink(Color color, Time seconds, Section sec) {
     LEDPattern pattern = LEDPattern.solid(color).blink(seconds);
     set(pattern, sec);
+  }
+
+  @Override
+  public Command idle() {
+    return run(() -> setOff());
   }
 
   public void setProgressMask(DoubleSupplier progress, Color color, Section sec) {

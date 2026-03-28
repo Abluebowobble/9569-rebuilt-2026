@@ -80,7 +80,7 @@ public class GeneralRobotCommands {
     public static enum ScoreFeedState {
         FEEDING, REVERSING, NOT_SCORING;
     }
- 
+
     public ScoreFeedState scoreFeedState;
 
     public GeneralRobotCommands(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem,
@@ -110,9 +110,7 @@ public class GeneralRobotCommands {
     }
 
     public Command prepareShooterCommand() {
-        return Commands.deadline(
-                new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem),
-                shooterLightsCommand());
+        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);
     }
 
     public Command feedCommand() {
@@ -120,8 +118,8 @@ public class GeneralRobotCommands {
                 feederSubsystem.runCommand(),
                 Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
                         .andThen(conveyorSubsystem.runCommand()
-                                .alongWith(intakeSubsystem.agitatePivotCommand())))
-                .onlyIf(() -> !intakeSubsystem.isStowed());
+                                .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))));
+        // .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 
     public Command feedWithOverrideCommand(BooleanSupplier reverseButton) {
@@ -197,12 +195,12 @@ public class GeneralRobotCommands {
     // good enough
     public Command shooterLightsCommand() {
         return Commands.run(() -> {
-            if (isReadyToShoot()) {
-                ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
+            if (shooterSubsystem.isVelocityWithinTolerance()) {
+                ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
             } else {
                 ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
             }
-        });
+        }, ledSubsystem);
     }
 
     public Command feedFromNeutralCommand() {
@@ -215,7 +213,8 @@ public class GeneralRobotCommands {
     public Command neutralFeedLightsCommand() {
         remember = 0;
         return Commands.run(() -> {
-            if (!shooterSubsystem.isVelocityWithinTolerance() && shooterSubsystem.getState() == ShooterState.SHOOTING && remember == 0) {
+            if (!shooterSubsystem.isVelocityWithinTolerance() && shooterSubsystem.getState() == ShooterState.SHOOTING
+                    && remember == 0) {
                 ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
                 return;
             } else {
@@ -227,19 +226,19 @@ public class GeneralRobotCommands {
             } else {
                 ledSubsystem.setBlink(Color.kDarkBlue, Seconds.of(0.25), LEDSubsystem.Section.SHOOTER);
             }
-        });
+        }, ledSubsystem);
     }
 
     public Command runIntakeRollerCommand() {
-        return 
-                // Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
-                intakeSubsystem.runRollerCommand();
+        return
+        // Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
+        intakeSubsystem.runRollerCommand();
     }
 
     public Command reverseIntakeRollerCommand() {
-        return 
-                intakeSubsystem.reverseRollerCommand();
-                // Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE)));
+        return intakeSubsystem.reverseRollerCommand();
+        // Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange,
+        // Section.SIDE)));
     }
 
     public Command autoAimLightsCommand() {
@@ -249,7 +248,7 @@ public class GeneralRobotCommands {
             } else {
                 ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.25), Section.SIDE);
             }
-        });
+        }, ledSubsystem);
     }
 
     public Command swerveLockCommand() {
@@ -278,7 +277,7 @@ public class GeneralRobotCommands {
             } else {
                 ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
             }
-        });
+        }, ledSubsystem);
     }
 
     public boolean isReadyToShoot() {
