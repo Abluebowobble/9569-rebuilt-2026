@@ -63,6 +63,7 @@ public class FeederSubsystem extends SubsystemBase {
   public enum Speed {
     STOP(0),
     REVERSE(-0.9),
+    RUN(0.5),
     UNJAM(-0.5);
 
     private final double percentageOutput;
@@ -122,7 +123,7 @@ public class FeederSubsystem extends SubsystemBase {
       if (reverseButton.getAsBoolean()) {
         set(Speed.REVERSE);
       } else {
-        set(getFeederSpeed());
+        set(Speed.RUN);
       }
     });
   }
@@ -131,7 +132,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command runCommand() {
     return run(() -> {
       setState(FeederState.RUNNING);
-      set(getFeederSpeed());
+      set(Speed.RUN);
     });
   }
 

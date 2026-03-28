@@ -260,11 +260,12 @@ public class RobotContainer {
     // !swerveSubsystem.currentPoseIsValidForScoring())); //
 
     // intake
-    ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
+    ps5Controller.L1().toggleOnTrue(intakeSubsystem.intakeCommand());
     ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
     ps5Controller.R1().whileTrue(
         Commands.defer(
-            () -> intakeSubsystem.getIntakeState() == IntakeState.AGITATING
+            () -> intakeSubsystem
+            .getIntakeState() == IntakeState.AGITATING
                 ? Commands.none()
                 : generalRobotCommands.reverseFeedCommand(),
             Set.of(conveyorSubsystem, feederSubsystem)));
@@ -310,7 +311,7 @@ public class RobotContainer {
     return Autons.testleftAuton(generalRobotCommands);
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
-    // swerveSubsystem).withTimeout(2);
+    // swerveSubsyste.withTimeout(2);
   }
 
   public Command shootAuton() {
