@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.5235623109572596,
+        "y": 2.3302622152642676
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.69600347639647,
+        "y": 2.5112706251848205
+      },
+      "isLocked": false,
+      "linkedName": "Score1Waypoint"
+    },
+    {
+      "anchor": {
+        "x": 0.4384713962253908,
+        "y": 0.6785398511405447
+      },
+      "prevControl": {
+        "x": 0.6884713962253908,
+        "y": 0.6785398511405447
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "HumanIntakeWaypoint"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.649081541218638,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 720.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -135.00687241609424
+  },
+  "useDefaultConstraints": true
+}

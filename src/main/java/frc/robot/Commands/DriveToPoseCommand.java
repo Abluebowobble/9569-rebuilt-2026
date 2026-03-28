@@ -14,23 +14,23 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.SilverKnightsLib.IsolatedSwerveController;
 import frc.SilverKnightsLib.SwerveController;
-import frc.SilverKnightsLib.IsolatedSwerveController.Speeds;
+import frc.SilverKnightsLib.BallsSwerveController;
+import frc.SilverKnightsLib.SwerveController.Speeds;
 import frc.robot.Subsystems.SwerveSubsystem;
 import frc.robot.LandMarks;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class DriveToPoseCommand extends Command {
 
-  private final IsolatedSwerveController swerveController;
+  private final SwerveController swerveController;
   private final SwerveSubsystem swerveSubsystem;
   private Pose2d targetPose;
   private Pose2d adjustedTargetPose;
   private final Distance exitRadius;
 
   /** Creates a new DriveToPoseCommand. */
-  public DriveToPoseCommand(IsolatedSwerveController swerveController, SwerveSubsystem swerveSubsystem, Pose2d targetPose, Distance exitRadius) {
+  public DriveToPoseCommand(SwerveController swerveController, SwerveSubsystem swerveSubsystem, Pose2d targetPose, Distance exitRadius) {
     this.swerveController = swerveController;
     this.swerveSubsystem = swerveSubsystem;
     this.targetPose = targetPose;
