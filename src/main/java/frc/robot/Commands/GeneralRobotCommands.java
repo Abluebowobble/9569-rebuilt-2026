@@ -180,18 +180,7 @@ public class GeneralRobotCommands {
     }
 
     public Command intakeCommand() {
-        return intakeSubsystem.intakeCommand().andThen(
-                Commands.defer(() -> {
-                    // DOESNT WORK :(
-                    ChassisSpeeds velocity = swerveSubsystem.getRobotVelocity();
-                    LinearVelocity minSpeed = MetersPerSecond.of(0.01);
-                    if (Math.abs(velocity.vxMetersPerSecond) > minSpeed.magnitude()
-                            || Math.abs(velocity.vyMetersPerSecond) > minSpeed.magnitude()) {
-                        return Commands.runOnce(() -> conveyorSubsystem.set(ConveyorSubsystem.Speed.RUN));
-                    } else {
-                        return Commands.runOnce(() -> conveyorSubsystem.set(ConveyorSubsystem.Speed.STOP));
-                    }
-                }, Set.of(conveyorSubsystem)));
+        return intakeSubsystem.intakeCommand();
     }
 
     // good enough
