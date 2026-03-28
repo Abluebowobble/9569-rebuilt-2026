@@ -246,7 +246,7 @@ public class RobotContainer {
     // .andThen(generalRobotCommands.scoringCommand(() ->
     // ps5Controller.R1().getAsBoolean())));
 
-    ps5Controller.R2().whileTrue(generalRobotCommands.feedCommand());
+    ps5Controller.R2().whileTrue(feederSubsystem.runCommand().alongWith(conveyorSubsystem.runCommand()));
     // ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // // misc swerve commands
@@ -262,13 +262,12 @@ public class RobotContainer {
     // intake
     ps5Controller.L1().toggleOnTrue(intakeSubsystem.intakeCommand());
     ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
-    ps5Controller.R1().whileTrue(
-        Commands.defer(
-            () -> intakeSubsystem
-            .getIntakeState() == IntakeState.AGITATING
-                ? Commands.none()
-                : generalRobotCommands.reverseFeedCommand(),
-            Set.of(conveyorSubsystem, feederSubsystem)));
+    ps5Controller.cross().whileTrue(
+        Commands.defer(() -> {
+          return intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState());
+        },
+            Set.of(intakeSubsystem)));
+    ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     ps5Controller.povLeft().whileTrue(generalRobotCommands.reverseIntakeRollerCommand());
 
     // gooner
