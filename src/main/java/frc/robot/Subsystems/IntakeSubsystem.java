@@ -81,7 +81,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public enum Position {
     STOWED(Degrees.of(8)),
     INTAKE(Degrees.of(80)), // 83.7
-    AGITATE(Degrees.of(60));
+    AGITATE(Degrees.of(50));
 
     private final Angle degrees;
 
@@ -169,17 +169,22 @@ public class IntakeSubsystem extends SubsystemBase {
   /**
    * humps balls in basket, goes back to intake position and stops on interrupt
    */
-  public Command agitatePivotCommand() {
+  public Command agitatePivotCommand(IntakeState prevState) {
     return runOnce(() -> set(Speed.INTAKE))
         .andThen(Commands.runOnce(() -> setState(IntakeState.AGITATING)))
         .andThen(
             sinusoidalPivotCommand())
         .handleInterrupt(() -> {
-          set(Position.INTAKE);
+          if (prevState == IntakeState.STOWED) {
+            set(Position.STOWED);
+          } else if (prevState == IntakeState.INTAKE) {
+            set(Position.INTAKE);
+          }
+
           set(Speed.STOP);
-          setState(IntakeState.INTAKE);
-        })
-        .onlyIf(() -> !isStowed());
+          setState(prevState);
+        });
+        // .onlyIf(() -> !isStowed());
   }
 
   private boolean agitate = false;
