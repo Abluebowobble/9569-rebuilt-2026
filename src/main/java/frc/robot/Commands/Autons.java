@@ -101,7 +101,6 @@ public class Autons {
                     Rotation2d startHeading = isBlue ? kBackward : kForward;
 
                     generalRobotCommands.getSwerveSubsystem().resetOdometry(new Pose2d(start, startHeading));
-
                 }),
 
                 generalRobotCommands.driveToWayPoint(
@@ -124,10 +123,16 @@ public class Autons {
                                         beginIntake,
                                         0.5,
                                         forwardHeading),
-                                generalRobotCommands.driveToWithAngle(
+                                generalRobotCommands.driveToWayPointWithAngle(
                                         finishIntake,
-                                        kTightTolerance,
-                                        intakeHeading)),
+                                        1.5,
+                                        intakeHeading,
+                                        null,
+                                        isBlue ? SwerveConstants.MAX_SPEED.div(4).times(-1)
+                                                : SwerveConstants.MAX_SPEED.div(4)),
+                                generalRobotCommands.driveTo(
+                                        finishIntake,
+                                        kTightTolerance)),
                         generalRobotCommands.intakeCommand()),
 
                 // test drive only === DO NOT USE FOR COMP
