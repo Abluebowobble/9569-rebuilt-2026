@@ -48,7 +48,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // pidf
   private AngularVelocity targetRPM = RPM.of(0); // desired RPM we want the wheels to turn at
 
-  private static final AngularVelocity kVelocityTolerance = RPM.of(50); // if current RPM is within desired RPM +-
+  private static final AngularVelocity kVelocityTolerance = RPM.of(100); // if current RPM is within desired RPM +-
 
   // velocity tolerance,
   // then its within tolerance
@@ -172,7 +172,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return run(() -> targetRPM = RPM.of(kStartingVelocity.magnitude()))
+    return run(() -> {
+      targetRPM = RPM.of(kStartingVelocity.magnitude());
+    })
         .alongWith(Commands.runOnce(() -> setState(ShooterState.IDLE)));
   }
 
@@ -191,7 +193,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
-    set(targetRPM);
+    if (getMinimumVelocity() < targetRPM.magnitude()) {
+      set(targetRPM);
+    } else {
+      setVoltage(Volts.of(0));
+    }
   }
 
   public double progress() {
