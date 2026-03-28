@@ -98,7 +98,7 @@ public class Autons {
                 // null),
                 new InstantCommand(() -> {
                     Translation2d start = allianceRelative(WaypointConstants.BLUE_1_START, isBlue);
-                    Rotation2d startHeading = isBlue ? kBackward : kForward;
+                    Rotation2d startHeading = isBlue ? kForward : kBackward;
 
                     generalRobotCommands.getSwerveSubsystem().resetOdometry(new Pose2d(start, startHeading));
                 }),
@@ -384,7 +384,7 @@ public class Autons {
         Rotation2d startHeading = isBlue ? kForward : kBackward;
 
         Translation2d forwardPoint = new Translation2d(
-                start.getX() + (isBlue ? -0.5 : 0.5),
+                start.getX() + (isBlue ? 0.5 : -0.5),
                 start.getY());
 
         return new SequentialCommandGroup(
@@ -394,7 +394,7 @@ public class Autons {
                 generalRobotCommands.driveToWayPoint(
                         forwardPoint,
                         kTightTolerance,
-                        SwerveConstants.MAX_SPEED,
+                        isBlue ? SwerveConstants.MAX_SPEED : SwerveConstants.MAX_SPEED.times(-1),
                         null));
     }
 
@@ -404,7 +404,7 @@ public class Autons {
                 .orElse(true);
 
         Translation2d start = allianceRelative(WaypointConstants.BLUE_1_START, isBlue);
-        Rotation2d startHeading = isBlue ? kBackward : kForward;
+        Rotation2d startHeading = isBlue ? kForward : kBackward;
         Rotation2d rotatedHeading = startHeading.plus(Rotation2d.fromDegrees(90));
 
         return new SequentialCommandGroup(

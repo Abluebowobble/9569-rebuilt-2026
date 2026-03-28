@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.324201500272057,
-        "y": 4.276064950752024
+        "x": 7.0,
+        "y": 4.035981129801005
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.554769046102127,
-        "y": 4.179428483464066
+        "x": 7.23056754583007,
+        "y": 3.9393446625130473
       },
       "isLocked": false,
       "linkedName": "B1IntakeWaypoint"
@@ -103,7 +103,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

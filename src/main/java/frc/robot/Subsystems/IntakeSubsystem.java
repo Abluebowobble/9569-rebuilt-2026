@@ -80,8 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(80)), // 83.7
-    AGITATE(Degrees.of(50));
+    INTAKE(Degrees.of(83.7)); // 83.7
 
     private final Angle degrees;
 
@@ -139,7 +138,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void sinusoidalPivot(Timer timer) {
     final double amplitude = 10;
-    final double center = 50.0;
+    final double center = 70.0;
     final double frequency = 1.25;
     final double omega = 2 * Math.PI * frequency;
 
@@ -159,7 +158,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public Command sinusoidalPivotCommand() {
     Timer timer = new Timer();
 
-    return runOnce(() -> set(Position.AGITATE))
+    return runOnce(() -> set(Position.INTAKE))
         .andThen(Commands.waitUntil(this::isPositionWithinTolerance)
             .andThen(run(() -> {
               sinusoidalPivot(timer);
@@ -193,7 +192,7 @@ public class IntakeSubsystem extends SubsystemBase {
     Timer timer = new Timer();
     return run(() -> {
       if (reverseButton.getAsBoolean()) {
-        set(Position.AGITATE);
+        set(Position.INTAKE);
         agitate = false;
         return;
       } else if (!agitate) {
@@ -208,7 +207,7 @@ public class IntakeSubsystem extends SubsystemBase {
       setState(IntakeState.AGITATING);
     }).beforeStarting(() -> {
       timer.restart(); 
-      set(Position.AGITATE);
+      set(Position.INTAKE);
       set(Speed.INTAKE);
       setState(IntakeState.AGITATING);
     }).handleInterrupt(() -> {
