@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.619897701835228,
-        "y": 5.391
+        "x": 7.0,
+        "y": 0.029537560089466952
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.6132176087635415,
-        "y": 4.434799126309214
+        "x": 6.993319906928313,
+        "y": -0.9266633136013194
       },
       "isLocked": false,
       "linkedName": "B1BumpWaypoint"
     },
     {
       "anchor": {
-        "x": 8.324201500272057,
-        "y": 4.276064950752024
+        "x": 7.0,
+        "y": 4.035981129801005
       },
       "prevControl": {
-        "x": 8.328582228733358,
-        "y": 5.272457592991558
+        "x": 7.004380728461301,
+        "y": 5.03237377204054
       },
       "nextControl": null,
       "isLocked": false,
@@ -56,7 +56,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
