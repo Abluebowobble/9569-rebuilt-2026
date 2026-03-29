@@ -80,10 +80,10 @@ public class RobotContainer {
   InputShaper inputShaper = new InputShaper(leftXSupplier, leftYSupplier, turnSupplier);
   private final SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
       swerveSubsystem.getSwerveDrive(),
-      // inputShaper::getShapedYInput,
-      // inputShaper::getShapedXInput)
-      leftYSupplier,
-      leftXSupplier)
+      inputShaper::getShapedYInput,
+      inputShaper::getShapedXInput)
+      // leftYSupplier,
+      // leftXSupplier)
       .deadband(0.05)
       .withControllerRotationAxis(turnSupplier)
       .allianceRelativeControl(true);
