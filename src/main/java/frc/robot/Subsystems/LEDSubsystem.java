@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.util.Units;
@@ -43,11 +44,14 @@ public class LEDSubsystem extends SubsystemBase {
   // alliance
   Optional<DriverStation.Alliance> alliance = Optional.empty();
 
+  BooleanSupplier shooterError;
+
   public enum Section {
     SHOOTER, SIDE, ALL
   };
 
-  public LEDSubsystem() {
+  public LEDSubsystem(BooleanSupplier shooterError) {
+    this.shooterError = shooterError;
     m_led.setLength(buffer.getLength());
 
     m_led.setData(buffer);
@@ -130,7 +134,13 @@ public class LEDSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return run(() -> setOff());
+    return run(() -> {
+      if (shooterError.getAsBoolean()) {
+        setSolidColor(Color.kRed, Section.ALL);
+      } else {
+        setOff();
+      }
+    });
   }
 
   public void setProgressMask(DoubleSupplier progress, Color color, Section sec) {

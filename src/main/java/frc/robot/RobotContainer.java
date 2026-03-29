@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.RPM;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.WaypointConstants;
 import frc.SilverKnightsLib.DriverFeedback;
 import frc.SilverKnightsLib.InputShaper;
 import frc.SilverKnightsLib.TapHoldBinder;
@@ -70,7 +71,7 @@ public class RobotContainer {
   private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed,
       swerveSubsystem::distanceToHub);
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
-  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem(shooterSubsystem::isThereAnError);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled
@@ -113,10 +114,12 @@ public class RobotContainer {
 
   private void configureAutos() {
     autoChooser.setDefaultOption("Empty", Commands.none());
-    autoChooser.addOption("Test Forward", Autons.testForwardAuton(generalRobotCommands));
+    // autoChooser.addOption("Test Forward",
+    // Autons.testbackwardAuton(generalRobotCommands));
     autoChooser.addOption("Test Rotate", Autons.testRotateAuton(generalRobotCommands));
     autoChooser.addOption("Left Auto", Autons.testleftAuton(generalRobotCommands));
     autoChooser.addOption("Right Auto", Autons.testRightAuton(generalRobotCommands));
+    autoChooser.addOption("Centre Auto", shootAuton());
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
@@ -235,6 +238,7 @@ public class RobotContainer {
   }
 
   public void johnnyBindings() {
+
     // default commands
     swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     hoodSubsystem.setDefaultCommand(generalRobotCommands.prepareShooterCommand());
@@ -250,7 +254,14 @@ public class RobotContainer {
     // ps5Controller.R3().whileTrue(generalRobotCommands.aimSwerveCommand());
 
     // // misc swerve commands
-    ps5Controller.circle().toggleOnTrue(intakeSubsystem.runRollerCommand());
+    // ps5Controller.circle().toggleOnTrue(generalRobotCommands.runIntakeRollerCommand());
+    // ps5Controller.circle()
+    // .onTrue(Commands.defer(() -> generalRobotCommands.driveToWithAngle(
+    // Autons.allianceRelative(WaypointConstants.BLUE_1_SHOOT,
+    // swerveSubsystem.isBlueAlliance()),
+    // 0.05,
+    // swerveSubsystem.isBlueAlliance() ? new Rotation2d(0) : new
+    // Rotation2d(Math.PI)), Set.of(swerveSubsystem)));
     ps5Controller.R3().toggleOnTrue(generalRobotCommands.swerveLockCommand());
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
 
@@ -260,7 +271,7 @@ public class RobotContainer {
     // !swerveSubsystem.currentPoseIsValidForScoring())); //
 
     // intake
-    ps5Controller.L1().toggleOnTrue(intakeSubsystem.intakeCommand());
+    ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
     ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
     ps5Controller.cross().whileTrue(
         Commands.defer(() -> {
@@ -268,10 +279,14 @@ public class RobotContainer {
         },
             Set.of(intakeSubsystem)));
     ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
-    ps5Controller.povLeft().whileTrue(generalRobotCommands.reverseIntakeRollerCommand().alongWith(conveyorSubsystem.reverseCommand()));
+    ps5Controller.povLeft()
+        .whileTrue(generalRobotCommands.reverseIntakeRollerCommand().alongWith(conveyorSubsystem.reverseCommand()));
 
     // gooner
-    ps5Controller.povRight().whileTrue(ledSubsystem.flashbangCommand());
+    ps5Controller.povRight().onTrue(Commands.runOnce(() -> shooterSubsystem.disableMiddle()));
+    ps5Controller.povUp().onTrue(Commands.runOnce(() -> shooterSubsystem.disableLeft()));
+    ps5Controller.circle().onTrue(Commands.runOnce(() -> shooterSubsystem.disableRight()));
+
   }
 
   // public void compBindings() {
@@ -307,7 +322,7 @@ public class RobotContainer {
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
     // return autoChooser.getSelected();
-    return Autons.testleftAuton(generalRobotCommands);
+    return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
     // swerveSubsyste.withTimeout(2);
@@ -317,12 +332,13 @@ public class RobotContainer {
     Command feed = conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand());
     Command shoot = Commands.deadline(
         Commands.waitSeconds(10),
-        shooterSubsystem.runCommand(RPM.of(5300)));
+        shooterSubsystem.runCommand(RPM.of(5300)),
+        Commands.waitSeconds(3).andThen(feed));
 
     try {
       Command driveVelocity = swerveSubsystem
           .driveWithSetpointGenerator(
-              () -> ChassisSpeeds.fromRobotRelativeSpeeds(-0.5, 0, 0, swerveSubsystem.getHeading()));
+              () -> ChassisSpeeds.fromRobotRelativeSpeeds(0.5, 0, 0, swerveSubsystem.getHeading()));
 
       return Commands.sequence(
           // Commands.deadline(Commands.waitSeconds(0.152), driveVelocity1),

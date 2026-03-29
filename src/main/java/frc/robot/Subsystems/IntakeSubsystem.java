@@ -80,7 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(83.7)); // 83.7
+    INTAKE(Degrees.of(81.7)); // 83.7
 
     private final Angle degrees;
 
@@ -294,10 +294,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public String toString() {
-    switch (intakeState) {
-      case INTAKE: return "INTAKING";
-      case AGITATING: return "AGITATING";
-      case STOWED: default: return "STOWED";
+    switch (rollerState) {
+      case RUNNING: return "INTAKING";
+      case REVERSE: return "REVERSING";
+      case STOP: default: return "STOPPED";
     }
   }
 
@@ -305,7 +305,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("position (rotations)", () -> pivotEncoder.getPosition(), null);
     builder.addDoubleProperty("Roller Velocity (RPM)", () -> rollerMotor.getEncoder().getVelocity(), null);
-    builder.addStringProperty("Current Intake State", this::toString, null);
+    builder.addDoubleProperty("Roller Supply Current (A)", () -> rollerMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Pivot Supply Current (A)", () -> pivotMotor.getOutputCurrent(), null);
+    builder.addStringProperty("Current Intake Roller State", this::toString, null);
   }
 
   // /** updates pivot position with pid, to add: slew */

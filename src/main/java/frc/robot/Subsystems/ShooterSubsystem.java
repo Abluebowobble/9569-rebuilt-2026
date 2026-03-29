@@ -48,7 +48,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // pidf
   private AngularVelocity targetRPM = RPM.of(0); // desired RPM we want the wheels to turn at
 
-  private static final AngularVelocity kVelocityTolerance = RPM.of(100); // if current RPM is within desired RPM +-
+  private static final AngularVelocity kVelocityTolerance = RPM.of(300); // if current RPM is within desired RPM +-
 
   // velocity tolerance,
   // then its within tolerance
@@ -72,7 +72,7 @@ public class ShooterSubsystem extends SubsystemBase {
     leaderConfig.closedLoop
         .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
-    leaderConfig.smartCurrentLimit(110, 80);
+    leaderConfig.smartCurrentLimit(70, 70);
 
     // double check this
     leaderConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
@@ -84,7 +84,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig middleFollower = new SparkMaxConfig();
     middleFollower.follow(leftShooterMotor, true); // invert follow if needed
-    middleFollower.smartCurrentLimit(110, 80);
+    middleFollower.smartCurrentLimit(70, 70);
     middleFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
     middleShooterMotor.configure(
         middleFollower,
@@ -93,7 +93,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SparkMaxConfig rightFollower = new SparkMaxConfig();
     rightFollower.follow(leftShooterMotor, true); // invert follow if needed
-    rightFollower.smartCurrentLimit(110, 80);
+    rightFollower.smartCurrentLimit(70, 70);
     rightFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
     rightShooterMotor.configure(
         rightFollower,
@@ -108,6 +108,18 @@ public class ShooterSubsystem extends SubsystemBase {
     leftShooterMotor.setVoltage(voltage.magnitude());
     middleShooterMotor.setVoltage(voltage.magnitude());
     rightShooterMotor.setVoltage(voltage.magnitude());
+  }
+
+  public void disableLeft() {
+    leftShooterMotor.disable();
+  }
+
+  public void disableMiddle() {
+    middleShooterMotor.disable();
+  }
+
+  public void disableRight() {
+    rightShooterMotor.disable();
   }
 
   /**
@@ -186,6 +198,8 @@ public class ShooterSubsystem extends SubsystemBase {
     return shooterState;
   }
 
+  public boolean error = false;
+
   @Override
   public void periodic() {
     // uncomment below to tune
@@ -198,6 +212,20 @@ public class ShooterSubsystem extends SubsystemBase {
     } else {
       setVoltage(Volts.of(0));
     }
+    checkForError();
+  }
+
+  private void checkForError() {
+    if (leftShooterMotor.getMotorTemperature() > 50 || middleShooterMotor.getMotorTemperature() > 50
+        || rightShooterMotor.getMotorTemperature() > 50) {
+      error = true;
+    } else {
+      error = false;
+    }
+  }
+
+  public boolean isThereAnError() {
+    return error;
   }
 
   public double progress() {
@@ -220,13 +248,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public String toString() {
-    if (MathUtil.isNear(getMinimumVelocity(), kStartingVelocity.magnitude(), 200)) {
-      return "IDLE";
-    } else {
+    if (shooterState == ShooterState.SHOOTING) {
       if (!isVelocityWithinTolerance())
         return "NOT READY";
       else
         return "READY";
+    } else {
+      return "IDLE";
     }
   }
 
@@ -240,6 +268,13 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addBooleanProperty("is Velocity within tolerance", this::isVelocityWithinTolerance, null);
     builder.addDoubleProperty("voltage (each)", () -> voltage.magnitude(), null);
     builder.addDoubleProperty("Target rpm", () -> targetRPM.magnitude(), null);
+
+    builder.addDoubleProperty("Right Shooter Current Supply (A)", () -> rightShooterMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Right Shooter Temperature", () -> rightShooterMotor.getMotorTemperature(), null);
+    builder.addDoubleProperty("Middle Shooter Temperature", () -> middleShooterMotor.getMotorTemperature(), null);
+    builder.addDoubleProperty("Middle Shooter Current Supply (A)", () -> middleShooterMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Left Shooter Temperature", () -> leftShooterMotor.getMotorTemperature(), null);
+    builder.addDoubleProperty("Left Shooter Current Supply (A)", () -> leftShooterMotor.getOutputCurrent(), null);
 
     builder.addStringProperty("Current Shooter State", this::toString, null);
   }

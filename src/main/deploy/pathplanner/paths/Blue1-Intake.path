@@ -23,9 +23,41 @@
         "x": 8.379380728461301,
         "y": 7.143220046079001
       },
-      "nextControl": null,
+      "nextControl": {
+        "x": 8.370619271538699,
+        "y": 5.150434761599932
+      },
       "isLocked": false,
       "linkedName": "B1IntakeWaypoint"
+    },
+    {
+      "anchor": {
+        "x": 7.718336314847942,
+        "y": 0.0192128801431124
+      },
+      "prevControl": {
+        "x": 8.04447779319332,
+        "y": 2.584823820871523
+      },
+      "nextControl": {
+        "x": 7.392194836502565,
+        "y": -2.5463980605852976
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 10.185,
+        "y": 2.5990518783542043
+      },
+      "prevControl": {
+        "x": 11.603906005013366,
+        "y": -1.5313117315448843
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
     }
   ],
   "rotationTargets": [],

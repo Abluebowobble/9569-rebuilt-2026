@@ -180,7 +180,9 @@ public class GeneralRobotCommands {
     }
 
     public Command intakeCommand() {
-        return intakeSubsystem.intakeCommand();
+        return Commands.parallel(
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kDeepPink, Section.ALL)),
+                intakeSubsystem.intakeCommand());
     }
 
     // good enough
@@ -221,13 +223,15 @@ public class GeneralRobotCommands {
     }
 
     public Command runIntakeRollerCommand() {
-        return
-        // Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE)),
-        intakeSubsystem.runRollerCommand();
+        return Commands.parallel(
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kDeepPink, Section.SIDE), ledSubsystem),
+                intakeSubsystem.runRollerCommand());
     }
 
     public Command reverseIntakeRollerCommand() {
-        return intakeSubsystem.reverseRollerCommand();
+        return Commands.parallel(
+                Commands.run(() -> ledSubsystem.setSolidColor(Color.kPurple, Section.SIDE), ledSubsystem),
+                intakeSubsystem.reverseRollerCommand());
         // Commands.run(() -> ledSubsystem.setSolidColor(Color.kDarkOrange,
         // Section.SIDE)));
     }
@@ -258,13 +262,13 @@ public class GeneralRobotCommands {
     }
 
     // public Command scoringLightsCommand() {
-    //     return Commands.run(() -> {
-    //         if (isReadyToShoot()) {
-    //             ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
-    //         } else {
-    //             ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
-    //         }
-    //     }, ledSubsystem);
+    // return Commands.run(() -> {
+    // if (isReadyToShoot()) {
+    // ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
+    // } else {
+    // ledSubsystem.setSolidColor(Color.kOrange, Section.SIDE);
+    // }
+    // }, ledSubsystem);
     // }
 
     public boolean isReadyToShoot() {
