@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.FeetPerSecond;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -81,5 +82,17 @@ public final class Constants {
     public static final int ACTUATOR_LEFT = 0;
     public static final int ACTUATOR_RIGHT = 1;
     public static final int LED = 9;
+  }
+
+  public static class WaypointConstants {
+    public static final Translation2d BLUE_1_START = new Translation2d(3.50, 5.79);
+    public static final Translation2d BLUE_1_RUNUP = new Translation2d(3, 5.79);
+    public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(7.8, 5.79);
+    public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(7.8, 4.14);
+    public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.8);
+    public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.8);
+    public static final Translation2d BLUE_1_SHOOT = new Translation2d(3.5, 3.97);
+    public static final Translation2d BLUE_1_PREPARE_DEPOT_INTAKE = new Translation2d(1.52, 5.95);
+    public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.5, 5.95);
   }
 }

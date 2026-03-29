@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -348,10 +349,8 @@ public class RobotContainer {
     }
 
     return new SequentialCommandGroup(
-        // drive over bump
-        new DriveToPoseCommand(swerveController, swerveSubsystem,
-            new Pose2d(5.74, 5.79, Rotation2d.fromDegrees(0))
-        ),
+        new DriveToPoseCommand(swerveController, swerveSubsystem, 
+            new Pose2d(3, 5.79, Rotation2d.fromDegrees(0)), 0),
 
         // intake fuel from neutral zone
         new ParallelDeadlineGroup(
@@ -369,7 +368,7 @@ public class RobotContainer {
 
         // drive to bump area
         new DriveToPoseCommand(swerveController, swerveSubsystem,
-            new Pose2d(5.79, 5.80, Rotation2d.fromDegrees(-180))
+            new Pose2d(6.5, 5.80, Rotation2d.fromDegrees(-180))
         ),
 
         // drive over bump
@@ -382,7 +381,10 @@ public class RobotContainer {
             new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(180))
         ),
 
-        shooterSubsystem.runCommand(RPM.of(5300)),
+        new ParallelDeadlineGroup(
+          new WaitCommand(3.0),
+          shooterSubsystem.runCommand(RPM.of(5300))
+        ),
 
         // heads to depot to intake
         new DriveToPoseCommand(swerveController, swerveSubsystem,
@@ -404,8 +406,45 @@ public class RobotContainer {
             new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(180))
         ),
 
-        // shoot
-        shooterSubsystem.runCommand(RPM.of(5300))
+        new ParallelDeadlineGroup(
+          new WaitCommand(20.0),
+          shooterSubsystem.runCommand(RPM.of(5300))
+        )
     );
+  }
+
+  public Command Blue1SaferAuton() {
+    var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+      swerveSubsystem.resetOdometry(new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(0)));
+    } else {
+      swerveSubsystem.resetOdometry(new Pose2d(LandMarks.kFieldLength.in(Meter) - 3.5, LandMarks.kFieldWidth.in(Meter) - 5.79, Rotation2d.fromDegrees(180)));
+    }
+    return new SequentialCommandGroup(
+      // heads to depot to intake
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(1.52, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // intakes from depot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(0.5, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // comes back from depot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(1.52, 5.95, Rotation2d.fromDegrees(180))
+        ),
+
+        // positions itself to shoot
+        new DriveToPoseCommand(swerveController, swerveSubsystem,
+            new Pose2d(3.5, 3.97, Rotation2d.fromDegrees(180))
+        ),
+
+        new ParallelDeadlineGroup(
+          new WaitCommand(20.0),
+          shooterSubsystem.runCommand(RPM.of(5300))
+        )
+    )
   }
 }
