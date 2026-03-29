@@ -37,7 +37,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.3), // to tune
+    RUN(0.7), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;
@@ -104,6 +104,6 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    builder.addDoubleProperty("current output", () -> motor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Conveyor Supply Current", () -> motor.getOutputCurrent(), null);
   }
 }

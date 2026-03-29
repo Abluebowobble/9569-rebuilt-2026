@@ -63,7 +63,7 @@ public class FeederSubsystem extends SubsystemBase {
   public enum Speed {
     STOP(0),
     REVERSE(-0.5),
-    RUN(0.5),
+    RUN(0.9),
     UNJAM(-0.5);
 
     private final double percentageOutput;
@@ -166,7 +166,7 @@ public class FeederSubsystem extends SubsystemBase {
     sendableBuilder.addStringProperty("Command",
         () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
-    sendableBuilder.addDoubleProperty("Supply Current", () -> motor.getOutputCurrent(), null);
+    sendableBuilder.addDoubleProperty("Feeder Supply Current (A)", () -> motor.getOutputCurrent(), null);
     sendableBuilder.addDoubleProperty("RPM", () -> motor.getEncoder().getVelocity(), null);
     sendableBuilder.addDoubleProperty("time", () -> Timer.getFPGATimestamp(), null);
     sendableBuilder.addStringProperty("Current Indexer State", this::toString, null);
