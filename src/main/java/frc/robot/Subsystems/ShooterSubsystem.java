@@ -24,6 +24,7 @@ import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -42,6 +43,13 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder leftEncoder = leftShooterMotor.getEncoder();
   private final RelativeEncoder middleEncoder = middleShooterMotor.getEncoder();
   private final RelativeEncoder rightEncoder = rightShooterMotor.getEncoder();
+
+  // disablers
+  private boolean isDisabledLeft = false;
+  private boolean isDisabledMiddle = false;
+  private boolean isDisabledRight = false;
+
+  private final LinearFilter currentFilter = LinearFilter.movingAverage(500);
 
   private final SparkClosedLoopController controller = leftShooterMotor.getClosedLoopController();
 
@@ -63,40 +71,60 @@ public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
   public ShooterSubsystem() {
     // initialize motors
-    SparkMaxConfig leaderConfig = new SparkMaxConfig();
-    leaderConfig
+    SparkMaxConfig leftConfig = new SparkMaxConfig();
+    leftConfig
         .voltageCompensation(12.0)
         .openLoopRampRate(1)
         .closedLoopRampRate(1)
         .inverted(false);
-    leaderConfig.closedLoop
+    leftConfig.closedLoop
         .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
-    leaderConfig.smartCurrentLimit(70, 70);
+    leftConfig.smartCurrentLimit(70, 70);
 
     // double check this
-    leaderConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+    leftConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
 
     leftShooterMotor.configure(
-        leaderConfig,
+        leftConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-    SparkMaxConfig middleFollower = new SparkMaxConfig();
-    middleFollower.follow(leftShooterMotor, true); // invert follow if needed
-    middleFollower.smartCurrentLimit(70, 70);
-    middleFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+    SparkMaxConfig middleConfig = new SparkMaxConfig();
+    middleConfig
+        .voltageCompensation(12.0)
+        .openLoopRampRate(1)
+        .closedLoopRampRate(1)
+        .inverted(true);
+    middleConfig.closedLoop
+        .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
+        .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
+    middleConfig.smartCurrentLimit(70, 70);
+
+    // double check this
+    middleConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+
     middleShooterMotor.configure(
-        middleFollower,
+        middleConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-    SparkMaxConfig rightFollower = new SparkMaxConfig();
-    rightFollower.follow(leftShooterMotor, true); // invert follow if needed
-    rightFollower.smartCurrentLimit(70, 70);
-    rightFollower.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+    SparkMaxConfig rightConfig = new SparkMaxConfig();
+    rightConfig
+        .voltageCompensation(12.0)
+        .openLoopRampRate(1)
+        .closedLoopRampRate(1)
+        .inverted(true);
+    rightConfig.closedLoop
+        .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
+        .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
+    rightConfig.smartCurrentLimit(70, 70);
+
+    // double check this
+    rightConfig.softLimit.reverseSoftLimit(0).reverseSoftLimitEnabled(true);
+
     rightShooterMotor.configure(
-        rightFollower,
+        rightConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
@@ -184,6 +212,18 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
+    if (isDisabledLeft) {
+      disableLeft();
+    }
+
+    if (isDisabledMiddle) {
+      disableMiddle();
+    }
+
+    if (isDisabledRight) {
+      disableRight();
+    }
+
     return run(() -> {
       targetRPM = RPM.of(kStartingVelocity.magnitude());
     })
@@ -202,6 +242,26 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    double leftMotorOutput = leftShooterMotor.getOutputCurrent();
+    double middleMotorOutput = middleShooterMotor.getOutputCurrent();
+    double rightMotorOutput = rightShooterMotor.getOutputCurrent();
+
+    double averageLeftMotorOutput = currentFilter.calculate(leftMotorOutput);
+    double averageMiddleMotorOutput = currentFilter.calculate(middleMotorOutput);
+    double averageRightMotorOutput = currentFilter.calculate(rightMotorOutput);
+
+    if (MathUtil.isNear(70, averageLeftMotorOutput, 5) && isDisabledLeft == false) {
+      isDisabledLeft = true;
+    }
+
+    if (MathUtil.isNear(70, averageMiddleMotorOutput, 5) && isDisabledMiddle == false) {
+      isDisabledMiddle = true;
+    }
+
+    if (MathUtil.isNear(70, averageRightMotorOutput, 5) && isDisabledRight == false) {
+      isDisabledRight = true;
+    }
+
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
 
