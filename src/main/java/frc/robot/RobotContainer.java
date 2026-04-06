@@ -120,6 +120,7 @@ public class RobotContainer {
     autoChooser.addOption("Left Auto", Autons.testleftAuton(generalRobotCommands));
     autoChooser.addOption("Right Auto", Autons.testRightAuton(generalRobotCommands));
     autoChooser.addOption("Centre Auto", shootAuton());
+    autoChooser.addOption("Middle Depot", Autons.middleDepotAuton(generalRobotCommands));
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
