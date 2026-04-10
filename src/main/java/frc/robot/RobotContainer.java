@@ -145,8 +145,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    // testBindings();
-    johnnyBindings();
+    testBindings();
+    // johnnyBindings();
   }
 
   public void test() {
@@ -156,7 +156,7 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
@@ -189,7 +189,7 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getRightY()));
+    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getLeftY()));
     ps5Controller.L2().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(5300)));
     ps5Controller.circle().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
     // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
@@ -262,7 +262,8 @@ public class RobotContainer {
     // 0.05,
     // swerveSubsystem.isBlueAlliance() ? new Rotation2d(0) : new
     // Rotation2d(Math.PI)), Set.of(swerveSubsystem)));
-    ps5Controller.R3().toggleOnTrue(generalRobotCommands.swerveLockCommand());
+    ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand( () -> Math.sqrt(
+                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
 
     // passing
@@ -283,10 +284,12 @@ public class RobotContainer {
         .whileTrue(generalRobotCommands.reverseIntakeRollerCommand().alongWith(conveyorSubsystem.reverseCommand()));
 
     // gooner
-    ps5Controller.povRight().onTrue(Commands.runOnce(() -> shooterSubsystem.disableMiddle()));
-    ps5Controller.povUp().onTrue(Commands.runOnce(() -> shooterSubsystem.disableLeft()));
-    ps5Controller.circle().onTrue(Commands.runOnce(() -> shooterSubsystem.disableRight()));
-
+    // ps5Controller.povRight().whileTrue(Commands.run(() -> {
+    // ps5Controller.setRumble(RumbleType.kBothRumble, 1);
+    // }));
+    ps5Controller.povRight().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledMiddle = !shooterSubsystem.isDisabledMiddle));
+    ps5Controller.povUp().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledLeft = !shooterSubsystem.isDisabledLeft));
+    ps5Controller.circle().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledRight = !shooterSubsystem.isDisabledRight));
   }
 
   // public void compBindings() {
@@ -322,6 +325,7 @@ public class RobotContainer {
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
     // return autoChooser.getSelected();
+    // return Autons.rightShiftToMiddle(generalRobotCommands);
     return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),

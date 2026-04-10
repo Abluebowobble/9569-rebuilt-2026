@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.541,
-        "y": 5.119
+        "y": 5.18
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.6984109858069285,
-        "y": 5.0960917907059855
+        "x": 4.698410985806962,
+        "y": 5.1570917907059854
       },
       "isLocked": false,
       "linkedName": null
@@ -53,11 +53,27 @@
       },
       "prevControl": {
         "x": 7.554350700523528,
-        "y": -0.016899727371355366
+        "y": -0.016899727371355394
+      },
+      "nextControl": {
+        "x": 8.045649299476471,
+        "y": 0.0759748475502893
+      },
+      "isLocked": false,
+      "linkedName": "B1BumpWaypoint"
+    },
+    {
+      "anchor": {
+        "x": 10.638908765652952,
+        "y": 2.469248658318426
+      },
+      "prevControl": {
+        "x": 9.691125186410865,
+        "y": -0.05787125243236879
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "B1BumpWaypoint"
+      "linkedName": null
     }
   ],
   "rotationTargets": [

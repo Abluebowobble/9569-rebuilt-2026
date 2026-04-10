@@ -63,7 +63,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed {
     STOP(0),
-    INTAKE(0.9), // to tune
+    INTAKE(0.95), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;
@@ -80,7 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(81.7)); // 83.7
+    INTAKE(Degrees.of(82.7)); // 83.7
 
     private final Angle degrees;
 

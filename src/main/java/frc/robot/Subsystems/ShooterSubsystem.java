@@ -45,13 +45,15 @@ public class ShooterSubsystem extends SubsystemBase {
   private final RelativeEncoder rightEncoder = rightShooterMotor.getEncoder();
 
   // disablers
-  private boolean isDisabledLeft = false;
-  private boolean isDisabledMiddle = false;
-  private boolean isDisabledRight = false;
+  public boolean isDisabledLeft = false;
+  public boolean isDisabledMiddle = false;
+  public boolean isDisabledRight = false;
 
   private final LinearFilter currentFilter = LinearFilter.movingAverage(500);
 
-  private final SparkClosedLoopController controller = leftShooterMotor.getClosedLoopController();
+  private final SparkClosedLoopController l_controller = leftShooterMotor.getClosedLoopController();
+  private final SparkClosedLoopController m_controller = middleShooterMotor.getClosedLoopController();
+  private final SparkClosedLoopController r_controller = rightShooterMotor.getClosedLoopController();
 
   // pidf
   private AngularVelocity targetRPM = RPM.of(0); // desired RPM we want the wheels to turn at
@@ -62,7 +64,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  public static final AngularVelocity kStartingVelocity = RPM.of(2900);
+  public static final AngularVelocity kStartingVelocity = RPM.of(2000);
 
   private ShooterState shooterState = ShooterState.IDLE;
 
@@ -76,8 +78,10 @@ public class ShooterSubsystem extends SubsystemBase {
         .voltageCompensation(12.0)
         .openLoopRampRate(1)
         .closedLoopRampRate(1)
-        .inverted(false);
+        .inverted(true);
     leftConfig.closedLoop
+        // .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
+        // .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
         .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leftConfig.smartCurrentLimit(70, 70);
@@ -95,7 +99,7 @@ public class ShooterSubsystem extends SubsystemBase {
         .voltageCompensation(12.0)
         .openLoopRampRate(1)
         .closedLoopRampRate(1)
-        .inverted(true);
+        .inverted(false);
     middleConfig.closedLoop
         .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
@@ -114,7 +118,7 @@ public class ShooterSubsystem extends SubsystemBase {
         .voltageCompensation(12.0)
         .openLoopRampRate(1)
         .closedLoopRampRate(1)
-        .inverted(true);
+        .inverted(false);
     rightConfig.closedLoop
         .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
@@ -139,14 +143,17 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void disableLeft() {
+    isDisabledLeft = true;
     leftShooterMotor.disable();
   }
 
   public void disableMiddle() {
+    isDisabledMiddle = true;
     middleShooterMotor.disable();
   }
 
   public void disableRight() {
+    isDisabledRight = true;
     rightShooterMotor.disable();
   }
 
@@ -171,7 +178,26 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void set(AngularVelocity rpm) {
-    controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    if (isDisabledLeft) {
+      disableLeft();
+      l_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      l_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    }
+
+    if (isDisabledMiddle) {
+      disableMiddle();
+      m_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      m_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    }
+
+    if (isDisabledRight) {
+      disableRight();
+      r_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      r_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    }
   }
 
   public boolean shouldFeed() {
@@ -212,18 +238,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    if (isDisabledLeft) {
-      disableLeft();
-    }
-
-    if (isDisabledMiddle) {
-      disableMiddle();
-    }
-
-    if (isDisabledRight) {
-      disableRight();
-    }
-
     return run(() -> {
       targetRPM = RPM.of(kStartingVelocity.magnitude());
     })
@@ -250,16 +264,27 @@ public class ShooterSubsystem extends SubsystemBase {
     double averageMiddleMotorOutput = currentFilter.calculate(middleMotorOutput);
     double averageRightMotorOutput = currentFilter.calculate(rightMotorOutput);
 
-    if (MathUtil.isNear(70, averageLeftMotorOutput, 5) && isDisabledLeft == false) {
+    if (MathUtil.isNear(70, averageLeftMotorOutput, 5)) {
       isDisabledLeft = true;
     }
 
-    if (MathUtil.isNear(70, averageMiddleMotorOutput, 5) && isDisabledMiddle == false) {
-      isDisabledMiddle = true;
+    if (isDisabledLeft) {
+      l_controller.setSetpoint(0, ControlType.kVelocity);
     }
 
-    if (MathUtil.isNear(70, averageRightMotorOutput, 5) && isDisabledRight == false) {
+    if (MathUtil.isNear(70, averageMiddleMotorOutput, 5)) {
+      isDisabledMiddle = true;
+    }
+    if (isDisabledMiddle) {
+      m_controller.setSetpoint(0, ControlType.kVelocity);
+    }
+
+    if (MathUtil.isNear(70, averageRightMotorOutput, 5)) {
       isDisabledRight = true;
+    }
+
+    if (isDisabledRight) {
+      r_controller.setSetpoint(0, ControlType.kVelocity);
     }
 
     // uncomment below to tune
@@ -267,17 +292,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
-    if (getMinimumVelocity() < targetRPM.magnitude()) {
-      set(targetRPM);
-    } else {
-      setVoltage(Volts.of(0));
-    }
+    set(targetRPM);
+
     checkForError();
   }
 
   private void checkForError() {
-    if (leftShooterMotor.getMotorTemperature() > 50 || middleShooterMotor.getMotorTemperature() > 50
-        || rightShooterMotor.getMotorTemperature() > 50) {
+    if (leftShooterMotor.getMotorTemperature() > 40 || middleShooterMotor.getMotorTemperature() > 40
+        || rightShooterMotor.getMotorTemperature() > 40) {
       error = true;
     } else {
       error = false;

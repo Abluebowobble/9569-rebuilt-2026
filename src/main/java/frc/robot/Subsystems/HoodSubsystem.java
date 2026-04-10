@@ -1,25 +1,19 @@
 package frc.robot.Subsystems;
 
-import static edu.wpi.first.units.Units.Millimeters;
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Value;
-
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix6.signals.Led1OffColorValue;
+import com.revrobotics.ResetMode;
+import com.revrobotics.servohub.ServoChannel;
+import com.revrobotics.servohub.ServoHub;
+import com.revrobotics.servohub.ServoChannel.ChannelId;
+import com.revrobotics.servohub.ServoHub.Bank;
+import com.revrobotics.servohub.config.ServoChannelConfig;
+import com.revrobotics.servohub.config.ServoHubConfig;
 
 import frc.robot.Commands.GeneralRobotCommands.HoodState;
-import frc.robot.Commands.GeneralRobotCommands.RollerState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Servo;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,9 +21,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
     // position variables, between 0-1
-    public static final double kMinPosition = 0;
+    public static final double kMinPosition = 0.05;
     public static final double kMaxPosition = 0.804;
-    public static final double kStartingPosition = 0;
+    public static final double kStartingPosition = 0.4;
 
     // tolerance
     private static final double kPositionTolerance = 0.01;
@@ -37,25 +31,35 @@ public class HoodSubsystem extends SubsystemBase {
     // sets current position and setpoint
     private double targetPosition = kStartingPosition;
 
-    // servos
-    private final Servo leftServo;
-    private final Servo rightServo;
-
     private HoodState hoodState = HoodState.IDLE;
+    private final ServoHub servoHub = new ServoHub(HardwareMap.SERVO_HUB);
+    private final ServoHubConfig servoConfig = new ServoHubConfig();
+    private final ServoChannelConfig channelConfig = new ServoChannelConfig(ChannelId.kChannelId0);
+
+    private ServoChannel leftServo;
+    private ServoChannel rightServo;
 
     public HoodSubsystem() {
-        leftServo = new Servo(HardwareMap.ACTUATOR_LEFT);
-        rightServo = new Servo(HardwareMap.ACTUATOR_RIGHT);
+        channelConfig.pulseRange(1000, 1500, 2000)
+                .disableBehavior(ServoChannelConfig.BehaviorWhenDisabled.kDoNotSupplyPower);
+        servoConfig.apply(ChannelId.kChannelId0, channelConfig);
+        servoConfig.apply(ChannelId.kChannelId5, channelConfig);
 
-        // tune
-        leftServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
-        rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
+        servoHub.configure(servoConfig, ResetMode.kResetSafeParameters);
+        servoHub.setBankPulsePeriod(Bank.kBank0_2, 4000);
+        servoHub.setBankPulsePeriod(Bank.kBank3_5, 5000);
 
-        // // adds value for SmartDashboard update function
-        // SmartDashboard.putNumber("Set Target Position", 0.5);
+        rightServo = servoHub.getServoChannel(ChannelId.kChannelId0);
+        leftServo = servoHub.getServoChannel(ChannelId.kChannelId5);
+
+        leftServo.setPowered(true);
+        leftServo.setEnabled(true);
+        
+        rightServo.setPowered(true);
+        rightServo.setEnabled(true);
 
         // prep hood at maximal position
-        setPosition(kMinPosition);
+        setPosition(kStartingPosition);
     }
 
     /**
@@ -74,11 +78,19 @@ public class HoodSubsystem extends SubsystemBase {
         return hoodState;
     }
 
+    
+    /**
+     * Expects a position between 0.0 and 1.0, sets position to given percentage
+     * position
+     */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
 
-        leftServo.set(clampedPosition);
-        rightServo.set(clampedPosition);
+        double pulseWidth = clampedPosition * 1000 + 1000;
+        int pulseWidthInt = (int) Math.round(pulseWidth);
+
+        leftServo.setPulseWidth(pulseWidthInt);
+        rightServo.setPulseWidth(pulseWidthInt);
 
         targetPosition = clampedPosition;
     }
@@ -88,7 +100,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance, for testing
      */
     public Command setCommand(DoubleSupplier position) {
-        return runOnce(() -> setPosition(position))
+        return run(() -> setPosition(position))
                 .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
     }
 
@@ -107,28 +119,33 @@ public class HoodSubsystem extends SubsystemBase {
 
     private double difference = 0;
 
-    public double progress() {
+    // public double progress() {
 
-        if (isPositionWithinTolerance()) {
-            difference = 0;
-            return 1.0;
-        }
+    // if (isPositionWithinTolerance()) {
+    // difference = 0;
+    // return 1.0;
+    // }
 
-        double servoPosition = leftServo.getPosition();
+    // double servoPosition = leftServo.getPosition();
 
-        if (difference == 0) {
-            difference = Math.abs(targetPosition - servoPosition);
-        }
-        
-        double curDiff = servoPosition - targetPosition;
-        double changeInDiff = difference - curDiff;
-        double percentage = (changeInDiff / difference);
-        return percentage;
-    }
+    // if (difference == 0) {
+    // difference = Math.abs(targetPosition - servoPosition);
+    // }
+
+    // double curDiff = servoPosition - targetPosition;
+    // double changeInDiff = difference - curDiff;
+    // double percentage = (changeInDiff / difference);
+    // return percentage;
+    // }
 
     /** checks if current position is within given tolerance */
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, leftServo.getPosition(), kPositionTolerance);
+        return MathUtil.isNear(targetPosition, (getPosition(leftServo) + getPosition(rightServo)) / 2,
+                kPositionTolerance);
+    }
+
+    public double getPosition(ServoChannel servoChannel) {
+        return (servoChannel.getPulseWidth() - 1000) / 1000;
     }
 
     @Override
@@ -148,8 +165,8 @@ public class HoodSubsystem extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         builder.setSmartDashboardType("Hood");
 
-        builder.addDoubleProperty("Hood Current Position Left", () -> leftServo.getPosition(), null);
-        builder.addDoubleProperty("Hood Current Position Right", () -> rightServo.getPosition(), null);
+        builder.addDoubleProperty("Hood Current Position Left", () -> getPosition(leftServo), null);
+        builder.addDoubleProperty("Hood Current Position Right", () -> getPosition(rightServo), null);
         builder.addDoubleProperty("Hood Target Position", () -> targetPosition, null);
         builder.addStringProperty("Current Hood State", this::toString, null);
     }

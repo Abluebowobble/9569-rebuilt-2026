@@ -4,12 +4,12 @@
 
 package frc.SilverKnightsLib;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PS5Controller;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
@@ -22,13 +22,13 @@ public class DriverFeedback {
   private final CommandPS5Controller ps5Controller;
   private final CommandXboxController xboxController;
 
+  int index = 0;
+
   /** Creates a new DriverFeedback. */
   public DriverFeedback(CommandPS5Controller ps5Controller, CommandXboxController xboxController) {
     this.ps5Controller = ps5Controller;
     this.xboxController = xboxController;
   }
-
-  int index = 5;
 
   /** Calculates the amount of time (seconds) remaining before next shift */
   public double timeRemainingBeforeNextShift() {
@@ -36,17 +36,17 @@ public class DriverFeedback {
       return Timer.getMatchTime();
     }
 
-    double[] shiftTimes = { 140, 130, 105, 80, 55, 30 }; // seconds remaining
+    double[] shiftTimes = { 130, 105, 80, 55, 30, 0 }; // seconds remaining
 
     double matchTime = Timer.getMatchTime(); // decreasing value that represents time remaining in match
 
-    if (matchTime < 0 || index < 0 || index > shiftTimes.length) {
+    if (matchTime < 0 || index < 0 || index >= shiftTimes.length) {
       return 0;
     }
 
-    double remainingShiftTime = shiftTimes[index] - matchTime;
-    if (MathUtil.isNear(0, remainingShiftTime, 0.9) && index > 0) {
-      index--;
+    double remainingShiftTime = matchTime - shiftTimes[index];
+    if (MathUtil.isNear(0, remainingShiftTime, 0.9) && index < 5) {
+      index++;
     }
 
     if (remainingShiftTime <= 0) {
@@ -61,7 +61,7 @@ public class DriverFeedback {
     double time = timeRemainingBeforeNextShift();
     SmartDashboard.putNumber("time remaining before next shift", time);
     SmartDashboard.putNumber("time left", Timer.getMatchTime());
-    // rumbleController(time);
+    rumbleController(time);
   }
 
   /** Vibrates controller every 0.2 seconds */
@@ -72,8 +72,8 @@ public class DriverFeedback {
       double phase = currentTime % 0.4;
       double intensity = phase < 0.2 ? 1.0 : 0.0; // might tune intensity if controller vibrates too much
 
-      ps5Controller.setRumble(RumbleType.kBothRumble, 0.5);
-      xboxController.setRumble(RumbleType.kBothRumble, 0.5);
+      ps5Controller.setRumble(RumbleType.kBothRumble, intensity);
+      xboxController.setRumble(RumbleType.kBothRumble, intensity);
     } else {
       ps5Controller.setRumble(RumbleType.kBothRumble, 0.0);
       xboxController.setRumble(RumbleType.kBothRumble, 0.0);

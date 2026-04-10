@@ -196,6 +196,14 @@ public class GeneralRobotCommands {
         }, ledSubsystem);
     }
 
+    public FeederSubsystem getFeederSubsytem() {
+        return feederSubsystem;
+    }
+
+    public ConveyorSubsystem getConveyorSubsystem() {
+        return conveyorSubsystem;
+    }
+
     public Command feedFromNeutralCommand() {
         return Commands.parallel(hoodSubsystem.feedFromNeutralCommand(),
                 neutralFeedLightsCommand());
@@ -249,7 +257,6 @@ public class GeneralRobotCommands {
     public Command swerveLockCommand() {
         return Commands.sequence(
                 Commands.runOnce(() -> swerveSubsystem.setState(SwerveState.LOCKED)),
-                Commands.runOnce(() -> ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE)),
                 swerveSubsystem.swerveLockCommand(
                         // motion vector
                         () -> Math.sqrt(

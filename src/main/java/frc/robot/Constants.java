@@ -76,7 +76,8 @@ public final class Constants {
     public static final Translation2d BLUE_1_SHOOT = new Translation2d(3.303, 3.97);
     public static final Translation2d BLUE_1_PREPARE_DEPOT_INTAKE = new Translation2d(1.52, 5.95);
     public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.706, 5.95);
-    public static final Translation2d TEMP = new Translation2d(10.185, 6.363);
+    public static final Translation2d TEMP = new Translation2d(10.6, 6.363);
+    public static final Translation2d SHOOT_NO_INTAKE = new Translation2d(3.541, 4.043);
   }
 
   public static class BehaviourConstants {
@@ -96,8 +97,7 @@ public final class Constants {
     public static final int SHOOTER_RIGHT = 13;
 
     // PWM
-    public static final int ACTUATOR_LEFT = 0;
-    public static final int ACTUATOR_RIGHT = 1;
+    public static final int SERVO_HUB = 18;
     public static final int LED = 9;
   }
 }

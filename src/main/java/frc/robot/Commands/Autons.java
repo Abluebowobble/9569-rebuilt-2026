@@ -15,9 +15,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.SilverKnightsLib.SwerveController;
 import frc.robot.LandMarks;
@@ -534,6 +536,62 @@ public class Autons {
                                                                 generalRobotCommands.feedCommand(),
                                                                 generalRobotCommands.getShooterSubsystem()
                                                                                 .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)));
+        }
+
+        public static Command rightShiftToMiddle(GeneralRobotCommands generalRobotCommands) {
+                var alliance = DriverStation.getAlliance();
+                boolean isBlue;
+                if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+                        isBlue = true;
+                } else {
+                        isBlue = false;
+                }
+                Translation2d backup = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_BACKUP, isBlue));
+                Translation2d runup = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_RUNUP, isBlue));
+                Translation2d beginIntake = allianceRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue);
+                Translation2d finishIntake = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue);
+                Translation2d finishIntake2 = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE2, isBlue);
+                Translation2d prepareBump = allianceRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue);
+                Translation2d returnFromBump = allianceRelative(WaypointConstants.BLUE_1_RETURN, isBlue);
+                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue);
+                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue);
+                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue);
+                Translation2d temp = mirrorSide(allianceRelative(WaypointConstants.TEMP, isBlue));
+                Translation2d shootNoIntake = mirrorSide(allianceRelative(WaypointConstants.SHOOT_NO_INTAKE, isBlue));
+
+                Rotation2d forwardHeading = isBlue ? kForward : kBackward;
+                Rotation2d backwardHeading = isBlue ? kBackward : kForward;
+                Rotation2d intakeHeading = isBlue ? Rotation2d.fromDegrees(-90) : Rotation2d.fromDegrees(90);
+
+                return new SequentialCommandGroup(
+                                // generalRobotCommands.driveToWayPoint(
+                                // backup,
+                                // kMedTolerance,
+                                // SwerveConstants.MAX_SPEED,
+                                // null),
+                                new InstantCommand(() -> {
+                                        Translation2d start = mirrorSide(
+                                                        allianceRelative(WaypointConstants.BLUE_1_START, isBlue));
+                                        Rotation2d startHeading = isBlue ? kForward : kBackward;
+
+                                        generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
+                                                        .resetOdometry(new Pose2d(start, startHeading));
+
+                                }),
+
+                                new WaitCommand(6),
+
+                                generalRobotCommands.driveToWithAngle(shootNoIntake,
+                                                kTightTolerance,
+                                                forwardHeading),
+
+                                new ParallelCommandGroup(generalRobotCommands.spinUpShooterCommand(),
+                                                Commands.waitSeconds(3)
+                                                                .andThen(generalRobotCommands.getConveyorSubsystem()
+                                                                                .runCommand()
+                                                                                .alongWith(generalRobotCommands
+                                                                                                .getFeederSubsytem()
+                                                                                                .runCommand()))));
         }
 
         public static Command testbackwardsAuton(GeneralRobotCommands generalRobotCommands) {
