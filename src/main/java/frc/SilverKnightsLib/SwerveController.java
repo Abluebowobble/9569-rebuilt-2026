@@ -43,6 +43,7 @@ public class SwerveController {
         this.rotationController.calculate(Double.MAX_VALUE, 0);
         this.rotationController.setTolerance(Units.degreesToRadians(3));
         rotationController.enableContinuousInput(0, 2 * Math.PI);
+        calculate(() -> new Pose2d(0, 0, new Rotation2d(0)), () -> new Pose2d(0, 0, new Rotation2d(180)));
     }
 
     public Speeds calculate(Supplier<Pose2d> currentPoseInput, Supplier<Pose2d> targetPoseInput){ 
