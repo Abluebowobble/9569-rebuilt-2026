@@ -14,6 +14,7 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -37,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Timer;
 
 public class IntakeSubsystem extends SubsystemBase {
@@ -44,6 +46,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // electronics
   private final SparkMax pivotMotor = new SparkMax(HardwareMap.INTAKE_PIVOT, MotorType.kBrushless);
   private final SparkMax rollerMotor = new SparkMax(HardwareMap.INTAKE_ROLLER, MotorType.kBrushless);
+  private final DutyCycleEncoder absEncoder = new DutyCycleEncoder(HardwareMap.INTAKE_ENCODER);
   private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
 
   // set point for pid
@@ -183,7 +186,7 @@ public class IntakeSubsystem extends SubsystemBase {
           set(Speed.STOP);
           setState(prevState);
         });
-        // .onlyIf(() -> !isStowed());
+    // .onlyIf(() -> !isStowed());
   }
 
   private boolean agitate = false;
@@ -206,7 +209,7 @@ public class IntakeSubsystem extends SubsystemBase {
       }
       setState(IntakeState.AGITATING);
     }).beforeStarting(() -> {
-      timer.restart(); 
+      timer.restart();
       set(Position.INTAKE);
       set(Speed.INTAKE);
       setState(IntakeState.AGITATING);
@@ -295,9 +298,13 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public String toString() {
     switch (rollerState) {
-      case RUNNING: return "INTAKING";
-      case REVERSE: return "REVERSING";
-      case STOP: default: return "STOPPED";
+      case RUNNING:
+        return "INTAKING";
+      case REVERSE:
+        return "REVERSING";
+      case STOP:
+      default:
+        return "STOPPED";
     }
   }
 
@@ -308,6 +315,7 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Roller Supply Current (A)", () -> rollerMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("Pivot Supply Current (A)", () -> pivotMotor.getOutputCurrent(), null);
     builder.addStringProperty("Current Intake Roller State", this::toString, null);
+    builder.addDoubleProperty("abs encoder", absEncoder::get, null);
   }
 
   // /** updates pivot position with pid, to add: slew */

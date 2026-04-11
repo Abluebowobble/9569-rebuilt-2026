@@ -637,4 +637,67 @@ public class Autons {
                                                 rotatedHeading));
         }
 
+        public static Command middleDepotAuton(GeneralRobotCommands generalRobotCommands) {
+                var alliance = DriverStation.getAlliance();
+                boolean isBlue;
+                if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+                        isBlue = true;
+                } else {
+                        isBlue = false;
+                }
+
+                Translation2d start = allianceRelative(WaypointConstants.BLUE_MIDDLE_START, isBlue);
+                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_MIDDLE_PREPARE_DEPOT, isBlue);
+                Translation2d depot = allianceRelative(WaypointConstants.BLUE_MIDDLE_DEPOT, isBlue);
+                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_MIDDLE_SHOOT, isBlue);
+
+                Rotation2d forwardHeading = isBlue ? kForward : kBackward;
+                Rotation2d backwardHeading = isBlue ? kBackward : kForward;
+
+                return new SequentialCommandGroup(
+                                // Step 1: reset odometry at middle start
+                                new InstantCommand(() -> {
+                                        generalRobotCommands.getSwerveSubsystem()
+                                                        .resetOdometry(new Pose2d(start, forwardHeading));
+                                }),
+
+                                // Step 2: cruise to prepare depot (waypoint drive for smooth motion)
+                                generalRobotCommands.driveToWayPointWithAngle(
+                                                prepareDepot,
+                                                kMedTolerance,
+                                                backwardHeading,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(-1)
+                                                                : SwerveConstants.MAX_SPEED,
+                                                null),
+
+                                // Step 3: drive into depot while intaking (waypoint drive to avoid wall oscillation)
+                                new ParallelDeadlineGroup(
+                                                generalRobotCommands.driveToWayPointWithAngle(
+                                                                depot,
+                                                                kLooseTolerance,
+                                                                backwardHeading,
+                                                                isBlue ? SwerveConstants.MAX_SPEED.div(3).times(-1)
+                                                                                : SwerveConstants.MAX_SPEED.div(3),
+                                                                null),
+                                                generalRobotCommands.intakeCommand()),
+
+                                // Step 4: leave depot back to prepare point
+                                generalRobotCommands.driveToWithAngle(
+                                                prepareDepot,
+                                                kMedTolerance,
+                                                backwardHeading),
+
+                                // Step 5: return to scoring position while spinning up shooter
+                                new ParallelDeadlineGroup(
+                                                generalRobotCommands.driveToWithAngle(
+                                                                shootPose,
+                                                                kTightTolerance,
+                                                                forwardHeading),
+                                                generalRobotCommands.getShooterSubsystem()
+                                                                .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
+
+                                // Step 6: shoot when ready
+                                shootWhenReady(generalRobotCommands, 1000));
+        }
+
 }
