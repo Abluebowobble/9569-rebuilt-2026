@@ -262,7 +262,7 @@ public class Autons {
                                         Rotation2d startHeading = isBlue ? kBackward : kForward;
 
                                         generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
-                                                        .resetOdometry(new Pose2d(start, forwardHeading));
+                                                        .resetOdometry(new Pose2d(start, startHeading));
 
                                 }),
 
@@ -642,4 +642,83 @@ public class Autons {
                                                 rotatedHeading));
         }
 
+        public static Command testMiddleAuton(GeneralRobotCommands generalRobotCommands) {
+                var alliance = DriverStation.getAlliance();
+                boolean isBlue;
+                if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+                        isBlue = true;
+                } else {
+                        isBlue = false;
+                }
+                
+                Translation2d towerPose = allianceRelative(WaypointConstants.BLUE_2_TOWER, isBlue);
+                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue);
+                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue);
+                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue);
+                Translation2d depotIntake2 = allianceRelative(WaypointConstants.BLUE_2_DEPOT_INTAKE_2, isBlue);
+
+                Rotation2d forwardHeading = isBlue ? kForward : kBackward;
+                Rotation2d backwardHeading = isBlue ? kBackward : kForward;
+
+                return new SequentialCommandGroup(
+                        new InstantCommand(() -> {
+                                Translation2d start = mirrorSide(
+                                                allianceRelative(WaypointConstants.BLUE_2_START, isBlue));
+                                Rotation2d startHeading = isBlue ? kForward : kBackward;
+
+                                generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
+                                                .resetOdometry(new Pose2d(start, startHeading));
+
+                        }),
+
+                        generalRobotCommands.driveToWayPoint(
+                                                towerPose,
+                                                kMedTolerance,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(-1)
+                                                                : SwerveConstants.MAX_SPEED,
+                                                null),
+
+                        generalRobotCommands.driveToWithAngle(
+                                                prepareDepot,
+                                                kMedTolerance,
+                                                backwardHeading),
+
+                        generalRobotCommands.driveToWayPointWithAngle(
+                                                depotIntake2,
+                                                0.48,
+                                                backwardHeading,
+                                                isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
+                                                                : SwerveConstants.MAX_SPEED.div(5),
+                                                null),
+
+                        generalRobotCommands.driveTo(
+                                                depotIntake,
+                                                kMedTolerance),
+
+                        generalRobotCommands.driveToWayPointWithAngle(
+                                                depotIntake2,
+                                                0.48,
+                                                backwardHeading,
+                                                isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
+                                                                : SwerveConstants.MAX_SPEED.div(5),
+                                                null),
+                        
+                        generalRobotCommands.driveToWithAngle(
+                                                prepareDepot,
+                                                kMedTolerance,
+                                                backwardHeading),
+
+                        generalRobotCommands.driveToWithAngle(
+                                                towerPose,
+                                                kMedTolerance,
+                                                forwardHeading),
+
+                        // may or may not be needed if it can just shoot from where it currnetly is
+                        // might be useful so it doesnt block any tower autos (e.g., 1310)
+                        generalRobotCommands.driveToWithAngle(
+                                                shootPose,
+                                                kMedTolerance,
+                                                forwardHeading)
+                );
+        }
 }
