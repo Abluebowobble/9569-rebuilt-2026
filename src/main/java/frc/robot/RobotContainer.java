@@ -348,7 +348,7 @@ public class RobotContainer {
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
     // return autoChooser.getSelected();
-    return Autons.testleftAuton(generalRobotCommands);
+    return Autons.testRightAuton(generalRobotCommands);
     // return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),

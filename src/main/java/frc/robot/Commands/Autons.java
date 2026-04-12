@@ -96,8 +96,7 @@ public class Autons {
                 Rotation2d forwardHeading = isBlue ? kForward : kBackward;
                 Rotation2d backwardHeading = isBlue ? kBackward : kForward;
                 Rotation2d intakeHeading = isBlue ? Rotation2d.fromDegrees(-90) : Rotation2d.fromDegrees(90);
-                Rotation2d bumpBack = isBlue ? kBumpHeadingBottomRight : kBumpHeadingTopLeft;
-                Rotation2d bumpForward = isBlue ? kBumpHeadingTopRight : kBumpHeadingTopLeft;
+                Rotation2d bumpHeading = isBlue ? kBumpHeadingBottomRight : kBumpHeadingTopLeft;
 
                 return new SequentialCommandGroup(
                                 // generalRobotCommands.driveToWayPoint(
@@ -109,7 +108,7 @@ public class Autons {
                                         Translation2d start = allianceRelative(WaypointConstants.BLUE_1_START, isBlue);
 
                                         generalRobotCommands.getSwerveSubsystem()
-                                                        .resetOdometry(new Pose2d(start, bumpForward));
+                                                        .resetOdometry(new Pose2d(start, bumpHeading));
                                 }),
 
                                 // generalRobotCommands.driveToWayPoint(
@@ -172,7 +171,7 @@ public class Autons {
                                 generalRobotCommands.driveToWithAngle(
                                                 prepareBump,
                                                 0.7,
-                                                bumpBack),
+                                                bumpHeading),
 
                                 generalRobotCommands.driveToWayPoint(
                                                 returnFromBump,
@@ -185,9 +184,9 @@ public class Autons {
                                 generalRobotCommands.driveToWithAngle(
                                                 returnFromBump,
                                                 kTightTolerance,
-                                                bumpBack),
+                                                bumpHeading),
 
-                                generalRobotCommands.aimSwerveToAlliance());
+                                generalRobotCommands.aimSwerveToHubCommand());
                 // ========== TEST ONLY TEST ONLY TEST ONLY
                 // new ParallelDeadlineGroup(
                 // generalRobotCommands.driveToWithAngle(
@@ -249,44 +248,33 @@ public class Autons {
                 } else {
                         isBlue = false;
                 }
-                Translation2d backup = allianceRelative(WaypointConstants.BLUE_1_BACKUP, isBlue);
-                Translation2d runup = allianceRelative(WaypointConstants.BLUE_1_RUNUP, isBlue);
-                Translation2d beginIntake = allianceRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue);
-                Translation2d finishIntake = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue);
-                Translation2d finishIntake2 = allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE2, isBlue);
-                Translation2d prepareBump = allianceRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue);
-                Translation2d returnFromBump = allianceRelative(WaypointConstants.BLUE_1_RETURN, isBlue);
-                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue);
-                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue);
-                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue);
+
+                Translation2d backup = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_BACKUP, isBlue));
+                Translation2d runup = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_RUNUP, isBlue));
+                Translation2d beginIntake = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue));
+                Translation2d finishIntake = mirrorSide(
+                                allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue));
+                Translation2d finishIntake2 = mirrorSide(
+                                allianceRelative(WaypointConstants.BLUE_1_FINISH_INTAKE2, isBlue));
+                Translation2d prepareBump = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue));
+                Translation2d returnFromBump = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_RETURN, isBlue));
+                Translation2d shootPose = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue));
+                Translation2d prepareDepot = mirrorSide(
+                                allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue));
+                Translation2d depotIntake = mirrorSide(allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue));
 
                 Rotation2d forwardHeading = isBlue ? kForward : kBackward;
                 Rotation2d backwardHeading = isBlue ? kBackward : kForward;
-                Rotation2d intakeHeading = isBlue ? Rotation2d.fromDegrees(-90) : Rotation2d.fromDegrees(90);
+                Rotation2d intakeHeading = isBlue ? Rotation2d.fromDegrees(90) : Rotation2d.fromDegrees(-90);
+                Rotation2d bumpHeading = isBlue ? kBumpHeadingTopRight : kBumpHeadingBottomLeft;
 
                 return new SequentialCommandGroup(
-                                // generalRobotCommands.driveToWayPoint(
-                                // backup,
-                                // kMedTolerance,
-                                // SwerveConstants.MAX_SPEED,
-                                // null),
                                 new InstantCommand(() -> {
                                         Translation2d start = mirrorSide(
                                                         allianceRelative(WaypointConstants.BLUE_1_START, isBlue));
-                                        Rotation2d startHeading = isBlue ? kBackward : kForward;
-
-                                        generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
-                                                        .resetOdometry(new Pose2d(start, forwardHeading));
-
+                                        generalRobotCommands.getSwerveSubsystem()
+                                                        .resetOdometry(new Pose2d(start, bumpHeading));
                                 }),
-
-                                // run over the bump toward the neutral zone
-                                generalRobotCommands.driveToWayPoint(
-                                                backup,
-                                                kMedTolerance,
-                                                isBlue ? SwerveConstants.MAX_SPEED.times(-1)
-                                                                : SwerveConstants.MAX_SPEED,
-                                                null),
 
                                 // run over the bump toward the neutral zone
                                 generalRobotCommands.driveToWayPoint(
@@ -296,85 +284,40 @@ public class Autons {
                                                                 : SwerveConstants.MAX_SPEED.times(-1),
                                                 null),
 
-                                // intake from neutral zone while moving through the path
-                                // new ParallelDeadlineGroup(
-                                // new SequentialCommandGroup(
-                                // generalRobotCommands.driveToWithAngle(
-                                // beginIntake,
-                                // 0.5,
-                                // forwardHeading),
-                                // generalRobotCommands.driveToWithAngle(
-                                // finishIntake,
-                                // kTightTolerance,
-                                // intakeHeading)),
-                                // generalRobotCommands.intakeCommand()),
-
+                                // test drive only === DO NOT USE FOR COMP
                                 generalRobotCommands.driveToWithAngle(
                                                 beginIntake,
                                                 0.5,
-                                                forwardHeading),
-                                generalRobotCommands.driveToWithAngle(
-                                                finishIntake,
-                                                kTightTolerance,
                                                 intakeHeading),
+
+                                // drive through the middle, end point is large to mimic like a line basically
+                                generalRobotCommands.driveToWayPoint(
+                                                finishIntake,
+                                                4.14,
+                                                null,
+                                                isBlue ? SwerveConstants.MAX_SPEED.div(4)
+                                                                : SwerveConstants.MAX_SPEED.div(4).times(-1)),
 
                                 // move back toward own side
                                 generalRobotCommands.driveToWithAngle(
                                                 prepareBump,
-                                                kMedTolerance,
-                                                backwardHeading),
+                                                0.7,
+                                                bumpHeading),
 
                                 generalRobotCommands.driveToWayPoint(
                                                 returnFromBump,
-                                                kLooseTolerance,
-                                                isBlue ? SwerveConstants.MAX_SPEED.times(-1)
-                                                                : SwerveConstants.MAX_SPEED,
+                                                0.5,
+                                                isBlue ? SwerveConstants.MAX_SPEED.div(2).times(-1)
+                                                                : SwerveConstants.MAX_SPEED.div(2),
                                                 null),
 
-                                // first shot
+                                // first shot == TEST ONLY DO NOT RUN DURING COMP
                                 generalRobotCommands.driveToWithAngle(
-                                                shootPose,
+                                                returnFromBump,
                                                 kTightTolerance,
-                                                forwardHeading));
-                // new ParallelDeadlineGroup(
-                // generalRobotCommands.driveToWithAngle(
-                // shootPose,
-                // kTightTolerance,
-                // forwardHeading),
-                // generalRobotCommands.getShooterSubsystem()
-                // .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
+                                                bumpHeading),
 
-                // shootWhenReady(generalRobotCommands, 1000));
-
-                // // drive to depot
-                // generalRobotCommands.driveToWithAngle(
-                // prepareDepot,
-                // kTightTolerance,
-                // backwardHeading),
-
-                // new ParallelDeadlineGroup(
-                // generalRobotCommands.driveToWithAngle(
-                // depotIntake,
-                // kTightTolerance,
-                // backwardHeading),
-                // generalRobotCommands.intakeCommand()),
-
-                // // leave depot
-                // generalRobotCommands.driveToWithAngle(
-                // prepareDepot,
-                // 0.1,
-                // backwardHeading),
-
-                // // spin up while returning to the shot
-                // new ParallelDeadlineGroup(
-                // generalRobotCommands.driveToWithAngle(
-                // shootPose,
-                // kTightTolerance,
-                // forwardHeading),
-                // generalRobotCommands.getShooterSubsystem()
-                // .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
-
-                // shootWhenReady(generalRobotCommands, 100000));
+                                generalRobotCommands.aimSwerveToHubCommand());
         }
 
         public static Command rightLockMiddle(GeneralRobotCommands generalRobotCommands) {

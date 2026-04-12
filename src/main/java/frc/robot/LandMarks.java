@@ -31,9 +31,9 @@ public class LandMarks {
     public static Translation2d hubPosition() {
         if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
             return new Translation2d(kAllianceFieldLength, Inches.of(158.845));
+        } else {
+            return new Translation2d(kFieldLength.minus(kAllianceFieldLength), Inches.of(158.845));
         }
-
-        return new Translation2d(kFieldLength.minus(kAllianceFieldLength), Inches.of(158.845));
     }
 
     public static Distance allianceHubCentreX() {

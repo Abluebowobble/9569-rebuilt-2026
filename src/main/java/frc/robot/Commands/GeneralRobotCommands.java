@@ -114,7 +114,7 @@ public class GeneralRobotCommands {
         return new AimSwerveCommand(swerveSubsystem, ledSubsystem,
                 leftYSupplier, leftXSupplier,
                 turnSupplier,
-                swerveSubsystem.isBlueAlliance() ? Rotation2d.fromDegrees(0) : Rotation2d.fromDegrees(180));
+                swerveSubsystem.isBlueAlliance() ? Rotation2d.fromDegrees(180) : Rotation2d.fromDegrees(0));
     }
 
     public Command prepareShooterForHubCommand() {
