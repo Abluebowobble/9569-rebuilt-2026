@@ -131,7 +131,6 @@ public class ShooterSubsystem extends SubsystemBase {
         rightConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-
     setDefaultCommand(idle());
   }
 
@@ -229,7 +228,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** sets voltage to shoot in front of Hub */
   public Command runTestCommand(DoubleSupplier rpm) {
-    return runOnce(() -> set(rpm));
+    return run(() -> targetRPM = RPM.of(rpm.getAsDouble()));
   }
 
   public Command runVoltageCommand(DoubleSupplier voltage) {

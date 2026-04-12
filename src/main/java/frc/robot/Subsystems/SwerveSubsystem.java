@@ -5,6 +5,7 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -133,7 +134,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
     vision = new Vision();
-    
+
   }
 
   public void setState(SwerveState swerveState) {
@@ -242,8 +243,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getTargetHeadingInFieldFrame() {
     // final Translation2d hubPosition = LandMarks.hubPosition();
-    final Translation2d hubPosition = LandMarks.K_APRIL_TAG_FIELD_LAYOUT.getTagPose(26).get().toPose2d()
-        .getTranslation();
+    final Translation2d hubPosition = new Translation2d(Inches.of(182.105), Inches.of(158.845));
     final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
 
     return hubPosition.minus(robotPosition).getAngle();
@@ -393,7 +393,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public double distanceToHub() {
-    return vision.distanceToPoint(swerveDrive.getPose(), new Pose2d(LandMarks.hubPosition(), new Rotation2d(0)));
+    return vision.distanceToPoint(swerveDrive.getPose(),
+        new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new Rotation2d(0)));
   }
 
   @Override

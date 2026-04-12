@@ -676,8 +676,8 @@ public class Autons {
                                                                 depot,
                                                                 kLooseTolerance,
                                                                 backwardHeading,
-                                                                isBlue ? SwerveConstants.MAX_SPEED.div(3).times(-1)
-                                                                                : SwerveConstants.MAX_SPEED.div(3),
+                                                                isBlue ? SwerveConstants.MAX_SPEED.div(4).times(-1)
+                                                                                : SwerveConstants.MAX_SPEED.div(4),
                                                                 null),
                                                 generalRobotCommands.intakeCommand()),
 
