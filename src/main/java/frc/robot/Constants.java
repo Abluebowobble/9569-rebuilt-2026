@@ -88,9 +88,9 @@ public final class Constants {
     public static final int SHOOTER_LEFT = 11;
     public static final int SHOOTER_MIDDLE = 12;
     public static final int SHOOTER_RIGHT = 13;
+    public static final int SERVO_HUB = 18;
 
     // PWM
-    public static final int SERVO_HUB = 18;
     public static final int INTAKE_ENCODER = 9;
     public static final int LED = 9;
   }

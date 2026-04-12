@@ -157,7 +157,7 @@ public class RobotContainer {
   }
 
   public void testBindings() {
-    // swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    swerveSubsystem.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 
     // // ps5Controller.triangle().whileTrue(new StartEndCommand(() ->
     // // intakeSubsystem.set(Volts.of(6)), () ->
@@ -190,11 +190,16 @@ public class RobotContainer {
     // ps5Controller.triangle().onTrue(intakeSubsystem.intakePositionCommand());
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
-    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> -ps5Controller.getLeftY()));
-    ps5Controller.L2().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(5300)));
+    SmartDashboard.putNumber("PICK HOOD POSITION", 0);
+    hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> SmartDashboard.getNumber("PICK HOOD POSITION", 0)));
+    // shooterSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
+    // -ps5Controller.getLeftY()));
+    // ps5Controller.L2().toggleOnTrue(shooterSubsystem.runCommand(RPM.of(5300)));
     ps5Controller.circle().whileTrue(conveyorSubsystem.runCommand().alongWith(feederSubsystem.runCommand()));
-    // shooterSubsystem.setDefaultCommand(shooterSubsystem.setCommand(() ->
-    // -xboxController.getLeftY()));
+
+    SmartDashboard.putNumber("PICK RPM", 0);
+    shooterSubsystem.setDefaultCommand(shooterSubsystem.runTestCommand(() -> SmartDashboard.getNumber("PICK RPM", 0)));
+    ps5Controller.R1().whileTrue(conveyorSubsystem.runCommand());
 
     // //test
     // shooterSubsystsem.setDefaultCommand(shooterSubsystem.runCommand(5300));
@@ -217,7 +222,7 @@ public class RobotContainer {
     // ps5Controller.L2().whileTrue(generalRobotCommands.runShooterCommand());
 
     // ps5Controller.circle().onTrue(generalRobotCommands.aimSwerveCommand());
-    // ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
+    ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
     // ledSubsystem.setDefaultCommand(Commands.run(() -> ledSubsystem.setOff(),
     // ledSubsystem));
     // ps5Controller.circle().whileTrue(Commands.run(() -> swerveSubsystem.drive(new
@@ -235,6 +240,7 @@ public class RobotContainer {
     // ps5Controller.R1().getAsBoolean()));
     // ps5Controller.square().onTrue(intakeSubsystem.togglePositionCommand());
     // ps5Controller.R2().whileTrue(feederSubsystem.runCommand());
+    ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
 
   }
 
@@ -263,8 +269,8 @@ public class RobotContainer {
     // 0.05,
     // swerveSubsystem.isBlueAlliance() ? new Rotation2d(0) : new
     // Rotation2d(Math.PI)), Set.of(swerveSubsystem)));
-    ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand( () -> Math.sqrt(
-                                Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
+    ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand(() -> Math.sqrt(
+        Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
 
     // passing
@@ -288,9 +294,12 @@ public class RobotContainer {
     // ps5Controller.povRight().whileTrue(Commands.run(() -> {
     // ps5Controller.setRumble(RumbleType.kBothRumble, 1);
     // }));
-    ps5Controller.povRight().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledMiddle = !shooterSubsystem.isDisabledMiddle));
-    ps5Controller.povUp().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledLeft = !shooterSubsystem.isDisabledLeft));
-    ps5Controller.circle().onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledRight = !shooterSubsystem.isDisabledRight));
+    ps5Controller.povRight()
+        .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledMiddle = !shooterSubsystem.isDisabledMiddle));
+    ps5Controller.povUp()
+        .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledLeft = !shooterSubsystem.isDisabledLeft));
+    ps5Controller.circle()
+        .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledRight = !shooterSubsystem.isDisabledRight));
   }
 
   // public void compBindings() {

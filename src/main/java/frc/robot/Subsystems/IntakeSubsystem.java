@@ -30,6 +30,7 @@ import frc.robot.Commands.GeneralRobotCommands.RollerState;
 import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.SilverKnightsLib.OPRSlewRateLimiter;
 import frc.robot.Constants.HardwareMap;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.Voltage;
@@ -59,12 +60,12 @@ public class IntakeSubsystem extends SubsystemBase {
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
   private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
-
+  // private final PIDController controller = new PIDController(0.7, 0, 0);
   private IntakeState intakeState = IntakeState.STOWED;
   private RollerState rollerState = RollerState.STOP;
 
   // speed for roller motor
-  public enum Speed {
+  public enum Speed { // 0.08969272724231818
     STOP(0),
     INTAKE(0.95), // to tune
     REVERSE(-0.9); // to tune
@@ -108,6 +109,8 @@ public class IntakeSubsystem extends SubsystemBase {
     rollerConfig.smartCurrentLimit(120, 60);
     rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    // controller.enableContinuousInput(0, 1);
+
     pivotEncoder.setPosition(0);
     setDefaultCommand(idle());
   }
@@ -125,8 +128,8 @@ public class IntakeSubsystem extends SubsystemBase {
   public void set(Position position) {
     setPointAngle = position.degrees();
     controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(),
-        ControlType.kPosition,
-        ClosedLoopSlot.kSlot0);
+    ControlType.kPosition,
+    ClosedLoopSlot.kSlot0);
   }
 
   /** set pivot motor to go to intake position */
@@ -153,9 +156,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
     setPointAngle = targetAngle;
     controller.setSetpoint(
-        targetAngle.div(kDegreesPerRotation).magnitude(),
-        ControlType.kPosition,
-        ClosedLoopSlot.kSlot0);
+    targetAngle.div(kDegreesPerRotation).magnitude(),
+    ControlType.kPosition,
+    ClosedLoopSlot.kSlot0);
   }
 
   public Command sinusoidalPivotCommand() {
@@ -294,6 +297,12 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putData(this);
     // updatePivotPosition();
   }
+
+  // public void updatePositionCommand() {
+  //   double position = controller.calculate(absEncoder.get(), setPointAngle.magnitude());
+  //   pivotMotor.set(position);
+  //   pivotMotor.setVoltage(position * pivotMotor.getBusVoltage());
+  // }
 
   @Override
   public String toString() {
