@@ -36,6 +36,7 @@ import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -43,6 +44,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -91,6 +94,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private SwerveState swerveState = SwerveState.OPERATED;
 
+  private static StructPublisher<Pose3d> publisher;
+
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
 
@@ -133,7 +138,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
     setupPathPlanner();
     vision = new Vision();
-    
+
+    publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("Robot Pose", Pose3d.struct).publish();
   }
 
   public void setState(SwerveState swerveState) {
@@ -421,6 +428,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement,
         swerveDrive.getRobotVelocity());
+
+    publisher.accept(new Pose3d(getPose()));
   }
 
   @Override
@@ -466,7 +475,7 @@ public class SwerveSubsystem extends SubsystemBase {
       // store target position and rotation
       Rotation2d currentRotation = getPose().getRotation();
       Speeds speeds = swerveController.calculate(swerveDrive::getPose,
-          () -> new Pose2d(targetTranslation, currentRotation));
+          () -> new Pose2d(targetTranslation, targetRotation == null ? currentRotation : targetRotation));
       ChassisSpeeds finalSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
           xVelocity == null ? 0 : xVelocity.magnitude(),
           yVelocity == null ? 0 : yVelocity.magnitude(),

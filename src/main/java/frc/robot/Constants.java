@@ -69,9 +69,8 @@ public final class Constants {
     public static final Translation2d TEMP = new Translation2d(10.6, 6.363);
     public static final Translation2d SHOOT_NO_INTAKE = new Translation2d(3.541, 4.043);
     public static final Translation2d BLUE_MIDDLE_START = new Translation2d(3.540, 3.989);
-    public static final Translation2d BLUE_MIDDLE_PREPARE_DEPOT = new Translation2d(1.52, 5.963);
-    public static final Translation2d BLUE_MIDDLE_DEPOT = new Translation2d(0.706, 5.963);
-    public static final Translation2d BLUE_MIDDLE_SHOOT = new Translation2d(3.303, 3.97);
+    public static final Translation2d BLUE_2_START = new Translation2d(3.541, 4.031);
+    public static final Translation2d BLUE_2_TOWER = new Translation2d(2.504, 4.019);
   }
 
   public static class BehaviourConstants {

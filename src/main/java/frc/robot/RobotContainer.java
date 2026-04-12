@@ -117,9 +117,10 @@ public class RobotContainer {
     // autoChooser.addOption("Test Forward",
     // Autons.testbackwardAuton(generalRobotCommands));
     autoChooser.addOption("Test Rotate", Autons.testRotateAuton(generalRobotCommands));
+    autoChooser.addOption("Middle Depot Auto", Autons.testMiddleAuton(generalRobotCommands));
     autoChooser.addOption("Left Auto", Autons.testleftAuton(generalRobotCommands));
     autoChooser.addOption("Right Auto", Autons.testRightAuton(generalRobotCommands));
-    autoChooser.addOption("Centre Auto", shootAuton());
+    autoChooser.addOption("Middle No Depot Auto", shootAuton());
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
@@ -325,8 +326,8 @@ public class RobotContainer {
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
     // return autoChooser.getSelected();
-    // return Autons.rightShiftToMiddle(generalRobotCommands);
-    return shootAuton();
+    return Autons.testMiddleAuton(generalRobotCommands);
+    // return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
     // swerveSubsyste.withTimeout(2);

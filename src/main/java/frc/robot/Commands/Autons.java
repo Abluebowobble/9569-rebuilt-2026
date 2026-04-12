@@ -637,7 +637,7 @@ public class Autons {
                                                 rotatedHeading));
         }
 
-        public static Command middleDepotAuton(GeneralRobotCommands generalRobotCommands) {
+        public static Command testMiddleAuton(GeneralRobotCommands generalRobotCommands) {
                 var alliance = DriverStation.getAlliance();
                 boolean isBlue;
                 if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
@@ -646,58 +646,63 @@ public class Autons {
                         isBlue = false;
                 }
 
-                Translation2d start = allianceRelative(WaypointConstants.BLUE_MIDDLE_START, isBlue);
-                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_MIDDLE_PREPARE_DEPOT, isBlue);
-                Translation2d depot = allianceRelative(WaypointConstants.BLUE_MIDDLE_DEPOT, isBlue);
-                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_MIDDLE_SHOOT, isBlue);
+                Translation2d towerPose = allianceRelative(WaypointConstants.BLUE_2_TOWER, isBlue);
+                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_2_START, isBlue);
+                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue);
+                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue);
 
                 Rotation2d forwardHeading = isBlue ? kForward : kBackward;
                 Rotation2d backwardHeading = isBlue ? kBackward : kForward;
 
                 return new SequentialCommandGroup(
-                                // Step 1: reset odometry at middle start
                                 new InstantCommand(() -> {
-                                        generalRobotCommands.getSwerveSubsystem()
-                                                        .resetOdometry(new Pose2d(start, forwardHeading));
+                                        Translation2d start = mirrorSide(
+                                                        allianceRelative(WaypointConstants.BLUE_2_START, isBlue));
+                                        Rotation2d startHeading = isBlue ? kForward : kBackward;
+
+                                        generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
+                                                        .resetOdometry(new Pose2d(start, startHeading));
+
                                 }),
 
-                                // Step 2: cruise to prepare depot (waypoint drive for smooth motion)
-                                generalRobotCommands.driveToWayPointWithAngle(
-                                                prepareDepot,
+                                generalRobotCommands.driveToWayPoint(
+                                                towerPose,
                                                 kMedTolerance,
-                                                backwardHeading,
                                                 isBlue ? SwerveConstants.MAX_SPEED.times(-1)
                                                                 : SwerveConstants.MAX_SPEED,
                                                 null),
 
-                                // Step 3: drive into depot while intaking (waypoint drive to avoid wall oscillation)
-                                new ParallelDeadlineGroup(
-                                                generalRobotCommands.driveToWayPointWithAngle(
-                                                                depot,
-                                                                kLooseTolerance,
-                                                                backwardHeading,
-                                                                isBlue ? SwerveConstants.MAX_SPEED.div(3).times(-1)
-                                                                                : SwerveConstants.MAX_SPEED.div(3),
-                                                                null),
-                                                generalRobotCommands.intakeCommand()),
-
-                                // Step 4: leave depot back to prepare point
                                 generalRobotCommands.driveToWithAngle(
                                                 prepareDepot,
                                                 kMedTolerance,
                                                 backwardHeading),
 
-                                // Step 5: return to scoring position while spinning up shooter
-                                new ParallelDeadlineGroup(
-                                                generalRobotCommands.driveToWithAngle(
-                                                                shootPose,
-                                                                kTightTolerance,
-                                                                forwardHeading),
-                                                generalRobotCommands.getShooterSubsystem()
-                                                                .runCommand(BehaviourConstants.TEMP_SHOOTER_VELOCITY)),
+                                // Commands.deadline(generalRobotCommands.driveToWithAngle(
+                                // depotIntake,
+                                // kMedTolerance,
+                                // backwardHeading),
+                                // generalRobotCommands.intakeCommand()),
 
-                                // Step 6: shoot when ready
-                                shootWhenReady(generalRobotCommands, 1000));
+                                generalRobotCommands.driveToWayPointWithAngle(
+                                                depotIntake,
+                                                kMedTolerance,
+                                                backwardHeading,
+                                                isBlue ? SwerveConstants.MAX_SPEED.div(6).times(-1)
+                                                                : SwerveConstants.MAX_SPEED.div(6),
+                                                null),
+
+                                generalRobotCommands.driveToWithAngle(
+                                                prepareDepot,
+                                                kMedTolerance,
+                                                backwardHeading),
+
+                                generalRobotCommands.driveToWithAngle(
+                                                towerPose,
+                                                kMedTolerance,
+                                                forwardHeading),
+                                generalRobotCommands.aimSwerveCommand()
+                                // shootWhenReady(generalRobotCommands, 1000)
+                );
         }
 
 }

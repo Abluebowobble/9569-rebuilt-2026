@@ -104,11 +104,11 @@ public class GeneralRobotCommands {
         scoreFeedState = ScoreFeedState.NOT_SCORING;
     }
 
-    // public Command aimSwerveCommand() {
-    // return new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem,
-    // leftYSupplier, leftXSupplier,
-    // turnSupplier);
-    // }
+    public Command aimSwerveCommand() {
+        return new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem,
+                leftYSupplier, leftXSupplier,
+                turnSupplier);
+    }
 
     public Command prepareShooterCommand() {
         return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);

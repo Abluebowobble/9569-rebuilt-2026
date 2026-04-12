@@ -4,6 +4,7 @@ package frc.robot.Commands;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
 
 import java.util.function.Supplier;
 
@@ -75,8 +76,7 @@ public class PrepareShooterCommand extends Command {
     this.swerve = swerve;
 
     // Use addRequirements() here to declare subsystem dependencies.
-    // addRequirements(shooterSubsystem, hoodSubsystem);
-    addRequirements(hoodSubsystem);
+    addRequirements(shooterSubsystem, hoodSubsystem);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -96,11 +96,8 @@ public class PrepareShooterCommand extends Command {
     final Shot shot = distanceToShotMap.get(distanceToHub);
 
     // set subsystems with calculated values
-    // shooterSubsystem.set(shot.shooterRPM);
+    shooterSubsystem.set(RPM.of(shot.shooterRPM));
     hoodSubsystem.setPosition(shot.hoodPosition);
-
-    // telemetry
-    SmartDashboard.putNumber("Distance to Hub (meters)", distanceToHub.in(Meters));
   }
 
   // Returns true when the command should end.
