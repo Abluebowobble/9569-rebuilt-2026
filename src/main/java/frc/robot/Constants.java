@@ -4,28 +4,18 @@
 
 package frc.robot;
 
-import java.util.HashMap;
-import java.util.Optional;
-
-import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.FeetPerSecond;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
-import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -66,7 +56,7 @@ public final class Constants {
   public static class WaypointConstants {
     public static final Translation2d BLUE_1_START = new Translation2d(3.541, 5.180);
     public static final Translation2d BLUE_1_BACKUP = new Translation2d(3.2, 5.180); // do 2.5 for practice to ensure we
-                                                                                   // get through everything? idk
+    // get through everything? idk
     public static final Translation2d BLUE_1_RUNUP = new Translation2d(6, 5.180);
     public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(8.375, 6.85);
     public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(8.375, 0); // 4.14
@@ -78,6 +68,10 @@ public final class Constants {
     public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.706, 5.95);
     public static final Translation2d TEMP = new Translation2d(10.6, 6.363);
     public static final Translation2d SHOOT_NO_INTAKE = new Translation2d(3.541, 4.043);
+    public static final Translation2d BLUE_MIDDLE_START = new Translation2d(3.540, 3.989);
+    public static final Translation2d BLUE_MIDDLE_PREPARE_DEPOT = new Translation2d(1.52, 5.963);
+    public static final Translation2d BLUE_MIDDLE_DEPOT = new Translation2d(0.706, 5.963);
+    public static final Translation2d BLUE_MIDDLE_SHOOT = new Translation2d(3.303, 3.97);
   }
 
   public static class BehaviourConstants {
@@ -98,7 +92,8 @@ public final class Constants {
         public static final int SERVO_HUB = 18;
 
     // PWM
-    public static final int LED = 9;
+    public static final int SERVO_HUB = 18;
     public static final int INTAKE_ENCODER = 9;
+    public static final int LED = 9;
   }
 }
