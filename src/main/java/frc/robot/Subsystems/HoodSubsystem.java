@@ -1,3 +1,5 @@
+// the states dont work for this 
+
 package frc.robot.Subsystems;
 
 import java.util.function.DoubleSupplier;
@@ -54,12 +56,14 @@ public class HoodSubsystem extends SubsystemBase {
 
         leftServo.setPowered(true);
         leftServo.setEnabled(true);
-        
+
         rightServo.setPowered(true);
         rightServo.setEnabled(true);
 
         // prep hood at maximal position
         setPosition(kStartingPosition);
+
+        setDefaultCommand(idle());
     }
 
     /**
@@ -78,7 +82,6 @@ public class HoodSubsystem extends SubsystemBase {
         return hoodState;
     }
 
-    
     /**
      * Expects a position between 0.0 and 1.0, sets position to given percentage
      * position
@@ -114,7 +117,12 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command feedFromNeutralCommand() {
-        return setCommand(kMaxPosition).alongWith(Commands.runOnce(() -> setState(HoodState.PASSING)));
+        return setCommand(kMaxPosition);
+    }
+
+    @Override
+    public Command idle() {
+        return run(() -> setPosition(kMaxPosition / 2));
     }
 
     private double difference = 0;

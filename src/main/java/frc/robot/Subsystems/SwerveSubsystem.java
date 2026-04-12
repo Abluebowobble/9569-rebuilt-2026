@@ -250,7 +250,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Rotation2d getTargetHeadingInFieldFrame() {
     // final Translation2d hubPosition = LandMarks.hubPosition();
-    final Translation2d hubPosition = new Translation2d(Inches.of(182.105), Inches.of(158.845));
+    final Translation2d hubPosition = LandMarks.hubPosition();
     final Translation2d robotPosition = swerveDrive.getPose().getTranslation();
 
     return hubPosition.minus(robotPosition).getAngle();
@@ -402,6 +402,11 @@ public class SwerveSubsystem extends SubsystemBase {
   public double distanceToHub() {
     return vision.distanceToPoint(swerveDrive.getPose(),
         new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new Rotation2d(0)));
+  }
+
+  public double distanceToAllianceHubCentre() {
+    return vision.distanceToPoint(swerveDrive.getPose(),
+        new Pose2d(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())), new Rotation2d(0)));
   }
 
   @Override

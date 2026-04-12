@@ -36,6 +36,14 @@ public class LandMarks {
         return new Translation2d(kFieldLength.minus(kAllianceFieldLength), Inches.of(158.845));
     }
 
+    public static Distance allianceHubCentreX() {
+        if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
+            return kAllianceFieldLength.div(2);
+        }
+
+        return kFieldLength.minus(kAllianceFieldLength).div(2);
+    }
+
     public static Translation2d blueTowerPosition() {
         return new Translation2d(Inches.of(20.223), Inches.of(158.845).minus(kTowerOffset));
     }

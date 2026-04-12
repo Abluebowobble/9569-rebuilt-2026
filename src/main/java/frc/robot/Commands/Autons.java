@@ -700,7 +700,7 @@ public class Autons {
                                                 towerPose,
                                                 kMedTolerance,
                                                 forwardHeading),
-                                generalRobotCommands.aimSwerveCommand()
+                                generalRobotCommands.aimSwerveToHubCommand().alongWith(generalRobotCommands.prepareShooterForHubCommand())
                                 // shootWhenReady(generalRobotCommands, 1000)
                 );
         }

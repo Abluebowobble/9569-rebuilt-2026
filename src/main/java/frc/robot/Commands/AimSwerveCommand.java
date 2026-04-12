@@ -1,5 +1,6 @@
 package frc.robot.Commands;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Optional;
@@ -9,7 +10,9 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -23,7 +26,7 @@ import frc.robot.Subsystems.SwerveSubsystem;
 import frc.robot.Subsystems.LEDSubsystem.Section;
 import swervelib.SwerveInputStream;
 
-public class AutoAimNoCorrectionCommand extends Command {
+public class AimSwerveCommand extends Command {
   private SwerveSubsystem swerveSubsystem;
   private DoubleSupplier leftYSupplier;
   private DoubleSupplier leftXSupplier;
@@ -34,17 +37,21 @@ public class AutoAimNoCorrectionCommand extends Command {
 
   private final PIDController controller = new PIDController(0.014, 0, 0);
 
-  public AutoAimNoCorrectionCommand(
+  private Rotation2d desiredAngle;
+
+  public AimSwerveCommand(
       SwerveSubsystem swerveSubsystem,
       LEDSubsystem ledSubsystem,
       DoubleSupplier leftYSupplier,
       DoubleSupplier leftXSupplier,
-      DoubleSupplier turnSupplier) {
+      DoubleSupplier turnSupplier,
+      Rotation2d desiredAngle) {
     this.swerveSubsystem = swerveSubsystem;
     this.leftYSupplier = leftYSupplier;
     this.leftXSupplier = leftXSupplier;
     this.turnSupplier = turnSupplier;
     this.ledSubsystem = ledSubsystem;
+    this.desiredAngle = desiredAngle;
     controller.enableContinuousInput(-180, 180);
 
     addRequirements(swerveSubsystem, ledSubsystem);
@@ -83,7 +90,7 @@ public class AutoAimNoCorrectionCommand extends Command {
     double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
     turn = MathUtil.clamp(
         controller.calculate(swerveSubsystem.getHeading().getDegrees(),
-            swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
+            desiredAngle.getDegrees()) * maxOmega,
         -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);

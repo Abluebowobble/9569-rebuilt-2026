@@ -104,14 +104,25 @@ public class GeneralRobotCommands {
         scoreFeedState = ScoreFeedState.NOT_SCORING;
     }
 
-    public Command aimSwerveCommand() {
-        return new AutoAimNoCorrectionCommand(swerveSubsystem, ledSubsystem,
+    public Command aimSwerveToHubCommand() {
+        return new AimSwerveCommand(swerveSubsystem, ledSubsystem,
                 leftYSupplier, leftXSupplier,
-                turnSupplier);
+                turnSupplier, swerveSubsystem.getTargetHeadingInFieldFrame());
     }
 
-    public Command prepareShooterCommand() {
-        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, swerveSubsystem);
+    public Command aimSwerveToAlliance() {
+        return new AimSwerveCommand(swerveSubsystem, ledSubsystem,
+                leftYSupplier, leftXSupplier,
+                turnSupplier,
+                swerveSubsystem.isBlueAlliance() ? Rotation2d.fromDegrees(0) : Rotation2d.fromDegrees(180));
+    }
+
+    public Command prepareShooterForHubCommand() {
+        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, Meters.of(swerveSubsystem.distanceToHub()));
+    }
+
+    public Command prepareShooterForPassCommand() {
+        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem, Meters.of(swerveSubsystem.distanceToHub()));
     }
 
     public Command feedCommand() {

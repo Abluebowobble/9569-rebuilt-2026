@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LandMarks;
 import frc.robot.Commands.GeneralRobotCommands.HoodState;
+import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.robot.Commands.PrepareShooterCommand.Shot;
 import frc.robot.Subsystems.HoodSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
@@ -64,22 +65,19 @@ public class PrepareShooterCommand extends Command {
     distanceToShotMap.put(Meters.of(2.2167671876494883), new Shot(3400, 0.3));
     distanceToShotMap.put(Meters.of(1.8414863971394388), new Shot(3300, 0.25));
     distanceToShotMap.put(Meters.of(1.4566681954055534), new Shot(3200, 0.2));
-
     distanceToShotMap.put(Meters.of(1.2239430024726599), new Shot(3000, 0.05));
   }
 
   private final ShooterSubsystem shooterSubsystem;
   private final HoodSubsystem hoodSubsystem;
-  // private final Supplier<Pose2d> robotPoseSupplier;
-  private final SwerveSubsystem swerve;
+  private final Distance distance;
 
   /** Creates a new AimShotCommand. */
   public PrepareShooterCommand(ShooterSubsystem shooterSubsystem, HoodSubsystem hoodSubsystem,
-      SwerveSubsystem swerve) {
+      Distance distance) {
     this.shooterSubsystem = shooterSubsystem;
     this.hoodSubsystem = hoodSubsystem;
-    // this.robotPoseSupplier = robotPoseSupplier;
-    this.swerve = swerve;
+    this.distance = distance;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(shooterSubsystem, hoodSubsystem);
@@ -88,25 +86,22 @@ public class PrepareShooterCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (!swerve.currentPoseIsValidForScoring()) {
-      hoodSubsystem.setPosition(HoodSubsystem.kStartingPosition);
-      hoodSubsystem.setState(HoodState.IDLE);
-      return;
-    }
     hoodSubsystem.setState(HoodState.AIMING);
-
-    // find distance
-    final Distance distanceToHub = Meters.of(swerve.distanceToHub());
+    shooterSubsystem.setState(ShooterState.SHOOTING);
 
     // get appropriate rpm and hood position pair
-    final Shot shot = distanceToShotMap.get(distanceToHub);
+    final Shot shot = distanceToShotMap.get(distance);
 
     // set subsystems with calculated values
     shooterSubsystem.set(RPM.of(shot.shooterRPM));
     hoodSubsystem.setPosition(shot.hoodPosition);
   }
 
-  // Returns true when the command should end.
+  public void end(boolean interrupted) {
+    hoodSubsystem.setState(HoodState.IDLE);
+    shooterSubsystem.setState(ShooterState.IDLE);
+  }
+
   @Override
   public boolean isFinished() {
     return false;

@@ -30,6 +30,7 @@ import frc.robot.Commands.GeneralRobotCommands.RollerState;
 import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.SilverKnightsLib.OPRSlewRateLimiter;
 import frc.robot.Constants.HardwareMap;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Frequency;
@@ -51,16 +52,17 @@ public class IntakeSubsystem extends SubsystemBase {
   private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
 
   // set point for pid
-  private Angle setPointAngle = Degrees.of(0);
+  private double pivotSetPoint = 0;
 
   // range of allowed positions
-  private static final Angle kPositionTolerance = Degrees.of(1); // to tune
+  private static final double kPositionTolerance = 0.0028; // to tune
 
   // gear reduction
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
-  private final SparkClosedLoopController controller = pivotMotor.getClosedLoopController();
-  // private final PIDController controller = new PIDController(0.7, 0, 0);
+  // private final SparkClosedLoopController controller =
+  // pivotMotor.getClosedLoopController();
+  private final PIDController controller = new PIDController(0.7, 0, 0);
   private IntakeState intakeState = IntakeState.STOWED;
   private RollerState rollerState = RollerState.STOP;
 
@@ -83,17 +85,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // set angle for pivot motor
   public enum Position {
-    STOWED(Degrees.of(8)),
-    INTAKE(Degrees.of(82.7)); // 83.7
+    STOWED(0), // to update
+    AGITATE(0), // to update
+    INTAKE(0.0897); // to update
 
-    private final Angle degrees;
+    private final double percentRotation;
 
-    private Position(Angle degrees) {
-      this.degrees = degrees;
+    private Position(double percentRotation) {
+      this.percentRotation = percentRotation;
     }
 
-    public Angle degrees() {
-      return degrees;
+    public double percentRotation() {
+      return percentRotation;
     }
   }
 
@@ -101,7 +104,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public IntakeSubsystem() {
     SparkBaseConfig pivotConfig = new SparkMaxConfig();
-    pivotConfig.closedLoop.p(0.7, ClosedLoopSlot.kSlot0); // 0.7
+    // pivotConfig.closedLoop.p(0.7, ClosedLoopSlot.kSlot0); // 0.7
     pivotConfig.smartCurrentLimit(40, 20);
     pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -109,15 +112,13 @@ public class IntakeSubsystem extends SubsystemBase {
     rollerConfig.smartCurrentLimit(120, 60);
     rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    // controller.enableContinuousInput(0, 1);
+    controller.enableContinuousInput(0, 1);
+    controller.calculate(Double.MAX_VALUE, 0);
 
-    pivotEncoder.setPosition(0);
+    // pivotEncoder.setPosition(0);
     setDefaultCommand(idle());
   }
 
-  public Command zeroCommand() {
-    return Commands.runOnce(() -> pivotEncoder.setPosition(0));
-  }
 
   /** set roller to percentage output given speed enum */
   public void set(Speed speed) {
@@ -126,10 +127,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** set pivot motor to position given Position enum */
   public void set(Position position) {
-    setPointAngle = position.degrees();
-    controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(),
-    ControlType.kPosition,
-    ClosedLoopSlot.kSlot0);
+    pivotSetPoint = position.percentRotation();
+    // controller.setSetpoint(position.degrees().div(kDegreesPerRotation).magnitude(),
+    // ControlType.kPosition,
+    // ClosedLoopSlot.kSlot0);
   }
 
   /** set pivot motor to go to intake position */
@@ -143,22 +144,21 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public void sinusoidalPivot(Timer timer) {
-    final double amplitude = 10;
-    final double center = 70.0;
+    final double amplitude = 10.0 / 360.0;
+    final double center = Position.AGITATE.percentRotation();
     final double frequency = 1.25;
     final double omega = 2 * Math.PI * frequency;
 
     double time = timer.get();
 
-    double angleDeg = center + amplitude * Math.sin(omega * time);
+    double rotations = center + amplitude * Math.sin(omega * time);
 
-    Angle targetAngle = Degrees.of(angleDeg);
+    pivotSetPoint = rotations;
 
-    setPointAngle = targetAngle;
-    controller.setSetpoint(
-    targetAngle.div(kDegreesPerRotation).magnitude(),
-    ControlType.kPosition,
-    ClosedLoopSlot.kSlot0);
+    // controller.setSetpoint(
+    // rotations,
+    // ControlType.kPosition,
+    // ClosedLoopSlot.kSlot0);
   }
 
   public Command sinusoidalPivotCommand() {
@@ -224,8 +224,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean isStowed() {
-    return setPointAngle.isNear(Position.STOWED.degrees(), kPositionTolerance)
-        || setPointAngle.magnitude() < Position.STOWED.degrees().magnitude();
+    return pivotSetPoint == Position.STOWED.percentRotation();
   }
 
   public Command runRollerCommand() {
@@ -287,22 +286,19 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** checks if angle of pivot is within kPositionTolerance */
   public boolean isPositionWithinTolerance() {
-    final Angle cur = Degrees.of(pivotEncoder.getPosition() * kDegreesPerRotation.magnitude());
-
-    return cur.isNear(setPointAngle, kPositionTolerance);
+    return MathUtil.isNear(absEncoder.get(), pivotSetPoint, kPositionTolerance);
   }
 
   @Override
   public void periodic() {
     SmartDashboard.putData(this);
-    // updatePivotPosition();
+    updatePivotPositionCommand();
   }
 
-  // public void updatePositionCommand() {
-  //   double position = controller.calculate(absEncoder.get(), setPointAngle.magnitude());
-  //   pivotMotor.set(position);
-  //   pivotMotor.setVoltage(position * pivotMotor.getBusVoltage());
-  // }
+  public void updatePivotPositionCommand() {
+    double position = controller.calculate(absEncoder.get(), pivotSetPoint);
+    pivotMotor.setVoltage(position * 12);
+  }
 
   @Override
   public String toString() {
@@ -324,7 +320,7 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Roller Supply Current (A)", () -> rollerMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("Pivot Supply Current (A)", () -> pivotMotor.getOutputCurrent(), null);
     builder.addStringProperty("Current Intake Roller State", this::toString, null);
-    builder.addDoubleProperty("abs encoder", absEncoder::get, null);
+    builder.addDoubleProperty("Absolute Encoder Position", absEncoder::get, null);
   }
 
   // /** updates pivot position with pid, to add: slew */
