@@ -58,14 +58,43 @@ public class PrepareShooterCommand extends Command {
     // distanceToShotMap.put(Meters.of(1.8874167417587684), new Shot(5300, 0.226));
     // distanceToShotMap.put(Meters.of(1.378834779227017), new Shot(5300, 0.148));
     // distanceToShotMap.put(Meters.of(2.4854897119801356), new Shot(5300, 0.273));
-    distanceToShotMap.put(Meters.of(4.021624175833074), new Shot(3950, 0.4));
-    distanceToShotMap.put(Meters.of(3.460651357333235), new Shot(3800, 0.4));
-    distanceToShotMap.put(Meters.of(2.8454100726604437), new Shot(3700, 0.3));
-    distanceToShotMap.put(Meters.of(2.500854879281561), new Shot(3500, 0.3));
-    distanceToShotMap.put(Meters.of(2.2167671876494883), new Shot(3400, 0.3));
-    distanceToShotMap.put(Meters.of(1.8414863971394388), new Shot(3300, 0.25));
-    distanceToShotMap.put(Meters.of(1.4566681954055534), new Shot(3200, 0.2));
-    distanceToShotMap.put(Meters.of(1.2239430024726599), new Shot(3000, 0.05));
+    distanceToShotMap.put(Meters.of(4.021), new Shot(3950, 0.4));
+    distanceToShotMap.put(Meters.of(3.460), new Shot(3800, 0.4));
+    distanceToShotMap.put(Meters.of(2.845), new Shot(3700, 0.3));
+    distanceToShotMap.put(Meters.of(2.500), new Shot(3500, 0.3));
+    distanceToShotMap.put(Meters.of(2.216), new Shot(3400, 0.3));
+    distanceToShotMap.put(Meters.of(1.841), new Shot(3300, 0.25));
+    distanceToShotMap.put(Meters.of(1.456), new Shot(3200, 0.2));
+    distanceToShotMap.put(Meters.of(1.223), new Shot(3000, 0.05));
+    distanceToShotMap.put(Meters.of(4.266), new Shot(4000, 0.55));
+    distanceToShotMap.put(Meters.of(5.123), new Shot(4200, 0.7));
+  }
+
+  private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMapFeed = new InterpolatingTreeMap<>(
+      // Reverse interpolates the value to find percentage distance between the two
+      // known values
+      (startValue, endValue, q) -> InverseInterpolator.forDouble()
+          .inverseInterpolate(startValue.in(Meters), endValue.in(Meters), q.in(Meters)),
+      // uses previously generated value to interpolate shooter velocity and hood
+      // position
+      (startValue, endValue, t) -> new Shot(
+          Interpolator.forDouble()
+              .interpolate(startValue.shooterRPM, endValue.shooterRPM, t),
+          Interpolator.forDouble()
+              .interpolate(startValue.hoodPosition, endValue.hoodPosition, t)));
+
+  // to tune
+  static {
+    // distanceToShotMap.put(Meters.of(1.649778334547691), new Shot(5300, 0.187));
+    // distanceToShotMap.put(Meters.of(0.5748198000485322), new Shot(5300, 0));
+    // distanceToShotMap.put(Meters.of(2.4006216556413467), new Shot(5300, 0.304));
+    // distanceToShotMap.put(Meters.of(1.8874167417587684), new Shot(5300, 0.226));
+    // distanceToShotMap.put(Meters.of(1.378834779227017), new Shot(5300, 0.148));
+    // distanceToShotMap.put(Meters.of(2.4854897119801356), new Shot(5300, 0.273));
+    distanceToShotMapFeed.put(Meters.of(11), new Shot(5600, 0.804));
+    distanceToShotMapFeed.put(Meters.of(8.544), new Shot(4300, 0.804));
+    distanceToShotMapFeed.put(Meters.of(6.832), new Shot(3600, 0.804));
+    distanceToShotMapFeed.put(Meters.of(6.480), new Shot(3000, 0.804));
   }
 
   private final ShooterSubsystem shooterSubsystem;
@@ -90,7 +119,7 @@ public class PrepareShooterCommand extends Command {
     shooterSubsystem.setState(ShooterState.SHOOTING);
 
     // get appropriate rpm and hood position pair
-    final Shot shot = distanceToShotMap.get(distance);
+    final Shot shot = distanceToShotMapFeed.get(distance);
 
     // set subsystems with calculated values
     shooterSubsystem.set(RPM.of(shot.shooterRPM));

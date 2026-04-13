@@ -71,7 +71,7 @@ public class RobotContainer {
   private final FeederSubsystem feederSubsystem = new FeederSubsystem(shooterSubsystem::shouldFeed,
       swerveSubsystem::distanceToHub);
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
-  private final LEDSubsystem ledSubsystem = new LEDSubsystem(shooterSubsystem::isThereAnError);
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled
@@ -146,8 +146,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    testBindings();
-    // johnnyBindings();
+    // testBindings();
+    johnnyBindings();
   }
 
   public void test() {
@@ -191,6 +191,7 @@ public class RobotContainer {
     // ps5Controller.circle().whileTrue(intakeSubsystem.agitatePivotCommand());
 
     SmartDashboard.putNumber("PICK HOOD POSITION", 0);
+    ps5Controller.cross().whileTrue(Commands.runOnce(() -> shooterSubsystem.set(RPM.of(2000))));
     hoodSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() -> SmartDashboard.getNumber("PICK HOOD POSITION", 0)));
     // shooterSubsystem.setDefaultCommand(hoodSubsystem.setCommand(() ->
     // -ps5Controller.getLeftY()));
@@ -263,10 +264,10 @@ public class RobotContainer {
     // ps5Controller.R1().getAsBoolean())));
 
     ps5Controller.R2().whileTrue(feederSubsystem.runCommand().alongWith(conveyorSubsystem.runCommand()));
-    ps5Controller.R3().whileTrue(Commands.defer(() -> {
+    ps5Controller.R3().onTrue(Commands.defer(() -> {
       if (swerveSubsystem.currentPoseIsValidForScoring()) {
         return generalRobotCommands.aimSwerveToHubCommand();
-      }
+      } 
       return generalRobotCommands.aimSwerveToAlliance();
     }, Set.of(swerveSubsystem)));
 
@@ -279,8 +280,8 @@ public class RobotContainer {
     // 0.05,
     // swerveSubsystem.isBlueAlliance() ? new Rotation2d(0) : new
     // Rotation2d(Math.PI)), Set.of(swerveSubsystem)));
-    ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand(() -> Math.sqrt(
-        Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
+    // ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand(() -> Math.sqrt(
+    //     Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
 
     // passing

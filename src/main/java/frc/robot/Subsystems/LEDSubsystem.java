@@ -44,14 +44,12 @@ public class LEDSubsystem extends SubsystemBase {
   // alliance
   Optional<DriverStation.Alliance> alliance = Optional.empty();
 
-  BooleanSupplier shooterError;
 
   public enum Section {
     SHOOTER, SIDE, ALL
   };
 
-  public LEDSubsystem(BooleanSupplier shooterError) {
-    this.shooterError = shooterError;
+  public LEDSubsystem() {
     m_led.setLength(buffer.getLength());
 
     m_led.setData(buffer);
@@ -135,11 +133,7 @@ public class LEDSubsystem extends SubsystemBase {
   @Override
   public Command idle() {
     return run(() -> {
-      if (shooterError.getAsBoolean()) {
-        setSolidColor(Color.kRed, Section.ALL);
-      } else {
-        setOff();
-      }
+      setOff();
     });
   }
 
