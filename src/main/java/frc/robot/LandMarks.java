@@ -29,7 +29,7 @@ public class LandMarks {
     public static final Distance kTowerOffset = Inches.of(11.34);
 
     public static Translation2d hubPosition() {
-        if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
+        if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
             return new Translation2d(kAllianceFieldLength, Inches.of(158.845));
         } else {
             return new Translation2d(kFieldLength.minus(kAllianceFieldLength), Inches.of(158.845));

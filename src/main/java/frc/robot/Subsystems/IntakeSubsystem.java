@@ -8,6 +8,8 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
 
+import javax.naming.ldap.ControlFactory;
+
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 
 import static edu.wpi.first.units.Units.Degrees;
@@ -55,14 +57,14 @@ public class IntakeSubsystem extends SubsystemBase {
   private double pivotSetPoint = 0;
 
   // range of allowed positions
-  private static final double kPositionTolerance = 0.0028; // to tune
+  private static final double kPositionTolerance = 0.004; // to tune
 
   // gear reduction
   private final Angle kDegreesPerRotation = Degrees.of(2);
 
   // private final SparkClosedLoopController controller =
   // pivotMotor.getClosedLoopController();
-  private final PIDController controller = new PIDController(0.7, 0, 0);
+  private final PIDController controller = new PIDController(6, 0, 0);
   private IntakeState intakeState = IntakeState.STOWED;
   private RollerState rollerState = RollerState.STOP;
 
@@ -83,11 +85,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
+  double zero = 0.78;
+
   // set angle for pivot motor
   public enum Position {
-    STOWED(0), // to update
-    AGITATE(0), // to update
-    INTAKE(0.0897); // to update
+    STOWED(0.0), // to update 0.7783878944596974
+    AGITATE(-0.7827), // to update 0.7527 , 
+    INTAKE(-0.6962); // to update 0.08388367709709192 // 0.0838
 
     private final double percentRotation;
 
@@ -116,6 +120,7 @@ public class IntakeSubsystem extends SubsystemBase {
     controller.calculate(Double.MAX_VALUE, 0);
 
     // pivotEncoder.setPosition(0);
+    SmartDashboard.putData("IntakeDown", intakeCommand());
     setDefaultCommand(idle());
   }
 
@@ -144,7 +149,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public void sinusoidalPivot(Timer timer) {
-    final double amplitude = 10.0 / 360.0;
+    final double amplitude = 0.05;
     final double center = Position.AGITATE.percentRotation();
     final double frequency = 1.25;
     final double omega = 2 * Math.PI * frequency;
@@ -164,7 +169,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public Command sinusoidalPivotCommand() {
     Timer timer = new Timer();
 
-    return runOnce(() -> set(Position.INTAKE))
+    return runOnce(() -> set(Position.AGITATE))
         .andThen(Commands.waitUntil(this::isPositionWithinTolerance)
             .andThen(run(() -> {
               sinusoidalPivot(timer);
@@ -296,8 +301,8 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public void updatePivotPositionCommand() {
-    double position = controller.calculate(absEncoder.get(), pivotSetPoint);
-    pivotMotor.setVoltage(position * 12);
+    double output = controller.calculate(absEncoder.get() - zero, pivotSetPoint);
+    pivotMotor.set(output);
   }
 
   @Override
@@ -320,7 +325,7 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Roller Supply Current (A)", () -> rollerMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("Pivot Supply Current (A)", () -> pivotMotor.getOutputCurrent(), null);
     builder.addStringProperty("Current Intake Roller State", this::toString, null);
-    builder.addDoubleProperty("Absolute Encoder Position", absEncoder::get, null);
+    builder.addDoubleProperty("Absolute Encoder Position", () -> absEncoder.get() - zero, null);
   }
 
   // /** updates pivot position with pid, to add: slew */

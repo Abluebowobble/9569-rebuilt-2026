@@ -400,13 +400,16 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public double distanceToHub() {
-    return vision.distanceToPoint(swerveDrive.getPose(),
-        new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new Rotation2d(0)));
+    return swerveDrive.getPose().getTranslation().getDistance(LandMarks.hubPosition());
+    // return vision.distanceToPoint(swerveDrive.getPose(),
+    //     new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new Rotation2d(0)));
   }
 
   public double distanceToAllianceHubCentre() {
-    return vision.distanceToPoint(swerveDrive.getPose(),
-        new Pose2d(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())), new Rotation2d(0)));
+    return swerveDrive.getPose().getTranslation().getDistance(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())));
+    
+    // vision.distanceToPoint(swerveDrive.getPose(),
+    //     new Pose2d(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())), new Rotation2d(0)));
   }
 
   @Override
@@ -430,7 +433,7 @@ public class SwerveSubsystem extends SubsystemBase {
     kField.setRobotPose(currentPose);
     SmartDashboard.putData("field swerve", kField);
     SmartDashboard.putString("Current Swerve State", toString());
-    SmartDashboard.putNumber("Distance from alliance hub", distanceToHub());
+    SmartDashboard.putNumber("Distance from alliance hub", distanceToAllianceHubCentre());
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement,
         swerveDrive.getRobotVelocity());

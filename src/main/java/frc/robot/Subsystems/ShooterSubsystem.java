@@ -145,21 +145,6 @@ public class ShooterSubsystem extends SubsystemBase {
     rightShooterMotor.setVoltage(voltage.magnitude());
   }
 
-  public void disableLeft() {
-    isDisabledLeft = true;
-    leftShooterMotor.disable();
-  }
-
-  public void disableMiddle() {
-    isDisabledMiddle = true;
-    middleShooterMotor.disable();
-  }
-
-  public void disableRight() {
-    isDisabledRight = true;
-    rightShooterMotor.disable();
-  }
-
   /**
    * this function updates the rpm based on the value in smart dashboard, updates
    * each motor separately
@@ -182,26 +167,32 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void set(AngularVelocity rpm) {
     rpm = RPM.of(MathUtil.clamp(rpm.magnitude(), 0, 5600));
+    // l_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+    // ClosedLoopSlot.kSlot0);
+    // m_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+    // ClosedLoopSlot.kSlot0);
+    // r_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+    // ClosedLoopSlot.kSlot0);
 
-    if (isDisabledLeft) {
-      disableLeft();
+    if (!SmartDashboard.getBoolean("Left Shooter Enabled", true)) {
       l_controller.setSetpoint(0, ControlType.kVelocity);
     } else {
-      l_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+      l_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+          ClosedLoopSlot.kSlot0);
     }
 
-    if (isDisabledMiddle) {
-      disableMiddle();
+    if (!SmartDashboard.getBoolean("Middle Shooter Enabled", true)) {
       m_controller.setSetpoint(0, ControlType.kVelocity);
     } else {
-      m_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+      m_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+          ClosedLoopSlot.kSlot0);
     }
 
-    if (isDisabledRight) {
-      disableRight();
+    if (!SmartDashboard.getBoolean("Right Shooter Enabled", true)) {
       r_controller.setSetpoint(0, ControlType.kVelocity);
     } else {
-      r_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+      r_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
+          ClosedLoopSlot.kSlot0);
     }
   }
 
@@ -257,40 +248,29 @@ public class ShooterSubsystem extends SubsystemBase {
     return shooterState;
   }
 
-  public boolean error = false;
-
   @Override
   public void periodic() {
-    double leftMotorOutput = leftShooterMotor.getOutputCurrent();
-    double middleMotorOutput = middleShooterMotor.getOutputCurrent();
-    double rightMotorOutput = rightShooterMotor.getOutputCurrent();
+    targetRPM = RPM.of(MathUtil.clamp(targetRPM.magnitude(), 0, 5600));
 
     // double averageLeftMotorOutput = currentFilter.calculate(leftMotorOutput);
     // double averageMiddleMotorOutput = currentFilter.calculate(middleMotorOutput);
     // double averageRightMotorOutput = currentFilter.calculate(rightMotorOutput);
 
-    if (!SmartDashboard.getBoolean("Left Shooter Enabled", true)) { //MathUtil.isNear(65, averageLeftMotorOutput, 5)  
-      isDisabledLeft = true;
-    }
-
-    if (isDisabledLeft) {
+    if (!SmartDashboard.getBoolean("Left Shooter Enabled", true)) { // MathUtil.isNear(65, averageLeftMotorOutput, 5)
       l_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      l_controller.setSetpoint(targetRPM.magnitude(), ControlType.kVelocity);
     }
 
-    if (!SmartDashboard.getBoolean("Middle Shooter Enabled", true)) { //MathUtil.isNear(65, averageMiddleMotorOutput, 5)
-      isDisabledMiddle = true;
-    }
-
-    if (isDisabledMiddle) {
+    if (!SmartDashboard.getBoolean("Middle Shooter Enabled", true)) { // MathUtil.isNear(65, averageMiddleMotorOutput,
       m_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      m_controller.setSetpoint(targetRPM.magnitude(), ControlType.kVelocity);
     }
-
-    if (!SmartDashboard.getBoolean("Right Shooter Enabled", true)) { //MathUtil.isNear(65, averageMiddleMotorOutput, 5)
-      isDisabledRight = true;
-    }
-
-    if (isDisabledRight) {
+    if (!SmartDashboard.getBoolean("Right Shooter Enabled", true)) { // MathUtil.isNear(65, averageMiddleMotorOutput, 5)
       r_controller.setSetpoint(0, ControlType.kVelocity);
+    } else {
+      r_controller.setSetpoint(targetRPM.magnitude(), ControlType.kVelocity);
     }
 
     // uncomment below to tune
@@ -298,11 +278,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // telemetry
     SmartDashboard.putData(this);
-    set(targetRPM);
-  }
-
-  public boolean isThereAnError() {
-    return error;
   }
 
   public double progress() {
@@ -352,6 +327,10 @@ public class ShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Middle Shooter Current Supply (A)", () -> middleShooterMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("Left Shooter Temperature", () -> leftShooterMotor.getMotorTemperature(), null);
     builder.addDoubleProperty("Left Shooter Current Supply (A)", () -> leftShooterMotor.getOutputCurrent(), null);
+
+    builder.addBooleanProperty("left disabled?", () -> isDisabledLeft, null);
+    builder.addBooleanProperty("middle disabled?", () -> isDisabledMiddle, null);
+    builder.addBooleanProperty("right disabled?", () -> isDisabledRight, null);
 
     builder.addStringProperty("Current Shooter State", this::toString, null);
   }
