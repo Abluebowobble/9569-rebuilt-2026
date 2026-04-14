@@ -60,7 +60,7 @@ public class PrepareShooterCommand extends Command {
     // distanceToShotMap.put(Meters.of(2.4854897119801356), new Shot(5300, 0.273));
     distanceToShotMap.put(Meters.of(4.021624175833074), new Shot(3950, 0.4));
     distanceToShotMap.put(Meters.of(3.460651357333235), new Shot(3800, 0.4));
-    distanceToShotMap.put(Meters.of(2.8454100726604437), new Shot(3700, 0.3));
+    distanceToShotMap.put(Meters.of(2.8454100726604437), new Shot(3600, 0.35));
     distanceToShotMap.put(Meters.of(2.500854879281561), new Shot(3500, 0.3));
     distanceToShotMap.put(Meters.of(2.2167671876494883), new Shot(3400, 0.3));
     distanceToShotMap.put(Meters.of(1.8414863971394388), new Shot(3300, 0.25));
