@@ -78,17 +78,19 @@ public final class Constants {
     public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.60, 5.95);
     public static final Translation2d TEMP = new Translation2d(10.185, 6.363);
 
-<<<<<<< HEAD
     // Middle Auton Waypoints
     public static final Translation2d BLUE_MIDDLE_START = new Translation2d(3.540, 3.989);
     public static final Translation2d BLUE_MIDDLE_PREPARE_DEPOT = new Translation2d(1.52, 5.963);
     public static final Translation2d BLUE_MIDDLE_DEPOT = new Translation2d(0.706, 5.963);
     public static final Translation2d BLUE_MIDDLE_SHOOT = new Translation2d(3.303, 3.97);
-=======
     public static final Translation2d BLUE_2_START = new Translation2d(3.541, 4.031);
     public static final Translation2d BLUE_2_TOWER = new Translation2d(2.504, 4.019);
     public static final Translation2d BLUE_2_DEPOT_INTAKE_2 = new Translation2d(0.8, 5.95);
->>>>>>> 98bc9d0813bfd8754564b17bc127de0d44b0eab7
+    public static final Translation2d BLUE_2_PREPARE_DEPOT = new Translation2d(1.26, 7.2);
+    public static final Translation2d BLUE_2_PREPARE_DEPOT_2 = new Translation2d(0.6, 7);
+    public static final Translation2d BLUE_2_DEPOT_INTAKE = new Translation2d(0.6, 4.93);
+    public static final Translation2d BLUE_2_FINISH_DEPOT = new Translation2d(2.46, 4.87);
+    public static final Translation2d BLUE_2_SHOOT = new Translation2d(2.9, 3.97);
   }
 
   public static class BehaviourConstants {

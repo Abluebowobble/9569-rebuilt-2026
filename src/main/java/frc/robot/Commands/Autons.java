@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.FeetPerSecond;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotation;
 
 import com.revrobotics.servohub.config.ServoChannelConfig.BehaviorWhenDisabled;
 
@@ -652,19 +653,21 @@ public class Autons {
                 }
                 
                 Translation2d towerPose = allianceRelative(WaypointConstants.BLUE_2_TOWER, isBlue);
-                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_1_SHOOT, isBlue);
-                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue);
-                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue);
-                Translation2d depotIntake2 = allianceRelative(WaypointConstants.BLUE_2_DEPOT_INTAKE_2, isBlue);
+                Translation2d shootPose = allianceRelative(WaypointConstants.BLUE_2_SHOOT, isBlue);
+                Translation2d prepareDepot = allianceRelative(WaypointConstants.BLUE_2_PREPARE_DEPOT, isBlue);
+                Translation2d prepareDepot2 = allianceRelative(WaypointConstants.BLUE_2_PREPARE_DEPOT_2, isBlue);
+                Translation2d depotIntake = allianceRelative(WaypointConstants.BLUE_2_DEPOT_INTAKE, isBlue);
+                Translation2d finishDepot = allianceRelative(WaypointConstants.BLUE_2_FINISH_DEPOT, isBlue);
 
                 Rotation2d forwardHeading = isBlue ? kForward : kBackward;
                 Rotation2d backwardHeading = isBlue ? kBackward : kForward;
+                Rotation2d intakeHeading = isBlue ? kIntakeHeading : Rotation2d.fromDegrees(90);
 
                 return new SequentialCommandGroup(
                         new InstantCommand(() -> {
                                 Translation2d start = mirrorSide(
                                                 allianceRelative(WaypointConstants.BLUE_2_START, isBlue));
-                                Rotation2d startHeading = isBlue ? kForward : kBackward;
+                                Rotation2d startHeading = isBlue ? kBackward : kForward;
 
                                 generalRobotCommands.getSwerveSubsystem().getSwerveDrive()
                                                 .resetOdometry(new Pose2d(start, startHeading));
@@ -673,52 +676,41 @@ public class Autons {
 
                         generalRobotCommands.driveToWayPoint(
                                                 towerPose,
-                                                kMedTolerance,
+                                                kLooseTolerance,
                                                 isBlue ? SwerveConstants.MAX_SPEED.times(-1)
                                                                 : SwerveConstants.MAX_SPEED,
                                                 null),
 
                         generalRobotCommands.driveToWithAngle(
                                                 prepareDepot,
-                                                kMedTolerance,
-                                                backwardHeading),
-
-                        generalRobotCommands.driveToWayPointWithAngle(
-                                                depotIntake2,
-                                                0.48,
-                                                backwardHeading,
-                                                isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
-                                                                : SwerveConstants.MAX_SPEED.div(5),
-                                                null),
+                                                0.5,
+                                                intakeHeading),
 
                         generalRobotCommands.driveTo(
-                                                depotIntake,
+                                                prepareDepot2,
                                                 kMedTolerance),
 
-                        generalRobotCommands.driveToWayPointWithAngle(
-                                                depotIntake2,
-                                                0.48,
-                                                backwardHeading,
+                        new ParallelDeadlineGroup(
+                                generalRobotCommands.driveToWayPoint(
+                                                depotIntake,
+                                                kMedTolerance,
+                                                null,
                                                 isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
-                                                                : SwerveConstants.MAX_SPEED.div(5),
-                                                null),
-                        
-                        generalRobotCommands.driveToWithAngle(
-                                                prepareDepot,
-                                                kMedTolerance,
-                                                backwardHeading),
+                                                                : SwerveConstants.MAX_SPEED.div(5)),
 
-                        generalRobotCommands.driveToWithAngle(
-                                                towerPose,
-                                                kMedTolerance,
-                                                forwardHeading),
+                                generalRobotCommands.intakeCommand()
+                        ),
 
-                        // may or may not be needed if it can just shoot from where it currnetly is
-                        // might be useful so it doesnt block any tower autos (e.g., 1310)
+                        generalRobotCommands.driveTo(
+                                                finishDepot,
+                                                0.5),
+
                         generalRobotCommands.driveToWithAngle(
                                                 shootPose,
                                                 kMedTolerance,
-                                                forwardHeading)
+                                                forwardHeading),
+
+                        shootWhenReady(generalRobotCommands, 1000)
                 );
         }
 }
