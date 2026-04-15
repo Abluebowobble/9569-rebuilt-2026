@@ -71,7 +71,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed { // 0.08969272724231818
     STOP(0),
-    INTAKE(0.95), // to tune
+    INTAKE(0.9), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;

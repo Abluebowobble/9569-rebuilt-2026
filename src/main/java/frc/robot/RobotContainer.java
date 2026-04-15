@@ -146,8 +146,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    // testBindings();
-    johnnyBindings();
+    testBindings();
+    // johnnyBindings();
   }
 
   public void test() {
@@ -202,6 +202,7 @@ public class RobotContainer {
     shooterSubsystem.setDefaultCommand(shooterSubsystem.runTestCommand(() -> SmartDashboard.getNumber("PICK RPM", 0)));
     ps5Controller.R1().whileTrue(conveyorSubsystem.runCommand());
 
+    ps5Controller.povLeft().whileTrue(feederSubsystem.runCommand());
     // //test
     // shooterSubsystsem.setDefaultCommand(shooterSubsystem.runCommand(5300));
     // feederSubsystem.setDefaultCommand(Commands.run(() -> {
@@ -348,8 +349,8 @@ public class RobotContainer {
     swerveSubsystem.zeroGyro();
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
-    // return autoChooser.getSelected();
-    return Autons.testRightAuton(generalRobotCommands);
+    return autoChooser.getSelected();
+    // return Autons.testleftAuton(generalRobotCommands);
     // return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),

@@ -53,7 +53,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public ConveyorSubsystem() {
     SparkBaseConfig config = new SparkMaxConfig();
-    config.smartCurrentLimit(90, 60);
+    config.smartCurrentLimit(60, 40);
     motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     setDefaultCommand(idle());
   }

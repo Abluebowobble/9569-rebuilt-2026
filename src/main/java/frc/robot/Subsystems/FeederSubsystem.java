@@ -63,7 +63,7 @@ public class FeederSubsystem extends SubsystemBase {
   public enum Speed {
     STOP(0),
     REVERSE(-0.5),
-    RUN(0.95),
+    RUN(0.9),
     UNJAM(-0.5);
 
     private final double percentageOutput;
@@ -72,9 +72,9 @@ public class FeederSubsystem extends SubsystemBase {
       this.percentageOutput = percentageOutput;
     }
 
-    public Voltage voltage() {
-      return Volts.of(percentageOutput * 12.0);
-    }
+    // public Voltage voltage() {
+    //   return Volts.of(percentageOutput * 12.0);
+    // }
   }
 
   private DoubleSupplier distanceToHubSupplier;
@@ -93,11 +93,7 @@ public class FeederSubsystem extends SubsystemBase {
     // targetRPM = speed.rpm();
     // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
 
-    motor.setVoltage(speed.voltage());
-  }
-
-  public double getFeederSpeed() {
-    return -0.05 * distanceToHubSupplier.getAsDouble() + 0.4;
+    // motor.setVoltage(speed.voltage());
   }
 
   /** sets speed given Voltage volts */

@@ -48,7 +48,7 @@ public final class Constants {
     public static final double autonSlewRateLimit = 15;
     public static final double autonJerkRateLimit = 30;
 
-    public static final PIDController translationController = new PIDController(4, 0, 0, 0.15);
+    public static final PIDController translationController = new PIDController(2.8, 0, 0, 0.15);
     public static final PIDController rotationController = new PIDController(7, 0, 0.15); // use 7, 0, 0.15, try p =
                                                                                           // 0.14 if that doesnt work
   }
@@ -61,8 +61,8 @@ public final class Constants {
     public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(8.375, 6.85);
     public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(8.375, 0); // 4.14
     public static final Translation2d BLUE_1_FINISH_INTAKE2 = new Translation2d(8.375, 4.724); // 4.14
-    public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.931);
-    public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.391);
+    public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.5);
+    public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.5);
     public static final Translation2d BLUE_1_SHOOT = new Translation2d(3.303, 3.97);
     public static final Translation2d BLUE_1_PREPARE_DEPOT_INTAKE = new Translation2d(1.52, 5.95);
     public static final Translation2d BLUE_1_DEPOT_INTAKE = new Translation2d(0.706, 5.95);
@@ -79,7 +79,7 @@ public final class Constants {
     public static final Translation2d BLUE_2_DEPOT_INTAKE_2 = new Translation2d(0.8, 5.95);
     public static final Translation2d BLUE_2_PREPARE_DEPOT = new Translation2d(1.26, 7.2);
     public static final Translation2d BLUE_2_PREPARE_DEPOT_2 = new Translation2d(0.6, 7);
-    public static final Translation2d BLUE_2_DEPOT_INTAKE = new Translation2d(0.6, 4.93);
+    public static final Translation2d BLUE_2_DEPOT_INTAKE = new Translation2d(0.6, 5.05);
     public static final Translation2d BLUE_2_FINISH_DEPOT = new Translation2d(2.46, 4.87);
     public static final Translation2d BLUE_2_SHOOT = new Translation2d(2.9, 3.97);
   }
@@ -95,7 +95,7 @@ public final class Constants {
     public static final int INTAKE_ROLLER = 16;
     public static final int INTAKE_PIVOT = 17;
     public static final int CONVEYOR = 14;
-    public static final int FEEDER = 15;
+    public static final int FEEDER = 20;
     public static final int SHOOTER_LEFT = 11;
     public static final int SHOOTER_MIDDLE = 12;
     public static final int SHOOTER_RIGHT = 13;

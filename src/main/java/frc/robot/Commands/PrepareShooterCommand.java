@@ -119,7 +119,7 @@ public class PrepareShooterCommand extends Command {
     shooterSubsystem.setState(ShooterState.SHOOTING);
 
     // get appropriate rpm and hood position pair
-    final Shot shot = distanceToShotMapFeed.get(distance);
+    final Shot shot = distanceToShotMap.get(distance);
 
     // set subsystems with calculated values
     shooterSubsystem.set(RPM.of(shot.shooterRPM));
