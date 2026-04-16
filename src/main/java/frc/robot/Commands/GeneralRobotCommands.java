@@ -135,7 +135,8 @@ public class GeneralRobotCommands {
                 feederSubsystem.runCommand(),
                 Commands.waitSeconds(BehaviourConstants.DELAY_BEFORE_AGITATE.magnitude())
                         .andThen(conveyorSubsystem.runCommand()
-                                .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))));
+                                .alongWith(intakeSubsystem.agitatePivotCommand(intakeSubsystem.getIntakeState()))))
+                .finallyDo(() -> feederSubsystem.idle().alongWith(conveyorSubsystem.idle()));
         // .onlyIf(() -> !intakeSubsystem.isStowed());
     }
 

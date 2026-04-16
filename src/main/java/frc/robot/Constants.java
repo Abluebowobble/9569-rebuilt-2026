@@ -48,7 +48,7 @@ public final class Constants {
     public static final double autonSlewRateLimit = 15;
     public static final double autonJerkRateLimit = 30;
 
-    public static final PIDController translationController = new PIDController(3, 0, 0, 0.15);
+    public static final PIDController translationController = new PIDController(3.5, 0, 0, 0.15);
     public static final PIDController rotationController = new PIDController(5, 0, 0.15); // use 7, 0, 0.15, try p =
                                                                                           // 0.14 if that doesnt work
   }
