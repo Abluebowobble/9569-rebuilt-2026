@@ -31,36 +31,28 @@ public class AimSwerveCommand extends Command {
   private DoubleSupplier leftYSupplier;
   private DoubleSupplier leftXSupplier;
   private DoubleSupplier turnSupplier;
-  private LEDSubsystem ledSubsystem;
 
   private static final double kMaxTurnScale = 1;
 
   private final PIDController controller = new PIDController(0.014, 0, 0);
 
-  private Rotation2d desiredAngle;
-
   public AimSwerveCommand(
       SwerveSubsystem swerveSubsystem,
-      LEDSubsystem ledSubsystem,
       DoubleSupplier leftYSupplier,
       DoubleSupplier leftXSupplier,
-      DoubleSupplier turnSupplier,
-      Rotation2d desiredAngle) {
+      DoubleSupplier turnSupplier) {
     this.swerveSubsystem = swerveSubsystem;
     this.leftYSupplier = leftYSupplier;
     this.leftXSupplier = leftXSupplier;
     this.turnSupplier = turnSupplier;
-    this.ledSubsystem = ledSubsystem;
-    this.desiredAngle = desiredAngle;
     controller.enableContinuousInput(-180, 180);
 
-    addRequirements(swerveSubsystem, ledSubsystem);
+    addRequirements(swerveSubsystem);
   }
 
   @Override
   public void initialize() {
     swerveSubsystem.setState(SwerveState.AIMING);
-    ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.5), Section.SIDE);
   }
 
   @Override
@@ -70,13 +62,8 @@ public class AimSwerveCommand extends Command {
           && Math.abs(leftYSupplier.getAsDouble()) < OperatorConstants.OVERRIDE_DEADBAND) {
         swerveSubsystem.lockPose();
         swerveSubsystem.setState(SwerveState.LOCKED_AND_AIMED);
-        ledSubsystem.setSolidColor(Color.kGreen, Section.SIDE);
         return;
-      } else {
-        swerveSubsystem.setState(SwerveState.AIMED);
       }
-    } else {
-      ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.5), Section.SIDE);
     }
 
     swerveSubsystem.setState(SwerveState.AIMING);
@@ -90,7 +77,7 @@ public class AimSwerveCommand extends Command {
     double maxOmega = swerveSubsystem.getSwerveDrive().getMaximumChassisAngularVelocity();
     turn = MathUtil.clamp(
         controller.calculate(swerveSubsystem.getHeading().getDegrees(),
-            desiredAngle.getDegrees()) * maxOmega,
+            swerveSubsystem.getTargetHeadingInFieldFrame().getDegrees()) * maxOmega,
         -maxOmega * kMaxTurnScale, maxOmega * kMaxTurnScale);
 
     swerveSubsystem.getSwerveDrive().drive(new Translation2d(forward, strafe), turn, true, false);
@@ -99,7 +86,6 @@ public class AimSwerveCommand extends Command {
   @Override
   public void end(boolean interrupted) {
     swerveSubsystem.setState(SwerveState.OPERATED);
-    ledSubsystem.setOff();
   }
 
   @Override

@@ -103,8 +103,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance, for testing
      */
     public Command setCommand(DoubleSupplier position) {
-        return run(() -> setPosition(position))
-                .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
+        return run(() -> setPosition(position));
     }
 
     /**
@@ -112,8 +111,7 @@ public class HoodSubsystem extends SubsystemBase {
      * ends when position is within tolerance
      */
     public Command setCommand(double position) {
-        return run(() -> setPosition(position))
-                .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
+        return run(() -> setPosition(position));
     }
 
     public Command feedFromNeutralCommand() {
@@ -146,37 +144,18 @@ public class HoodSubsystem extends SubsystemBase {
     // return percentage;
     // }
 
-    /** checks if current position is within given tolerance */
-    public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, (getPosition(leftServo) + getPosition(rightServo)) / 2,
-                kPositionTolerance);
-    }
-
-    public double getPosition(ServoChannel servoChannel) {
-        return (servoChannel.getPulseWidth() - 1000) / 1000;
-    }
-
     @Override
     public void periodic() {
         // uncomment below to update hood based on smartdashboard
         // updateSpeedWithSmartDashboard();
-
         SmartDashboard.putData(this);
     }
-
-    @Override
-    public String toString() {
-        return isPositionWithinTolerance() ? "READY" : "NOT READY";
-    }
-
+    
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.setSmartDashboardType("Hood");
 
-        builder.addDoubleProperty("Hood Current Position Left", () -> getPosition(leftServo), null);
-        builder.addDoubleProperty("Hood Current Position Right", () -> getPosition(rightServo), null);
         builder.addDoubleProperty("Hood Target Position", () -> targetPosition, null);
-        builder.addStringProperty("Current Hood State", this::toString, null);
     }
 
     public void updateSpeedWithSmartDashboard() {

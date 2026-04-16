@@ -99,14 +99,16 @@ public class PrepareShooterCommand extends Command {
 
   private final ShooterSubsystem shooterSubsystem;
   private final HoodSubsystem hoodSubsystem;
-  private final Distance distance;
+  private final Supplier<Distance> distance;
+  private final InterpolatingTreeMap<Distance, Shot> shotMap;
 
   /** Creates a new AimShotCommand. */
   public PrepareShooterCommand(ShooterSubsystem shooterSubsystem, HoodSubsystem hoodSubsystem,
-      Distance distance) {
+      Supplier<Distance> distance, boolean forScoring) {
     this.shooterSubsystem = shooterSubsystem;
     this.hoodSubsystem = hoodSubsystem;
     this.distance = distance;
+    this.shotMap = forScoring ? distanceToShotMap : distanceToShotMapFeed;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(shooterSubsystem, hoodSubsystem);
@@ -119,7 +121,7 @@ public class PrepareShooterCommand extends Command {
     shooterSubsystem.setState(ShooterState.SHOOTING);
 
     // get appropriate rpm and hood position pair
-    final Shot shot = distanceToShotMap.get(distance);
+    final Shot shot = shotMap.get(distance.get());
 
     // set subsystems with calculated values
     shooterSubsystem.set(RPM.of(shot.shooterRPM));

@@ -259,7 +259,7 @@ public class Vision extends SubsystemBase {
 
     // Reject vision entirely if the robot is spinning or moving too fast,
     // since rotating or moving quickly often causes poor AprilTag measurements.
-    if (omegaDegrees > 240) {
+    if (omegaDegrees > 180) {
       curStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       return;
     }

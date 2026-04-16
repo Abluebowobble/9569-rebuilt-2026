@@ -2,41 +2,27 @@
 package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.thethriftybot.devices.ThriftyNova;
+import com.thethriftybot.devices.ThriftyNova.CurrentType;
+import com.thethriftybot.devices.ThriftyNova.MotorType;
 
 import frc.robot.Commands.GeneralRobotCommands.FeederState;
-import frc.robot.Commands.GeneralRobotCommands.HoodState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj.Timer;
 
 public class FeederSubsystem extends SubsystemBase {
 
-  private final SparkMax motor = new SparkMax(HardwareMap.FEEDER, MotorType.kBrushless);
+  private final ThriftyNova motor = new ThriftyNova(HardwareMap.FEEDER, MotorType.NEO);
 
   private AngularVelocity targetRPM = RPM.of(0);
-  private final SparkClosedLoopController controller = motor.getClosedLoopController();
 
   private FeederState feederState = FeederState.STOP;
 
@@ -55,9 +41,6 @@ public class FeederSubsystem extends SubsystemBase {
   // return Volts.of(percentOutput * 12.0);
   // }
   // }
-  private final Timer reverseTimer = new Timer();
-  private boolean reversingPulse = false;
-
   public BooleanSupplier shouldFeed;
 
   public enum Speed {
@@ -80,9 +63,13 @@ public class FeederSubsystem extends SubsystemBase {
   private DoubleSupplier distanceToHubSupplier;
 
   public FeederSubsystem(BooleanSupplier shouldFeed, DoubleSupplier distanceToHubSupplier) {
-    SparkBaseConfig config = new SparkMaxConfig();
-    config.smartCurrentLimit(70, 60);
-    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    motor.factoryReset();
+    motor.setMotorType(MotorType.NEO);
+    motor.setInversion(false);
+    motor.enableHardLimits(false);
+    motor.enableSoftLimits(false);
+    motor.setMaxOutput(1.0, 1.0);
+    motor.setMaxCurrent(CurrentType.SUPPLY, 60);
     this.shouldFeed = shouldFeed;
     this.distanceToHubSupplier = distanceToHubSupplier;
     setDefaultCommand(idle());
@@ -90,15 +77,12 @@ public class FeederSubsystem extends SubsystemBase {
 
   /** sets speed based on percentage output given Speed enum */
   public void set(Speed speed) {
-    // targetRPM = speed.rpm();
-    // controller.setSetpoint(speed.rpm().magnitude(), ControlType.kVelocity);
-
-    // motor.setVoltage(speed.voltage());
+    motor.setPercent(speed.percentageOutput);
   }
 
   /** sets speed given Voltage volts */
   public void set(Voltage volts) {
-    motor.setVoltage(volts);
+    motor.setPercent(volts.magnitude() / 12.0);
   }
 
   public void setState(FeederState feederState) {
@@ -111,7 +95,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   /** given parameter 0-1, sets percentage output of motor */
   public void set(double percentageOutput) {
-    motor.setVoltage(percentageOutput * 12.0);
+    motor.setPercent(percentageOutput);
   }
 
   public Command runWithOverrideCommand(BooleanSupplier reverseButton) {
@@ -145,7 +129,6 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putData(this);
   }
 
   public String toString() {
@@ -154,17 +137,5 @@ public class FeederSubsystem extends SubsystemBase {
       case REVERSE: return "REVERSING";
       case STOP: default: return "STOPPED";
     }
-  }
-
-  @Override
-  public void initSendable(SendableBuilder sendableBuilder) {
-    sendableBuilder.addBooleanProperty("should feed", shouldFeed, null);
-    sendableBuilder.addStringProperty("Command",
-        () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
-        null);
-    sendableBuilder.addDoubleProperty("Feeder Supply Current (A)", () -> motor.getOutputCurrent(), null);
-    sendableBuilder.addDoubleProperty("RPM", () -> motor.getEncoder().getVelocity(), null);
-    sendableBuilder.addDoubleProperty("time", () -> Timer.getFPGATimestamp(), null);
-    sendableBuilder.addStringProperty("Current Indexer State", this::toString, null);
   }
 }

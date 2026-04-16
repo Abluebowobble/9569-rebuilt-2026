@@ -82,7 +82,7 @@ public class ShooterSubsystem extends SubsystemBase {
     leftConfig.closedLoop
         // .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         // .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
-        .pid(0.0001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
+        .pid(0.00001, 0, 0.001, ClosedLoopSlot.kSlot0).feedForward // test
         .sv(0.115, 0.00203, ClosedLoopSlot.kSlot0); // might wanna increase kV
     leftConfig.smartCurrentLimit(70, 70);
 
@@ -166,7 +166,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void set(AngularVelocity rpm) {
-    rpm = RPM.of(MathUtil.clamp(rpm.magnitude(), 0, 5600));
+    targetRPM = RPM.of(MathUtil.clamp(rpm.magnitude(), 0, 5600));
     // l_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
     // ClosedLoopSlot.kSlot0);
     // m_controller.setSetpoint(rpm.magnitude(), ControlType.kVelocity,
@@ -234,10 +234,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return run(() -> {
+    return runOnce(() -> {
       targetRPM = RPM.of(kStartingVelocity.magnitude());
-    })
-        .alongWith(Commands.runOnce(() -> setState(ShooterState.IDLE)));
+    }).alongWith(Commands.runOnce(() -> setState(ShooterState.IDLE)));
   }
 
   public void setState(ShooterState shooterState) {
@@ -275,6 +274,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
+
+    SmartDashboard.putBoolean("is velocity of shooters within tolerance", isVelocityWithinTolerance());
 
     // telemetry
     SmartDashboard.putData(this);

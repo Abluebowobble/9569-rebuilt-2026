@@ -23,6 +23,7 @@ import frc.robot.Commands.Autons;
 import frc.robot.Commands.GeneralRobotCommands;
 import frc.robot.Commands.GeneralRobotCommands.IntakeState;
 import frc.robot.Commands.GeneralRobotCommands.ScoreFeedState;
+import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -46,6 +47,7 @@ import frc.robot.Subsystems.FeederSubsystem;
 import frc.robot.Subsystems.HoodSubsystem;
 import swervelib.SwerveInputStream;
 
+import com.ctre.phoenix6.HootAutoReplay;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -118,8 +120,8 @@ public class RobotContainer {
     // Autons.testbackwardAuton(generalRobotCommands));
     autoChooser.addOption("Test Rotate", Autons.testRotateAuton(generalRobotCommands));
     autoChooser.addOption("Middle Depot Auto", Autons.testMiddleAuton(generalRobotCommands));
-    autoChooser.addOption("Left Auto", Autons.testleftAuton(generalRobotCommands));
-    autoChooser.addOption("Right Auto", Autons.testRightAuton(generalRobotCommands));
+    autoChooser.addOption("Left Auto", Autons.leftAuton(generalRobotCommands));
+    autoChooser.addOption("Right Auto", Autons.rightAuton(generalRobotCommands));
     autoChooser.addOption("Middle No Depot Auto", shootAuton());
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -146,8 +148,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    testBindings();
-    // johnnyBindings();
+    // testBindings();
+    johnnyBindings();
   }
 
   public void test() {
@@ -253,42 +255,28 @@ public class RobotContainer {
 
     // // scoring
     ps5Controller.L2().toggleOnTrue(Commands.defer(() -> {
+      if (shooterSubsystem.getState() == ShooterState.SHOOTING) {
+        return shooterSubsystem.idle().alongWith(hoodSubsystem.setCommand(HoodSubsystem.kStartingPosition));
+      }
+
       if (swerveSubsystem.currentPoseIsValidForScoring()) {
         return generalRobotCommands.prepareShooterForHubCommand();
       }
       return generalRobotCommands.prepareShooterForPassCommand();
     }, Set.of(shooterSubsystem, hoodSubsystem)));
 
-    // ps5Controller.L2().whileTrue(
-    // Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
-    // .andThen(generalRobotCommands.scoringCommand(() ->
-    // ps5Controller.R1().getAsBoolean())));
+    ps5Controller.L2().whileTrue(
+        Commands.waitSeconds(OperatorConstants.HOLD_DELAY.magnitude())
+            .andThen(generalRobotCommands.scoringCommand()));
+
+    // pov right is for convert controls to manual
+    // pov up is for feed to alliance when manual
 
     ps5Controller.R2().whileTrue(feederSubsystem.runCommand().alongWith(conveyorSubsystem.runCommand()));
-    ps5Controller.R3().onTrue(Commands.defer(() -> {
-      if (swerveSubsystem.currentPoseIsValidForScoring()) {
-        return generalRobotCommands.aimSwerveToHubCommand();
-      } 
-      return generalRobotCommands.aimSwerveToAlliance();
-    }, Set.of(swerveSubsystem)));
+    ps5Controller.R3().onTrue(generalRobotCommands.aimSwerveToHubCommand());
 
     // // misc swerve commands
-    // ps5Controller.circle().toggleOnTrue(generalRobotCommands.runIntakeRollerCommand());
-    // ps5Controller.circle()
-    // .onTrue(Commands.defer(() -> generalRobotCommands.driveToWithAngle(
-    // Autons.allianceRelative(WaypointConstants.BLUE_1_SHOOT,
-    // swerveSubsystem.isBlueAlliance()),
-    // 0.05,
-    // swerveSubsystem.isBlueAlliance() ? new Rotation2d(0) : new
-    // Rotation2d(Math.PI)), Set.of(swerveSubsystem)));
-    // ps5Controller.R3().toggleOnTrue(swerveSubsystem.swerveLockCommand(() -> Math.sqrt(
-    //     Math.pow(leftXSupplier.getAsDouble(), 2) + Math.pow(leftYSupplier.getAsDouble(), 2))));
     ps5Controller.povDown().onTrue(swerveSubsystem.zeroGyroCommand());
-
-    // passing
-    // ps5Controller.povUp().toggleOnTrue(
-    // hoodSubsystem.feedFromNeutralCommand().onlyWhile(() ->
-    // !swerveSubsystem.currentPoseIsValidForScoring())); //
 
     // intake
     ps5Controller.L1().toggleOnTrue(generalRobotCommands.intakeCommand());
@@ -301,20 +289,6 @@ public class RobotContainer {
     ps5Controller.R1().whileTrue(generalRobotCommands.reverseFeedCommand());
     ps5Controller.povLeft()
         .whileTrue(generalRobotCommands.reverseIntakeRollerCommand().alongWith(conveyorSubsystem.reverseCommand()));
-
-    // gooner
-    // ps5Controller.povRight().whileTrue(Commands.run(() -> {
-    // ps5Controller.setRumble(RumbleType.kBothRumble, 1);
-    // }));
-    // ps5Controller.povRight()
-    // .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledMiddle =
-    // !shooterSubsystem.isDisabledMiddle));
-    // ps5Controller.povUp()
-    // .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledLeft =
-    // !shooterSubsystem.isDisabledLeft));
-    // ps5Controller.circle()
-    // .onTrue(Commands.runOnce(() -> shooterSubsystem.isDisabledRight =
-    // !shooterSubsystem.isDisabledRight));
   }
 
   // public void compBindings() {
@@ -349,8 +323,8 @@ public class RobotContainer {
     swerveSubsystem.zeroGyro();
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
-    return autoChooser.getSelected();
-    // return Autons.testleftAuton(generalRobotCommands);
+    // return autoChooser.getSelected();
+    return Autons.rightAuton(generalRobotCommands);
     // return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),

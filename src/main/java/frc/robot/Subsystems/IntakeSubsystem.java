@@ -90,7 +90,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(0.0), // to update 0.7783878944596974
-    AGITATE(-0.7827), // to update 0.7527 , 
+    AGITATE(-0.7827), // to update 0.7527 ,
     INTAKE(-0.6962); // to update 0.08388367709709192 // 0.0838
 
     private final double percentRotation;
@@ -123,7 +123,6 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putData("IntakeDown", intakeCommand());
     setDefaultCommand(idle());
   }
-
 
   /** set roller to percentage output given speed enum */
   public void set(Speed speed) {
@@ -170,10 +169,9 @@ public class IntakeSubsystem extends SubsystemBase {
     Timer timer = new Timer();
 
     return runOnce(() -> set(Position.AGITATE))
-        .andThen(Commands.waitUntil(this::isPositionWithinTolerance)
-            .andThen(run(() -> {
-              sinusoidalPivot(timer);
-            })).beforeStarting(timer::restart));
+        .andThen(run(() -> {
+          sinusoidalPivot(timer);
+        })).beforeStarting(timer::restart);
   }
 
   /**
@@ -297,6 +295,7 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putData(this);
+    SmartDashboard.putNumber("setpoint", pivotSetPoint);
     updatePivotPositionCommand();
   }
 

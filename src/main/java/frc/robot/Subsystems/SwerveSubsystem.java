@@ -72,6 +72,7 @@ import frc.robot.Constants.SwerveConstants;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
+import swervelib.parser.json.modules.DriveConversionFactorsJson;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
@@ -88,8 +89,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private final Field2d kField = new Field2d();
 
-  public final boolean kIsBlueAlliance;
-  private static final Distance kPoseEdgeMargin = Meters.of(0.3);
+  private static final Distance kPoseEdgeMargin = Meters.of(0.2);
 
   public static final Angle kAimTolerance = Degrees.of(2);
 
@@ -99,13 +99,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   /** Creates a new SwerveSubsystem. */
   public SwerveSubsystem() {
-
-    // checks alliance
-    kIsBlueAlliance = DriverStation.getAlliance().isPresent()
-        && DriverStation.getAlliance().get() == Alliance.Blue;
-
-    // sets starting pose based on alliance
-    Pose2d startingPose = kIsBlueAlliance ? new Pose2d(new Translation2d(
+    Pose2d startingPose = isBlueAlliance() ? new Pose2d(new Translation2d(
         Meter.of(0),
         Meter.of(0)),
         new Rotation2d(0))
@@ -114,7 +108,7 @@ public class SwerveSubsystem extends SubsystemBase {
             Meter.of(0)),
             Rotation2d.fromDegrees(180));
 
-    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    // SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     // try to open json files to create swerve
     try {
       File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -362,41 +356,18 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public boolean currentPoseIsValidForScoring() {
-    Pose2d pose = getPose();
-
-    if (pose == null) {
-      return false;
-    }
-
-    final Translation2d translation = pose.getTranslation();
-    final double x = translation.getX();
-    final double y = translation.getY();
-
-    if (!Double.isFinite(x) || !Double.isFinite(y)) {
-      return false;
-    }
-
-    double poseEdgeMargin = kPoseEdgeMargin.magnitude();
-    double sectionLength = LandMarks.kAllianceFieldLength.magnitude();
-
-    boolean inYBounds = y >= -poseEdgeMargin
-        && y <= LandMarks.kFieldWidth.magnitude() + poseEdgeMargin;
-
-    if (!inYBounds) {
-      return false;
-    }
+    double x = getPose().getTranslation().getX();
+    double hubX = LandMarks.hubPosition().getX();
 
     if (isBlueAlliance()) {
-      return x >= -poseEdgeMargin
-          && x <= sectionLength + poseEdgeMargin;
-    } else {
-      return x >= LandMarks.kFieldLength.magnitude() - sectionLength - poseEdgeMargin
-          && x <= LandMarks.kFieldLength.magnitude() + poseEdgeMargin;
+      return hubX + kPoseEdgeMargin.magnitude() > x;
+    } {
+      return hubX - kPoseEdgeMargin.magnitude() < x;
     }
   }
 
   public boolean isBlueAlliance() {
-    return DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
+    return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
   }
 
   public double distanceToHub() {
@@ -423,6 +394,8 @@ public class SwerveSubsystem extends SubsystemBase {
     // .minus(getHeading())
     // .getDegrees());
     SmartDashboard.putNumber("gyro", getHeading().getDegrees());
+    SmartDashboard.putBoolean("alliance colour variable", isBlueAlliance());
+    SmartDashboard.putBoolean("is valid for shooting", currentPoseIsValidForScoring());
 
     // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "",
     // swerveDrive.getMaximumChassisVelocity());
