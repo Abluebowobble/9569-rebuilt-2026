@@ -899,7 +899,7 @@ public class Autons {
                                                                 isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
                                                                                 : SwerveConstants.MAX_SPEED.div(5))),
 
-                                // generalRobotCommands.intakeCommand()),
+                                generalRobotCommands.intakeCommand(),
 
                                 generalRobotCommands.driveTo(
                                                 finishDepot,
@@ -910,10 +910,7 @@ public class Autons {
                                                 kMedTolerance,
                                                 forwardHeading),
                                 generalRobotCommands.aimSwerveToHubCommand(),
-                                new ParallelDeadlineGroup(
-                                                Commands.waitSeconds(0.5).andThen(
-                                                                generalRobotCommands.feedCommand()),
-                                                generalRobotCommands.prepareShooterForHubCommand()));
+                                shoot(generalRobotCommands, 10));
                 // shootWhenReady(generalRobotCommands, 1000));
         }
 

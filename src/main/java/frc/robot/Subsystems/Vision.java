@@ -70,6 +70,10 @@ public class Vision extends SubsystemBase {
       new Translation3d(Units.inchesToMeters(13.717), Units.inchesToMeters(0), Units.inchesToMeters(-25.353391)),
       new Rotation3d(0, Units.degreesToRadians(-63), 0));
 
+    // private static final Transform3d kCamToRobot = new Transform3d(
+    //   new Translation3d(Units.inchesToMeters(-1.341920), Units.inchesToMeters(0), Units.inchesToMeters(-28.686840)),
+    //   new Rotation3d(0, Units.degreesToRadians(-17), 0));
+
   private static final Set<Integer> PRIORITY_TAGS = Set.of(
       8, 5, 9, 10, 4, 3, 11, 2, 18, 27, 19, 20, 26, 25, 21, 24);
 
