@@ -131,21 +131,6 @@ public class RobotContainer {
     return driverFeedback;
   }
 
-  private void registerCommands() {
-    NamedCommands.registerCommand("reverseFeeder", generalRobotCommands.reverseFeedCommand());
-    NamedCommands.registerCommand("runFeeder", generalRobotCommands.feedCommand());
-    NamedCommands.registerCommand("runShooter", generalRobotCommands.spinUpShooterCommand());
-    NamedCommands.registerCommand("intakeUp", intakeSubsystem.returnPositionCommand());
-    NamedCommands.registerCommand("intakeDown", intakeSubsystem.intakePositionCommand());
-    NamedCommands.registerCommand("runIntakeRoller", intakeSubsystem.runRollerCommand());
-    NamedCommands.registerCommand("reverseIntakeRoller", intakeSubsystem.reverseRollerCommand());
-    // NamedCommands.registerCommand("aim",
-    // generalRobotCommands.aimSwerveCommand());
-    NamedCommands.registerCommand("passBackHoodPosition", hoodSubsystem.feedFromNeutralCommand());
-    NamedCommands.registerCommand(
-        "debugPrint",
-        Commands.print("DEBUG COMMAND: PATH PLANNER IS RUNNING"));
-  }
 
   private void configureBindings() {
     // testBindings();
@@ -323,8 +308,8 @@ public class RobotContainer {
     swerveSubsystem.zeroGyro();
     // return swerveSubsystem.driveToPose(new Pose2d(new Translation2d(0, 0), new
     // Rotation2d(Math.PI)));
-    // return autoChooser.getSelected();
-    return  Autons.sideAuton(generalRobotCommands, true);
+    return autoChooser.getSelected();
+    // return  Autons.sideAut/on(generalRobotCommands, true);
     // return shootAuton();
     // return Commands.run(() -> swerveSubsystem.drive(new ChassisSpeeds(0, 0,
     // Math.PI)),
