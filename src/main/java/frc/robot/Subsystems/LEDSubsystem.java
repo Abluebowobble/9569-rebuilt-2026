@@ -6,12 +6,10 @@ package frc.robot.Subsystems;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.util.Units;
@@ -19,7 +17,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
@@ -58,7 +55,8 @@ public class LEDSubsystem extends SubsystemBase {
     alliance = DriverStation.getAlliance();
 
     // runDefaultColor();
-    setRainbowScrolling();
+    // setRainbowScrolling();
+    setSolidColor(Color.kDarkMagenta, Section.ALL);
     // setOff();
     setDefaultCommand(idle());
   }

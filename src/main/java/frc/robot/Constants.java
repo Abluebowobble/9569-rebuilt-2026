@@ -59,9 +59,12 @@ public final class Constants {
     // get through everything? idk
     public static final Translation2d BLUE_1_RUNUP = new Translation2d(6, 5.180);
     public static final Translation2d BLUE_1_FRONT_TRENCH = new Translation2d(6.388, 8);
-    public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(8.375, 7.15);
-    public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(8.375, 0); // 4.14
-    public static final Translation2d BLUE_1_FINISH_INTAKE2 = new Translation2d(8.375, 4.724); // 4.14
+    public static final Translation2d BLUE_1_BEGIN_INTAKE = new Translation2d(9, 7.15); // 8.375
+    public static final Translation2d BLUE_1_FINISH_INTAKE = new Translation2d(9, 0); // 4.14
+
+    public static final Translation2d BLUE_1_BEGIN_INTAKE_2 = new Translation2d(8, 7.15); // 8.375
+    public static final Translation2d BLUE_1_FINISH_INTAKE_2 = new Translation2d(8, 0); // 4.14
+    public static final Translation2d BLUE_1_FINISH_INTAKE2 = new Translation2d(8.475, 4.724); // 4.14
     public static final Translation2d BLUE_1_PREPARE_BUMP = new Translation2d(6.5, 5.7);
     public static final Translation2d BLUE_1_RETURN = new Translation2d(3, 5.5);
     public static final Translation2d BLUE_1_FINAL = new Translation2d(7, 5.5);
@@ -80,8 +83,8 @@ public final class Constants {
     public static final Translation2d BLUE_2_TOWER = new Translation2d(2.504, 4.019);
     public static final Translation2d BLUE_2_DEPOT_INTAKE_2 = new Translation2d(0.8, 5.95);
     public static final Translation2d BLUE_2_PREPARE_DEPOT = new Translation2d(1.26, 7.2);
-    public static final Translation2d BLUE_2_PREPARE_DEPOT_2 = new Translation2d(0.6, 7);
-    public static final Translation2d BLUE_2_DEPOT_INTAKE = new Translation2d(0.6, 5.05);
+    public static final Translation2d BLUE_2_PREPARE_DEPOT_2 = new Translation2d(0.54, 7);
+    public static final Translation2d BLUE_2_DEPOT_INTAKE = new Translation2d(0.54, 5.05);
     public static final Translation2d BLUE_2_FINISH_DEPOT = new Translation2d(2.46, 4.87);
     public static final Translation2d BLUE_2_SHOOT = new Translation2d(2.9, 3.97);
   }
@@ -104,7 +107,9 @@ public final class Constants {
     public static final int SERVO_HUB = 18;
 
     // PWM
-    public static final int INTAKE_ENCODER = 9;
     public static final int LED = 9;
+
+    // DIO 
+    public static final int INTAKE_ENCODER = 9;
   }
 }

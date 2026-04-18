@@ -1,17 +1,11 @@
 package frc.robot.Commands;
 
-import static edu.wpi.first.units.Units.FeetPerSecond;
 import static edu.wpi.first.units.Units.Meter;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
-
-import com.pathplanner.lib.path.Waypoint;
-import com.revrobotics.servohub.config.ServoChannelConfig.BehaviorWhenDisabled;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,18 +13,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.SilverKnightsLib.SwerveController;
 import frc.robot.LandMarks;
-import frc.robot.Constants.BehaviourConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.WaypointConstants;
-import frc.robot.Subsystems.IntakeSubsystem;
-import frc.robot.Subsystems.ShooterSubsystem;
-import frc.robot.Subsystems.SwerveSubsystem;
 
 public class Autons {
 
@@ -165,7 +152,7 @@ public class Autons {
                                                 Commands.waitSeconds(0.5)
                                                                 .andThen(generalRobotCommands.feedCommand())
                                                                 .withTimeout(SHOOT_DELAY),
-                                                generalRobotCommands.prepareShooterForHubCommand()),
+                                                generalRobotCommands.prepareShooter()),
 
                                 generalRobotCommands.driveToWayPoint(
                                                 runup,
@@ -339,7 +326,7 @@ public class Autons {
                                                 Commands.waitSeconds(0.5).andThen(
                                                                 generalRobotCommands.feedCommand())
                                                                 .withTimeout(SHOOT_DELAY),
-                                                generalRobotCommands.prepareShooterForHubCommand()),
+                                                generalRobotCommands.prepareShooter()),
                                 generalRobotCommands.driveToWayPoint(
                                                 runup,
                                                 1,
@@ -568,8 +555,9 @@ public class Autons {
                 Translation2d runup = sideRelative(WaypointConstants.BLUE_1_RUNUP, isBlue, isLeft);
                 Translation2d frontTrench = sideRelative(WaypointConstants.BLUE_1_FRONT_TRENCH, isBlue, isLeft);
                 Translation2d beginIntake = sideRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue, isLeft);
+                Translation2d beginIntake2 = sideRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE_2, isBlue, isLeft);
                 Translation2d finishIntake = sideRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue, isLeft);
-                Translation2d finishIntake2 = sideRelative(WaypointConstants.BLUE_1_FINISH_INTAKE2, isBlue, isLeft);
+                Translation2d finishIntake2 = sideRelative(WaypointConstants.BLUE_1_FINISH_INTAKE_2, isBlue, isLeft);
                 Translation2d prepareBump = sideRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue, isLeft);
                 Translation2d returnFromBump = sideRelative(WaypointConstants.BLUE_1_RETURN, isBlue, isLeft);
                 Translation2d shootPose = sideRelative(WaypointConstants.BLUE_1_SHOOT, isBlue, isLeft);
@@ -589,7 +577,7 @@ public class Autons {
                                 ? (isBlue ? kBumpHeadingBottomRight : kBumpHeadingTopLeft)
                                 : (isBlue ? kBumpHeadingTopRight : kBumpHeadingBottomLeft);
 
-                double percentageIntakeSpeed = 0.3;
+                double percentageIntakeSpeed = 0.4;
                 double percentageBumpSpeed = 0.6;
 
                 LinearVelocity intakeVelocity = isLeft
@@ -617,16 +605,16 @@ public class Autons {
                                                                                 .times(-1),
                                                 null),
 
-                                generalRobotCommands.driveToWayPoint(
-                                                frontTrench,
-                                                1,
-                                                isBlue ? SwerveConstants.MAX_SPEED.times(0.6)
-                                                                : SwerveConstants.MAX_SPEED.times(0.6).times(-1),
-                                                isLeft
-                                                                ? (isBlue ? SwerveConstants.MAX_SPEED
-                                                                                : SwerveConstants.MAX_SPEED.times(-1))
-                                                                : (isBlue ? SwerveConstants.MAX_SPEED.times(-1)
-                                                                                : SwerveConstants.MAX_SPEED)),
+                                // generalRobotCommands.driveToWayPoint(
+                                // frontTrench,
+                                // 1,
+                                // isBlue ? SwerveConstants.MAX_SPEED.times(0.6)
+                                // : SwerveConstants.MAX_SPEED.times(0.6).times(-1),
+                                // isLeft
+                                // ? (isBlue ? SwerveConstants.MAX_SPEED
+                                // : SwerveConstants.MAX_SPEED.times(-1))
+                                // : (isBlue ? SwerveConstants.MAX_SPEED.times(-1)
+                                // : SwerveConstants.MAX_SPEED)),
 
                                 Commands.deadline(
                                                 new SequentialCommandGroup(
@@ -634,9 +622,10 @@ public class Autons {
                                                                                 beginIntake,
                                                                                 kLooseTolerance,
                                                                                 intakeHeading),
-                                                                generalRobotCommands.driveToWayPoint(
+                                                                generalRobotCommands.driveToWayPointWithAngle(
                                                                                 finishIntake,
                                                                                 4.5,
+                                                                                intakeHeading,
                                                                                 null,
                                                                                 intakeVelocity),
                                                                 generalRobotCommands.driveToWithAngle(
@@ -659,6 +648,9 @@ public class Autons {
                                                 bumpHeading),
 
                                 shoot(generalRobotCommands, SHOOT_DELAY),
+
+                                generalRobotCommands.getConveyorSubsystem().idle()
+                                                .alongWith(generalRobotCommands.getFeederSubsytem().idle()),
 
                                 // cycle 2
 
@@ -684,21 +676,111 @@ public class Autons {
                                 Commands.deadline(
                                                 new SequentialCommandGroup(
                                                                 generalRobotCommands.driveToWithAngle(
-                                                                                beginIntake,
+                                                                                beginIntake2,
                                                                                 kLooseTolerance,
                                                                                 intakeHeading),
-                                                                generalRobotCommands.driveToWayPoint(
-                                                                                finishIntake,
+                                                                generalRobotCommands.driveToWayPointWithAngle(
+                                                                                finishIntake2,
                                                                                 4.5,
+                                                                                intakeHeading,
                                                                                 null,
                                                                                 intakeVelocity)),
                                                 Commands.waitSeconds(0.1)
-                                                                .andThen(generalRobotCommands.intakeCommand())),
+                                                                .andThen(generalRobotCommands.intakeCommand())));
+        }
 
-                                generalRobotCommands.driveToWithAngle(
-                                                prepareBump,
-                                                kMedTolerance,
-                                                bumpHeading),
+        public static Command sideAuton2Sweep(GeneralRobotCommands generalRobotCommands, boolean isLeft) {
+                var alliance = DriverStation.getAlliance();
+                boolean isBlue;
+                if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Blue) {
+                        isBlue = true;
+                } else {
+                        isBlue = false;
+                }
+
+                Translation2d backup = sideRelative(WaypointConstants.BLUE_1_BACKUP, isBlue, isLeft);
+                Translation2d runup = sideRelative(WaypointConstants.BLUE_1_RUNUP, isBlue, isLeft);
+                Translation2d frontTrench = sideRelative(WaypointConstants.BLUE_1_FRONT_TRENCH, isBlue, isLeft);
+                Translation2d beginIntake = sideRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE, isBlue, isLeft);
+                Translation2d beginIntake2 = sideRelative(WaypointConstants.BLUE_1_BEGIN_INTAKE_2, isBlue, isLeft);
+                Translation2d finishIntake = sideRelative(WaypointConstants.BLUE_1_FINISH_INTAKE, isBlue, isLeft);
+                Translation2d finishIntake2 = sideRelative(WaypointConstants.BLUE_1_FINISH_INTAKE_2, isBlue, isLeft);
+                Translation2d prepareBump = sideRelative(WaypointConstants.BLUE_1_PREPARE_BUMP, isBlue, isLeft);
+                Translation2d returnFromBump = sideRelative(WaypointConstants.BLUE_1_RETURN, isBlue, isLeft);
+                Translation2d shootPose = sideRelative(WaypointConstants.BLUE_1_SHOOT, isBlue, isLeft);
+                Translation2d prepareDepot = sideRelative(WaypointConstants.BLUE_1_PREPARE_DEPOT_INTAKE, isBlue,
+                                isLeft);
+                Translation2d depotIntake = sideRelative(WaypointConstants.BLUE_1_DEPOT_INTAKE, isBlue, isLeft);
+                Translation2d finalPos = sideRelative(WaypointConstants.BLUE_1_FINAL, isBlue, isLeft);
+
+                Rotation2d forwardHeading = isBlue ? kForward : kBackward;
+                Rotation2d backwardHeading = isBlue ? kBackward : kForward;
+
+                Rotation2d intakeHeading = isLeft
+                                ? (isBlue ? Rotation2d.fromDegrees(-90) : Rotation2d.fromDegrees(90))
+                                : (isBlue ? Rotation2d.fromDegrees(90) : Rotation2d.fromDegrees(-90));
+
+                Rotation2d bumpHeading = isLeft
+                                ? (isBlue ? kBumpHeadingBottomRight : kBumpHeadingTopLeft)
+                                : (isBlue ? kBumpHeadingTopRight : kBumpHeadingBottomLeft);
+
+                double percentageIntakeSpeed = 0.4;
+                double percentageBumpSpeed = 0.5;
+
+                LinearVelocity intakeVelocity = isLeft
+                                ? (isBlue ? SwerveConstants.MAX_SPEED.times(percentageIntakeSpeed).times(-1)
+                                                : SwerveConstants.MAX_SPEED.times(percentageIntakeSpeed))
+                                : (isBlue ? SwerveConstants.MAX_SPEED.times(percentageIntakeSpeed)
+                                                : SwerveConstants.MAX_SPEED.times(percentageIntakeSpeed).times(-1));
+
+                final double SHOOT_DELAY = 4.5;
+
+                return new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        Translation2d start = sideRelative(WaypointConstants.BLUE_1_START, isBlue,
+                                                        isLeft);
+
+                                        generalRobotCommands.getSwerveSubsystem()
+                                                        .resetOdometry(new Pose2d(start, bumpHeading));
+                                }),
+
+                                generalRobotCommands.driveToWayPoint(
+                                                runup,
+                                                1,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(percentageBumpSpeed)
+                                                                : SwerveConstants.MAX_SPEED.times(percentageBumpSpeed)
+                                                                                .times(-1),
+                                                null),
+
+                                // generalRobotCommands.driveToWayPoint(
+                                // frontTrench,
+                                // 1,
+                                // isBlue ? SwerveConstants.MAX_SPEED.times(0.6)
+                                // : SwerveConstants.MAX_SPEED.times(0.6).times(-1),
+                                // isLeft
+                                // ? (isBlue ? SwerveConstants.MAX_SPEED
+                                // : SwerveConstants.MAX_SPEED.times(-1))
+                                // : (isBlue ? SwerveConstants.MAX_SPEED.times(-1)
+                                // : SwerveConstants.MAX_SPEED)),
+
+                                Commands.deadline(
+                                                new SequentialCommandGroup(
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                beginIntake,
+                                                                                kLooseTolerance,
+                                                                                intakeHeading),
+                                                                generalRobotCommands.driveToWayPointWithAngle(
+                                                                                finishIntake,
+                                                                                4.5, // 4.5
+                                                                                intakeHeading,
+                                                                                null,
+                                                                                intakeVelocity),
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                prepareBump,
+                                                                                kTightTolerance,
+                                                                                bumpHeading)),
+                                                Commands.waitSeconds(0.1)
+                                                                .andThen(generalRobotCommands.intakeCommand())),
 
                                 generalRobotCommands.driveToWayPoint(
                                                 returnFromBump,
@@ -712,7 +794,63 @@ public class Autons {
                                                 kTightTolerance,
                                                 bumpHeading),
 
-                                shoot(generalRobotCommands, 1000));
+                                shoot(generalRobotCommands, SHOOT_DELAY),
+
+                                generalRobotCommands.getConveyorSubsystem().idle()
+                                                .alongWith(generalRobotCommands.getFeederSubsytem().idle()),
+
+                                // cycle 2
+
+                                generalRobotCommands.driveToWayPoint(
+                                                runup,
+                                                1,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(percentageBumpSpeed)
+                                                                : SwerveConstants.MAX_SPEED.times(percentageBumpSpeed)
+                                                                                .times(-1),
+                                                null),
+
+                                generalRobotCommands.driveToWayPoint(
+                                                frontTrench,
+                                                1,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(0.6)
+                                                                : SwerveConstants.MAX_SPEED.times(0.6).times(-1),
+                                                isLeft
+                                                                ? (isBlue ? SwerveConstants.MAX_SPEED
+                                                                                : SwerveConstants.MAX_SPEED.times(-1))
+                                                                : (isBlue ? SwerveConstants.MAX_SPEED.times(-1)
+                                                                                : SwerveConstants.MAX_SPEED)),
+
+                                Commands.deadline(
+                                                new SequentialCommandGroup(
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                beginIntake2,
+                                                                                kLooseTolerance,
+                                                                                intakeHeading),
+                                                                generalRobotCommands.driveToWayPointWithAngle(
+                                                                                finishIntake2,
+                                                                                4.5, // 4.5
+                                                                                intakeHeading,
+                                                                                null,
+                                                                                intakeVelocity),
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                prepareBump,
+                                                                                kMedTolerance,
+                                                                                bumpHeading)),
+                                                Commands.waitSeconds(0.1)
+                                                                .andThen(generalRobotCommands.intakeCommand())),
+                                generalRobotCommands.driveToWayPoint(
+                                                returnFromBump,
+                                                0.5,
+                                                isBlue ? SwerveConstants.MAX_SPEED.times(percentageBumpSpeed).times(-1)
+                                                                : SwerveConstants.MAX_SPEED.times(percentageBumpSpeed),
+                                                null),
+
+                                generalRobotCommands.driveToWithAngle(
+                                                returnFromBump,
+                                                kTightTolerance,
+                                                bumpHeading),
+
+                                shoot(generalRobotCommands, SHOOT_DELAY));
         }
 
         public static Translation2d sideRelative(Translation2d pose, boolean isBlue, boolean isLeft) {
@@ -744,7 +882,7 @@ public class Autons {
                                 Commands.waitSeconds(seconds),
                                 Commands.waitSeconds(0.5)
                                                 .andThen(generalRobotCommands.feedCommand()),
-                                generalRobotCommands.prepareShooterForHubCommand());
+                                generalRobotCommands.prepareShooter());
         }
 
         public static Command rightShiftToMiddle(GeneralRobotCommands generalRobotCommands) {
@@ -881,25 +1019,25 @@ public class Autons {
                                                 towerPose,
                                                 kMedTolerance),
 
-                                generalRobotCommands.driveToWithAngle(
-                                                prepareDepot,
-                                                0.5,
-                                                intakeHeading),
-
-                                generalRobotCommands.driveToWithAngle(
-                                                prepareDepot2,
-                                                kTightTolerance,
-                                                intakeHeading),
-
                                 new ParallelDeadlineGroup(
-                                                generalRobotCommands.driveToWayPoint(
-                                                                depotIntake,
-                                                                kMedTolerance,
-                                                                null,
-                                                                isBlue ? SwerveConstants.MAX_SPEED.div(5).times(-1)
-                                                                                : SwerveConstants.MAX_SPEED.div(5))),
-
-                                generalRobotCommands.intakeCommand(),
+                                                new SequentialCommandGroup(
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                prepareDepot,
+                                                                                0.5,
+                                                                                intakeHeading),
+                                                                generalRobotCommands.driveToWithAngle(
+                                                                                prepareDepot2,
+                                                                                kTightTolerance,
+                                                                                intakeHeading),
+                                                                generalRobotCommands.driveToWayPoint(
+                                                                                depotIntake,
+                                                                                kMedTolerance,
+                                                                                null,
+                                                                                isBlue ? SwerveConstants.MAX_SPEED
+                                                                                                .times(0.3).times(-1)
+                                                                                                : SwerveConstants.MAX_SPEED
+                                                                                                                .times(0.3))),
+                                                Commands.waitSeconds(1).andThen(generalRobotCommands.intakeCommand())),
 
                                 generalRobotCommands.driveTo(
                                                 finishDepot,

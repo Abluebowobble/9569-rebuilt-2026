@@ -18,7 +18,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
@@ -62,8 +61,6 @@ public class HoodSubsystem extends SubsystemBase {
 
         // prep hood at maximal position
         setPosition(kStartingPosition);
-
-        setDefaultCommand(idle());
     }
 
     /**
@@ -148,7 +145,7 @@ public class HoodSubsystem extends SubsystemBase {
     public void periodic() {
         // uncomment below to update hood based on smartdashboard
         // updateSpeedWithSmartDashboard();
-        SmartDashboard.putData(this);
+        // SmartDashboard.putData(this);
     }
     
     @Override

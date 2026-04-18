@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
 
-import static edu.wpi.first.units.Units.Seconds;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -19,11 +18,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HardwareMap;
 import frc.robot.Commands.GeneralRobotCommands.ConveyorState;
-import frc.robot.Commands.GeneralRobotCommands.FeederState;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -37,7 +33,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   public enum Speed {
     STOP(0),
-    RUN(0.8), // to tune
+    RUN(0.95), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;
@@ -65,7 +61,7 @@ public class ConveyorSubsystem extends SubsystemBase {
 
   /** set speed given a percentage output */
   public void setPercentageOutput(double percentage) {
-    SmartDashboard.putNumber("conveyor output percentage", percentage);
+    // SmartDashboard.putNumber("conveyor output percentage", percentage);
     motor.setVoltage(percentage * 12.0);
   }
 

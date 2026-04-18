@@ -8,34 +8,25 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
 
-import javax.naming.ldap.ControlFactory;
 
-import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 
 import static edu.wpi.first.units.Units.Degrees;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Commands.GeneralRobotCommands.IntakeState;
 import frc.robot.Commands.GeneralRobotCommands.RollerState;
-import frc.robot.Commands.GeneralRobotCommands.ShooterState;
 import frc.SilverKnightsLib.OPRSlewRateLimiter;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -71,7 +62,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // speed for roller motor
   public enum Speed { // 0.08969272724231818
     STOP(0),
-    INTAKE(0.9), // to tune
+    INTAKE(0.95), // to tune
     REVERSE(-0.9); // to tune
 
     private final double percentOutput;
@@ -90,8 +81,8 @@ public class IntakeSubsystem extends SubsystemBase {
   // set angle for pivot motor
   public enum Position {
     STOWED(0.0), // to update 0.7783878944596974
-    AGITATE(-0.7827), // to update 0.7527 ,
-    INTAKE(-0.6962); // to update 0.08388367709709192 // 0.0838
+    AGITATE(-0.745), // to update 0.7527 ,
+    INTAKE(-0.683); // to update 0.08388367709709192 // 0.0838 
 
     private final double percentRotation;
 
@@ -120,7 +111,7 @@ public class IntakeSubsystem extends SubsystemBase {
     controller.calculate(Double.MAX_VALUE, 0);
 
     // pivotEncoder.setPosition(0);
-    SmartDashboard.putData("IntakeDown", intakeCommand());
+    // SmartDashboard.putData("IntakeDown", intakeCommand());
     setDefaultCommand(idle());
   }
 
@@ -294,8 +285,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putData(this);
-    SmartDashboard.putNumber("setpoint", pivotSetPoint);
+    // SmartDashboard.putData(this);
+    // SmartDashboard.putNumber("setpoint", pivotSetPoint);
     updatePivotPositionCommand();
   }
 

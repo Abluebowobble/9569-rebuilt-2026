@@ -59,8 +59,8 @@ public class DriverFeedback {
   /** Updates the amount of time (seconds) remaining before next shift */
   public void update() {
     double time = timeRemainingBeforeNextShift();
-    SmartDashboard.putNumber("time remaining before next shift", time);
-    SmartDashboard.putNumber("time left", Timer.getMatchTime());
+    // SmartDashboard.putNumber("time remaining before next shift", time);
+    // SmartDashboard.putNumber("time left", Timer.getMatchTime());
     rumbleController(time);
   }
 

@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.PersistMode;
@@ -21,7 +20,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Commands.GeneralRobotCommands.ShooterState;
-import frc.robot.Commands.GeneralRobotCommands.SwerveState;
 import frc.robot.Constants.HardwareMap;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -64,7 +62,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // then its within tolerance
   private Voltage voltage = Volts.of(0);
 
-  public static final AngularVelocity kStartingVelocity = RPM.of(2000);
+  public static final AngularVelocity kStartingVelocity = RPM.of(1400);
 
   private ShooterState shooterState = ShooterState.IDLE;
 
@@ -275,10 +273,10 @@ public class ShooterSubsystem extends SubsystemBase {
     // uncomment below to tune
     // updateSpeedWithSmartDashboard();
 
-    SmartDashboard.putBoolean("is velocity of shooters within tolerance", isVelocityWithinTolerance());
+    // SmartDashboard.putBoolean("is velocity of shooters within tolerance", isVelocityWithinTolerance());
 
     // telemetry
-    SmartDashboard.putData(this);
+    // SmartDashboard.putData(this);
   }
 
   public double progress() {

@@ -8,21 +8,14 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Seconds;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonUtils;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -34,12 +27,10 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -48,12 +39,10 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -61,8 +50,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.SilverKnightsLib.SwerveController;
 import frc.SilverKnightsLib.SwerveController.Speeds;
 import frc.robot.Constants;
@@ -72,9 +59,6 @@ import frc.robot.Constants.SwerveConstants;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveParser;
-import swervelib.parser.json.modules.DriveConversionFactorsJson;
-import swervelib.telemetry.SwerveDriveTelemetry;
-import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
 
@@ -118,7 +102,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     kField.setRobotPose(startingPose);
-    SmartDashboard.putData("field swerve", kField);
+    // SmartDashboard.putData("field swerve", kField);
 
     // Correct for skew that gets worse as angular velocity increases. Start with a
     // coefficient of 0.1.
@@ -361,8 +345,22 @@ public class SwerveSubsystem extends SubsystemBase {
 
     if (isBlueAlliance()) {
       return hubX + kPoseEdgeMargin.magnitude() > x;
-    } {
+    }
+    {
       return hubX - kPoseEdgeMargin.magnitude() < x;
+    }
+  }
+
+  public boolean currentPoseIsValidForFeeding() {
+    double x = getPose().getTranslation().getX();
+    boolean isBlue = isBlueAlliance();
+    Distance opposingAllianceHub = isBlue ? LandMarks.kFieldLength.minus(LandMarks.kAllianceFieldLength)
+        : LandMarks.kAllianceFieldLength;
+
+    if (isBlue) {
+      return opposingAllianceHub.magnitude() - kPoseEdgeMargin.magnitude() < x;
+    } else {
+      return opposingAllianceHub.magnitude() + kPoseEdgeMargin.magnitude() > x;
     }
   }
 
@@ -373,29 +371,33 @@ public class SwerveSubsystem extends SubsystemBase {
   public double distanceToHub() {
     return swerveDrive.getPose().getTranslation().getDistance(LandMarks.hubPosition());
     // return vision.distanceToPoint(swerveDrive.getPose(),
-    //     new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new Rotation2d(0)));
+    // new Pose2d(new Translation2d(Inches.of(182.105), Inches.of(158.845)), new
+    // Rotation2d(0)));
   }
 
   public double distanceToAllianceHubCentre() {
-    return swerveDrive.getPose().getTranslation().getDistance(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())));
-    
+    return swerveDrive.getPose().getTranslation()
+        .getDistance(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())));
+
     // vision.distanceToPoint(swerveDrive.getPose(),
-    //     new Pose2d(new Translation2d(LandMarks.allianceHubCentreX(), Inches.of(swerveDrive.getPose().getY())), new Rotation2d(0)));
+    // new Pose2d(new Translation2d(LandMarks.allianceHubCentreX(),
+    // Inches.of(swerveDrive.getPose().getY())), new Rotation2d(0)));
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("Distance FRom Blue HUb",
-        vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
+    // SmartDashboard.putNumber("Distance FRom Blue HUb",
+        // vision.distanceToPoint(swerveDrive.getPose(), Vision.kAprilTagField.getTagPose(26).get().toPose2d()));
     SmartDashboard.putBoolean("is aimed?", isAimed());
     // SmartDashboard.putNumber("YAW FOR AUTO CORRECTION",
     // getTargetHeadingInFieldFrame()
     // .minus(getHeading())
     // .getDegrees());
-    SmartDashboard.putNumber("gyro", getHeading().getDegrees());
-    SmartDashboard.putBoolean("alliance colour variable", isBlueAlliance());
-    SmartDashboard.putBoolean("is valid for shooting", currentPoseIsValidForScoring());
+    // SmartDashboard.putNumber("gyro", getHeading().getDegrees());
+    // SmartDashboard.putBoolean("alliance colour variable", isBlueAlliance());
+    // SmartDashboard.putBoolean("is valid for shooting", currentPoseIsValidForScoring());
+    // SmartDashboard.putBoolean("is valid for feeding", currentPoseIsValidForFeeding());
 
     // SmartDashboard.putNumber(swerveDrive.getMaximumChassisAngularVelocity() + "",
     // swerveDrive.getMaximumChassisVelocity());
@@ -404,9 +406,9 @@ public class SwerveSubsystem extends SubsystemBase {
     // field2d
     Pose2d currentPose = swerveDrive.getPose();
     kField.setRobotPose(currentPose);
-    SmartDashboard.putData("field swerve", kField);
-    SmartDashboard.putString("Current Swerve State", toString());
-    SmartDashboard.putNumber("Distance from alliance hub", distanceToAllianceHubCentre());
+    // SmartDashboard.putData("field swerve", kField);
+    // SmartDashboard.putString("Current Swerve State", toString());
+    // SmartDashboard.putNumber("Distance from alliance hub", distanceToHub());
 
     vision.useBestPoseFieldRelativeTEST(this::addVisionMeasurement,
         swerveDrive.getRobotVelocity());

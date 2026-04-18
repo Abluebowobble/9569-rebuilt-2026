@@ -1,25 +1,14 @@
 package frc.robot.Commands;
 
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
-import com.ctre.phoenix.CANifier.LEDChannel;
-import com.ctre.phoenix6.signals.Led1OffColorValue;
-import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
-
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.AccelerationUnit;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -31,7 +20,6 @@ import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.LEDSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
 import frc.robot.Subsystems.SwerveSubsystem;
-import frc.robot.Subsystems.Vision;
 import frc.robot.Subsystems.LEDSubsystem.Section;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -109,16 +97,78 @@ public class GeneralRobotCommands {
                 turnSupplier);
     }
 
-    public Command prepareShooterForHubCommand() {
-        return new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-                () -> Meters.of(swerveSubsystem.distanceToHub()),
-                true);
+    public Command prepareShooter() {
+        return Commands.parallel(
+                new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+                        () -> Meters.of(swerveSubsystem.distanceToHub()),
+                        () -> Meters.of(swerveSubsystem.distanceToAllianceHubCentre()),
+                        () -> swerveSubsystem.currentPoseIsValidForScoring()),
+                Commands.run(() -> {
+                    if (swerveSubsystem.currentPoseIsValidForScoring()) {
+
+                        if (isReadyToShoot()) {
+                            ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.2), Section.SIDE);
+                            return;
+                        }
+                        
+                        ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE);
+                    } else {
+                        if (isReadyToShoot()) {
+                            ledSubsystem.setSolidColor(Color.kBlue, Section.SIDE);
+                            return;
+                        }
+
+                        ledSubsystem.setBlink(Color.kBlue, Seconds.of(0.2), Section.SIDE);
+                    }
+                }));
     }
 
-    public Command prepareShooterForPassCommand() {
-        return Commands.parallel(new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
-                () -> Meters.of(swerveSubsystem.distanceToAllianceHubCentre()),
-                false),
+    // public Command prepareShooterForHubCommand() {
+    //     return Commands.parallel(new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    //             () -> Meters.of(swerveSubsystem.distanceToHub()),
+    //             true),
+    //             Commands.run(() -> {
+    //                 if (isReadyToShoot()) {
+    //                     ledSubsystem.setBlink(Color.kGreen, Seconds.of(0.2), Section.SIDE);
+    //                     return;
+    //                 }
+    //                 ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE);
+
+    //             }));
+    // }
+
+    // public Command prepareShooterForPassCommand() {
+    //     return Commands.parallel(new PrepareShooterCommand(shooterSubsystem, hoodSubsystem,
+    //             () -> Meters.of(swerveSubsystem.distanceToAllianceHubCentre()),
+    //             false),
+    //             Commands.run(() -> {
+    //                 if (isReadyToShoot()) {
+    //                     ledSubsystem.setSolidColor(Color.kBlue, Section.SIDE);
+    //                     return;
+    //                 }
+
+    //                 ledSubsystem.setBlink(Color.kBlue, Seconds.of(0.2), Section.SIDE);
+
+    //             }));
+    // }
+
+    public Command manualPrepareShooterForPassFromAllianceCommand() {
+        return Commands.parallel(shooterSubsystem.runCommand(RPM.of(1500))
+                .alongWith(hoodSubsystem.setCommand(HoodSubsystem.kMaxPosition)),
+                Commands.run(() -> {
+                    if (isReadyToShoot()) {
+                        ledSubsystem.setSolidColor(Color.kBlue, Section.SIDE);
+                        return;
+                    }
+
+                    ledSubsystem.setBlink(Color.kBlue, Seconds.of(0.2), Section.SIDE);
+
+                }));
+    }
+
+    public Command manualPrepareShooterForPassFromNeutralCommand() {
+        return Commands.parallel(shooterSubsystem.runCommand(RPM.of(4300))
+                .alongWith(hoodSubsystem.setCommand(HoodSubsystem.kMaxPosition)),
                 Commands.run(() -> {
                     if (isReadyToShoot()) {
                         ledSubsystem.setSolidColor(Color.kBlue, Section.SIDE);
@@ -157,8 +207,8 @@ public class GeneralRobotCommands {
         // spinUpShooterCommand());
         return Commands.deadline(
                 aimSwerveToHubCommand(),
-                Commands.either(prepareShooterForHubCommand().asProxy(), Commands.none(),
-                        () -> shooterSubsystem.getState() != ShooterState.SHOOTING),
+                Commands.either(Commands.none(), prepareShooter().asProxy(),
+                        () -> shooterSubsystem.getState() == ShooterState.SHOOTING),
                 Commands.run(() -> {
                     if (!isReadyToShoot()) {
                         ledSubsystem.setSolidColor(Color.kDarkOrange, Section.SIDE);

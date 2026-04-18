@@ -46,7 +46,7 @@ public class FeederSubsystem extends SubsystemBase {
   public enum Speed {
     STOP(0),
     REVERSE(-0.5),
-    RUN(0.9),
+    RUN(0.95),
     UNJAM(-0.5);
 
     private final double percentageOutput;
@@ -118,7 +118,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public Command idle() {
-    return run(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(FeederState.STOP)));
+    return runOnce(() -> set(Speed.STOP)).alongWith(Commands.runOnce(() -> setState(FeederState.STOP)));
   }
 
   /** set to reverse speed enum on start, stop on end */

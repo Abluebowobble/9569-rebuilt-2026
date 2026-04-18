@@ -4,32 +4,24 @@
 
 package frc.robot.Subsystems;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import frc.robot.LandMarks;
-import frc.robot.Robot;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -41,16 +33,10 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 
 public class Vision extends SubsystemBase {
 
@@ -66,13 +52,13 @@ public class Vision extends SubsystemBase {
 
   private Optional<EstimatedRobotPose> latestEstimatedPose = Optional.empty();
 
-  private static final Transform3d kCamToRobot = new Transform3d(
-      new Translation3d(Units.inchesToMeters(13.717), Units.inchesToMeters(0), Units.inchesToMeters(-25.353391)),
-      new Rotation3d(0, Units.degreesToRadians(-63), 0));
+  // private static final Transform3d kCamToRobot = new Transform3d(
+  //     new Translation3d(Units.inchesToMeters(13.717), Units.inchesToMeters(0), Units.inchesToMeters(-25.353391)),
+  //     new Rotation3d(0, Units.degreesToRadians(-63), 0));
 
-    // private static final Transform3d kCamToRobot = new Transform3d(
-    //   new Translation3d(Units.inchesToMeters(-1.341920), Units.inchesToMeters(0), Units.inchesToMeters(-28.686840)),
-    //   new Rotation3d(0, Units.degreesToRadians(-17), 0));
+    private static final Transform3d kCamToRobot = new Transform3d(
+      new Translation3d(Units.inchesToMeters(-1.341920), Units.inchesToMeters(0), Units.inchesToMeters(-28.686840)),
+      new Rotation3d(0, Units.degreesToRadians(-17), 0));
 
   private static final Set<Integer> PRIORITY_TAGS = Set.of(
       8, 5, 9, 10, 4, 3, 11, 2, 18, 27, 19, 20, 26, 25, 21, 24);
@@ -98,11 +84,11 @@ public class Vision extends SubsystemBase {
     // useBestCameraResults();
     // useBestPoseFieldRelative();
     // useBestPoseFieldRelativeTEST();
-    if (DriverStation.getAlliance().isPresent())
-      SmartDashboard.putString("alliance",
-          DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? "Blue" : "Red");
+    // if (DriverStation.getAlliance().isPresent())
+      // SmartDashboard.putString("alliance",
+      //     DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? "Blue" : "Red");
 
-    SmartDashboard.putData("Localized Field", field);
+    // SmartDashboard.putData("Localized Field", field);
   }
 
   /** newest */

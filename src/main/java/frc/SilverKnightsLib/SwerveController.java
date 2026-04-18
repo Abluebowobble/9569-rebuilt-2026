@@ -78,9 +78,9 @@ public class SwerveController {
         final double finalVx = vx;
         final double finalVy = vy;
         final double finalVr = MathUtil.clamp(vr,-2*Math.PI,2*Math.PI);
-        SmartDashboard.putNumber("DT Speed / Vx", finalVx);
-        SmartDashboard.putNumber("DT Speed / Vy", finalVy);
-        SmartDashboard.putNumber("DT Speed / Vr", finalVr);
+        // SmartDashboard.putNumber("DT Speed / Vx", finalVx);
+        // SmartDashboard.putNumber("DT Speed / Vy", finalVy);
+        // SmartDashboard.putNumber("DT Speed / Vr", finalVr);
 
         return new Speeds(finalVx, finalVy, finalVr);
     }

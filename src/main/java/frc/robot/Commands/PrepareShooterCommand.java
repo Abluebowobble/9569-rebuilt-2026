@@ -2,27 +2,21 @@
 
 package frc.robot.Commands;
 
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.Interpolator;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.LandMarks;
 import frc.robot.Commands.GeneralRobotCommands.HoodState;
 import frc.robot.Commands.GeneralRobotCommands.ShooterState;
-import frc.robot.Commands.PrepareShooterCommand.Shot;
 import frc.robot.Subsystems.HoodSubsystem;
 import frc.robot.Subsystems.ShooterSubsystem;
-import frc.robot.Subsystems.SwerveSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class PrepareShooterCommand extends Command {
@@ -99,16 +93,18 @@ public class PrepareShooterCommand extends Command {
 
   private final ShooterSubsystem shooterSubsystem;
   private final HoodSubsystem hoodSubsystem;
-  private final Supplier<Distance> distance;
-  private final InterpolatingTreeMap<Distance, Shot> shotMap;
+  private final Supplier<Distance> distanceShoot;
+  private final Supplier<Distance> distanceFeed;
+  private final BooleanSupplier forScoring;
 
   /** Creates a new AimShotCommand. */
   public PrepareShooterCommand(ShooterSubsystem shooterSubsystem, HoodSubsystem hoodSubsystem,
-      Supplier<Distance> distance, boolean forScoring) {
+      Supplier<Distance> distanceShoot, Supplier<Distance> distanceFeed, BooleanSupplier forScoring) {
     this.shooterSubsystem = shooterSubsystem;
     this.hoodSubsystem = hoodSubsystem;
-    this.distance = distance;
-    this.shotMap = forScoring ? distanceToShotMap : distanceToShotMapFeed;
+    this.distanceShoot = distanceShoot;
+    this.distanceFeed = distanceFeed;
+    this.forScoring = forScoring;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(shooterSubsystem, hoodSubsystem);
@@ -121,7 +117,7 @@ public class PrepareShooterCommand extends Command {
     shooterSubsystem.setState(ShooterState.SHOOTING);
 
     // get appropriate rpm and hood position pair
-    final Shot shot = shotMap.get(distance.get());
+    final Shot shot = forScoring.getAsBoolean() ? distanceToShotMap.get(distanceShoot.get()) : distanceToShotMapFeed.get(distanceFeed.get());
 
     // set subsystems with calculated values
     shooterSubsystem.set(RPM.of(shot.shooterRPM));
