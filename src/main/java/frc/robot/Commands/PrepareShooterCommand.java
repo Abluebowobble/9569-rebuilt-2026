@@ -79,16 +79,10 @@ public class PrepareShooterCommand extends Command {
 
   // to tune
   static {
-    // distanceToShotMap.put(Meters.of(1.649778334547691), new Shot(5300, 0.187));
-    // distanceToShotMap.put(Meters.of(0.5748198000485322), new Shot(5300, 0));
-    // distanceToShotMap.put(Meters.of(2.4006216556413467), new Shot(5300, 0.304));
-    // distanceToShotMap.put(Meters.of(1.8874167417587684), new Shot(5300, 0.226));
-    // distanceToShotMap.put(Meters.of(1.378834779227017), new Shot(5300, 0.148));
-    // distanceToShotMap.put(Meters.of(2.4854897119801356), new Shot(5300, 0.273));
-    distanceToShotMapFeed.put(Meters.of(11), new Shot(5600, 0.804));
+    distanceToShotMapFeed.put(Meters.of(11), new Shot(5650, 0.804));
     distanceToShotMapFeed.put(Meters.of(8.544), new Shot(4300, 0.804));
-    distanceToShotMapFeed.put(Meters.of(6.832), new Shot(3600, 0.804));
-    distanceToShotMapFeed.put(Meters.of(6.480), new Shot(3000, 0.804));
+    distanceToShotMapFeed.put(Meters.of(6.832), new Shot(4000, 0.6));
+    distanceToShotMapFeed.put(Meters.of(6.480), new Shot(3400, 0.3));
   }
 
   private final ShooterSubsystem shooterSubsystem;

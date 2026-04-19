@@ -36,13 +36,13 @@ public class LandMarks {
         }
     }
 
-    public static Translation2d hubCloserPosition() {
-        if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
-            return new Translation2d(kAllianceFieldLength.minus(Inches.of(10)), Inches.of(158.845));
-        } else {
-            return new Translation2d(kFieldLength.minus(kAllianceFieldLength).plus(Inches.of(10)), Inches.of(158.845));
-        }
-    }
+    // public static Translation2d hubCloserPosition() {
+    //     if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
+    //         return new Translation2d(kAllianceFieldLength.minus(Inches.of(10)), Inches.of(158.845));
+    //     } else {
+    //         return new Translation2d(kFieldLength.minus(kAllianceFieldLength).plus(Inches.of(10)), Inches.of(158.845));
+    //     }
+    // }
 
     public static Distance allianceHubCentreX() {
         if (kAlliance.isPresent() && kAlliance.get() == Alliance.Blue) {
